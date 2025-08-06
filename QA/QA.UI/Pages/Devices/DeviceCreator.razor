@@ -1,0 +1,152 @@
+﻿@using QA.DataAccess;
+@using QA.Domain.Models;
+@using QA.UI.Models;
+@using QA.UI.Services;
+
+@inject QAContext QAContext
+@inject IErrorLogger ErrorLogger
+@inject NavigationManager NavigationManager
+
+@* TODO dodać czas klaibracji i zanzaczać na czerwono jeśli miną *@
+
+@if (_showModal)
+{
+    <div class="modal" style="display: block; width: 20%; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+        <div class="modal-content col-md-2">
+            <div class="modal-header">
+                <h5 class="modal-title" style="font-weight:bold">Creator urzadzenia</h5>
+                <button class="btn btn-close" @onclick="HideModal"></button>
+            </div>
+
+            <EditForm Model="@_measuringDevice" OnValidSubmit="@SaveDevice">
+                <ValidationSummary />
+                <DataAnnotationsValidator />
+
+                <div class="modal-body">
+                    <div class="form-row">
+                        <div class="form-group col-md-12">
+                            <label for="SerialNo">Nazwa</label>
+                            <InputText class="form-control" id="Name" @bind-Value="@_measuringDevice.Name" />
+                            <ValidationMessage For="@(() => _measuringDevice.Name)" />
+                        </div>
+
+                        <div class="form-group col-md-12">
+                            <label for="Name">Numer seryjny</label>
+                            <InputText class="form-control" id="Name" @bind-Value="@_measuringDevice.SerialNo" />
+                            <ValidationMessage For="@(() => _measuringDevice.SerialNo)" />
+                        </div>
+
+                        <div class="form-group col-md-12">
+                            <label for="CalibrationDate">Data kalibracji</label>
+                            <InputDate class="form-control" id="CalibrationDate" @bind-Value="@_measuringDevice.CalibrationDate" />
+                            <ValidationMessage For="@(() => _measuringDevice.CalibrationDate)" />
+                        </div>
+
+                        @if (_measuringDevice.Ports != null && _measuringDevice.Ports.Count() != 0)
+                        {
+                            @foreach (var devicePort in _measuringDevice.Ports)
+                            {
+                                <div class="form-group col-md-12">
+                                    <label for="Name">Wejście</label>
+                                    <InputText class="form-control" id="Name" @bind-Value="@devicePort.Name" />
+                                    <ValidationMessage For="@(() => devicePort.Name)" />
+                                </div>
+                            }
+                        }
+
+                        <NavLink class="nav-link" style="margin-left: auto;">
+                            <span class="oi oi-plus" @onclick="() => AddPort()"> Dodaj wejście</span>
+                        </NavLink>
+
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-success">Zapisz</button>
+                    <button type="button" class="btn btn-secondary" @onclick=HideModal>Anuluj</button>
+                </div>
+
+            </EditForm>
+        </div>
+    </div>
+}
+
+@code {
+    [CascadingParameter]
+    public MeasuringDevices MeasuringDevices { get; set; }
+    private MeasuringDevice _measuringDevice = new MeasuringDevice();
+    private bool _showModal = false;
+    private bool _isEditMode = false;
+
+    protected override void OnInitialized()
+    {
+        _measuringDevice.CalibrationDate = DateTime.Now.Date;
+    }
+
+    public void ShowModal()
+    {
+        _showModal = true;
+        StateHasChanged();
+    }
+
+    private void HideModal()
+    {
+        _showModal = false;
+    }
+
+    private void AddPort()
+    {
+        @if (_measuringDevice.Ports == null || _measuringDevice.Ports.Count() == 0)
+        {
+            _measuringDevice.Ports = new List<DevicePort>();
+        }
+
+        DevicePort devicePort = new();
+        devicePort.MeasuringDevice = _measuringDevice;
+        _measuringDevice.Ports.Add(devicePort);
+        StateHasChanged();
+    }
+
+    private async Task SaveDevice()
+    {
+        try
+        {
+            if (_measuringDevice.Ports != null)
+            {
+                var portsToRemove = _measuringDevice.Ports.Where(p => string.IsNullOrEmpty(p.Name)).ToList();
+
+                foreach (var portToRemove in portsToRemove)
+                {
+                    _measuringDevice.Ports.Remove(portToRemove);
+                }
+            }
+
+            if (_isEditMode)
+            {
+                QAContext.MeasuringDevices.Update(_measuringDevice);
+            }
+            else
+            {
+                QAContext.Add(_measuringDevice);
+            }
+
+            await QAContext.SaveChangesAsync();
+            HideModal();
+            _measuringDevice = new() { CalibrationDate = DateTime.Now };
+            await MeasuringDevices.Refresh();
+        }
+        catch (Exception ex)
+        {
+            await ErrorLogger.LogError(ex, nameof(DeviceCreator));
+            throw;
+        }
+    }
+
+    public void ShowModalInEditMode(MeasuringDevice measuringDevice)
+    {
+        _measuringDevice = measuringDevice;
+        _isEditMode = true;
+        _showModal = true;
+        StateHasChanged();
+    }
+}

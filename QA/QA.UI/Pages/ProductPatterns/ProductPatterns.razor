@@ -1,0 +1,66 @@
+﻿@page "/productpatterns"
+@using Microsoft.EntityFrameworkCore;
+@using QA.DataAccess;
+@using QA.Domain.Models;
+@using QA.Domain.Models.Erp;
+@using QA.UI.Models;
+@using QA.UI.Pages.Products
+@using QA.UI.Services;
+
+@inject ERPContext HermesContext
+@inject QAContext QAContext
+@inject IErrorLogger ErrorLogger
+
+<span class="oi oi-plus" @onclick="() => ShowPatternCreator()"></span>
+
+@if (_products != null)
+{
+    <CascadingValue Value="@this">
+        <ProductsList @ref="_productList" Products="_products" PatternCreator="_patternCreator" HideMeasurementLink="true"></ProductsList>
+    </CascadingValue>
+}
+
+<CascadingValue Value="@this">
+    <PatternCreator @ref="_patternCreator"></PatternCreator>
+</CascadingValue>
+
+@code {
+    private List<Product> _products;
+    private PatternCreator _patternCreator = new();
+    private ProductsList _productList = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _products = await GetProductsWitchOperationsAndParameters();
+    }
+
+    private async Task<List<Product>> GetProductsWitchOperationsAndParameters()
+    {
+        try
+        {
+            return await QAContext.Products
+            .Include(p => p.Operations)
+                .ThenInclude(o => o.Parameters)
+                    .ThenInclude(p => p.Image)
+            .Where(p => p.IsPattern == true)
+            .ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            ErrorLogger.LogError(ex, nameof(ProductPatterns));
+            throw;
+        }
+    }
+
+    private void ShowPatternCreator()
+    {
+        _patternCreator.ShowModal();
+    }
+
+    public async Task Refresh()
+    {
+        _products = await GetProductsWitchOperationsAndParameters();
+        _productList.Refresh();
+        StateHasChanged();
+    }
+}

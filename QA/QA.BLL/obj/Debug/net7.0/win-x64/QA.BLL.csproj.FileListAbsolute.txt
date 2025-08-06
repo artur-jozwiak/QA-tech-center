@@ -1,0 +1,15 @@
+C:\Users\ajozwiak\Desktop\QA\QA\QA.BLL\bin\Debug\net7.0\win-x64\QA.BLL.deps.json
+C:\Users\ajozwiak\Desktop\QA\QA\QA.BLL\bin\Debug\net7.0\win-x64\QA.BLL.dll
+C:\Users\ajozwiak\Desktop\QA\QA\QA.BLL\bin\Debug\net7.0\win-x64\QA.BLL.pdb
+C:\Users\ajozwiak\Desktop\QA\QA\QA.BLL\bin\Debug\net7.0\win-x64\QA.Domain.dll
+C:\Users\ajozwiak\Desktop\QA\QA\QA.BLL\bin\Debug\net7.0\win-x64\QA.Domain.pdb
+C:\Users\ajozwiak\Desktop\QA\QA\QA.BLL\obj\Debug\net7.0\win-x64\QA.BLL.csproj.AssemblyReference.cache
+C:\Users\ajozwiak\Desktop\QA\QA\QA.BLL\obj\Debug\net7.0\win-x64\QA.BLL.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\ajozwiak\Desktop\QA\QA\QA.BLL\obj\Debug\net7.0\win-x64\QA.BLL.AssemblyInfoInputs.cache
+C:\Users\ajozwiak\Desktop\QA\QA\QA.BLL\obj\Debug\net7.0\win-x64\QA.BLL.AssemblyInfo.cs
+C:\Users\ajozwiak\Desktop\QA\QA\QA.BLL\obj\Debug\net7.0\win-x64\QA.BLL.csproj.CoreCompileInputs.cache
+C:\Users\ajozwiak\Desktop\QA\QA\QA.BLL\obj\Debug\net7.0\win-x64\QA.BLL.csproj.Up2Date
+C:\Users\ajozwiak\Desktop\QA\QA\QA.BLL\obj\Debug\net7.0\win-x64\QA.BLL.dll
+C:\Users\ajozwiak\Desktop\QA\QA\QA.BLL\obj\Debug\net7.0\win-x64\refint\QA.BLL.dll
+C:\Users\ajozwiak\Desktop\QA\QA\QA.BLL\obj\Debug\net7.0\win-x64\QA.BLL.pdb
+C:\Users\ajozwiak\Desktop\QA\QA\QA.BLL\obj\Debug\net7.0\win-x64\ref\QA.BLL.dll

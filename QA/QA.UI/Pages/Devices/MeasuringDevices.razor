@@ -1,0 +1,148 @@
+﻿@page "/measuringdevices"
+@using Microsoft.EntityFrameworkCore;
+@using QA.BLL.Interfaces;
+@using QA.DataAccess;
+@using QA.DataAccess.Repositories.Keyence;
+@using QA.Domain.Models;
+@using QA.UI.Models;
+@using QA.UI.Pages.Common
+@using QA.UI.Services;
+
+@inject IErrorLogger ErrorLogger
+@inject QAContext QAContext
+@inject IJSRuntime IJSRuntime
+@inject IConfiguration Configuration
+@inject IKeyenceReader KeyenceReader
+
+<LoadingSpiner @ref="_loadingSpiner" Message="Aktualizacja danych Keyence..."></LoadingSpiner>
+
+<CascadingValue Value="@this">
+    <DeviceCreator @ref="_deviceCreator "></DeviceCreator>
+</CascadingValue>
+
+<NavLink class="nav-link" style="margin-left: auto;">
+    <span class="oi oi-plus" @onclick="() => ShowDeviceCreator()"></span>
+</NavLink>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Nazwa</th>
+            <th>Numer seryjny</th>
+            <th>Data kalibracji</th>
+            <th>Wejścia</th>
+            <th></th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @if (_measuringDevices != null)
+        {
+            @foreach (var device in _measuringDevices)
+            {
+                <tr>
+                    <td>@device.Name</td>
+                    <td>@device.SerialNo</td>
+                    <td>@device.CalibrationDate</td>
+                    <td>
+                        @if (device.Ports != null)
+                        {
+                            @foreach (var portNo in device.Ports)
+                            {
+                                @portNo.Name
+                                <br />
+                            }
+                        }
+                    </td>
+                    <CascadingAuthenticationState>
+                        <AuthorizeView Roles="Admin,Manager">
+                            <td>
+                                @if (device.Name == "Keyence")
+                                {
+                                    <span class="oi oi-loop-circular functional-icon" @onclick="() => RefreshKeyenceData()"></span>
+                                }
+                                <span class="oi oi-pencil functional-icon" @onclick="() => ShowEditModal(device)"></span>
+                                <span class="oi oi-trash functional-icon" @onclick="() => ConfirmDeletion(device)"></span>
+                            </td>
+                        </AuthorizeView>
+                    </CascadingAuthenticationState>
+
+                </tr>
+                <tr>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+
+@code {
+    private List<MeasuringDevice> _measuringDevices = new();
+    private DeviceCreator _deviceCreator = new();
+    private LoadingSpiner _loadingSpiner = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _measuringDevices = await QAContext.MeasuringDevices.Include(md => md.Ports).ToListAsync();
+    }
+
+    private void ShowDeviceCreator()
+    {
+        _deviceCreator.ShowModal();
+    }
+
+    private void ShowEditModal(MeasuringDevice measuringDevice)
+    {
+        _deviceCreator.ShowModalInEditMode(measuringDevice);
+    }
+
+    public async Task ConfirmDeletion(MeasuringDevice device)
+    {
+        if (device != null)
+        {
+            bool confirmed = await IJSRuntime.InvokeAsync<bool>("confirm", $"Czy na pewno chcesz usunąć  przyrząd : {device.Name}, ?");
+
+            if (confirmed)
+            {
+                try
+                {
+                    QAContext.MeasuringDevices.Remove(device);
+                    await QAContext.SaveChangesAsync();
+                    _measuringDevices.Remove(device);
+                }
+                catch (Exception ex)
+                {
+                    await ErrorLogger.LogError(ex, nameof(MeasuringDevices));
+                    throw;
+                }
+            }
+        }
+    }
+
+    public async Task Refresh()
+    {
+        _measuringDevices = await QAContext.MeasuringDevices.Include(md => md.Ports).ToListAsync();
+        StateHasChanged();
+    }
+
+    private async Task RefreshKeyenceData()
+    {
+
+        bool confirmed = await IJSRuntime.InvokeAsync<bool>("confirm", $"Aktualizacja danych może zająć kilka minut. Czy chcesz kontynuować?");
+
+        if (confirmed)
+        {
+            _loadingSpiner.Show();
+
+            var startTime = DateTime.Now;
+            await KeyenceReader.GetKeyenceData();
+            var endTime = DateTime.Now;
+            var dataActualizationTime = endTime - startTime;
+            ErrorLogger.LogInformation($"Keyence data update time: {dataActualizationTime}", nameof(IKeyenceReader));
+            _loadingSpiner.Hide();
+        }
+
+        await IJSRuntime.InvokeAsync<bool>("confirm", $"Dane zaktualizowane pomyślnie.");
+    }
+}
+
+

@@ -1,0 +1,190 @@
+﻿@using QA.BLL.Interfaces
+@using QA.DataAccess
+@using QA.Domain.Models
+@using QA.UI.Models
+@using QA.UI.Pages.Common
+@using QA.UI.Pages.Images
+
+@inject IJSRuntime JSRuntime
+@inject IUnitOfWork UnitOfWork
+@inject QAContext QAContext
+@inject NavigationManager NavigationManager
+
+@if (Order != null)
+{
+    <div style="display: flex; align-items: flex-start; gap: 20px; max-width: 100%; border: 1px solid #ccc; border-radius: 4px; padding: 10px; margin: 10px;">
+
+        <div style="display: flex; flex-direction: column; align-items: flex-start; max-width: 70%;">
+            <div style="display: flex; align-items: center; justify-content: center;">
+                <h5 style="margin: 0; font-weight:bold">Kontrola wizualna - prasowanie</h5>
+            </div>
+
+            <canvas @ref="canvasRef" style="max-width: 100%; max-height: 100%; border: 1px solid; border-radius: 4px;"></canvas>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <strong>Odległość od 0 do krawędzi:</strong>
+                <img src="/images/Point.png" style="width:20px; height:20px; transform: rotate(45deg);" />
+
+                <strong>Wysokość:</strong>
+                <img src="/images/Point.png" style="width:20px; height:20px;" />
+
+            </div>
+
+            <div style="margin-top: 10px; display: flex; gap: 10px;">
+                <button class="btn btn-primary no-print" @onclick="SaveMarkers" style="margin-bottom: 5px;" hidden="@Lock">Zapisz znaczniki</button>
+            </div>
+        </div>
+
+        <table style="border-collapse: collapse; width: auto; table-layout: auto;">
+
+            <thead>
+                <tr style="width: auto;">
+                    <th style="border: 1px solid; padding: 4px; ">Etykieta</th>
+                    <th style="border: 1px solid; padding: 4px;">Szerokość gratu / uwagi</th>
+                    <th style="border: 1px solid; padding: 4px; ">Zdjęcie defektu</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach (var marker in Order.VisualInspectionForm.Markers.Where(m => m.Department == "Press").OrderBy(m => m.Label))
+                {
+                    <tr>
+                        <td style="border: 1px solid; padding: 4px;">
+                            @if (!Lock)
+                            {
+                                <span class="oi oi-trash functional-icon" style="color:red" @onclick="() => DeleteMarker(marker)"></span>
+                            }
+                            @marker.Label
+                        </td>
+
+                        <td style="border: 1px solid; padding: 4px;">
+                            <InputText class="border-0"
+                                       Value="@marker.Remark"
+                                       ValueChanged="@(async (string? e) => { marker.Remark = e; await UpdateMaker(marker); })"
+                                       ValueExpression="() => marker.Remark" disabled="@Lock"
+                                       style=" width:400px;" />
+                        </td>
+
+                        <td style="border: 1px solid; padding: 4px; white-space: nowrap;">
+                            <ImageUploader Marker="@marker" Image="@marker.Image" ShowFileInput="@( !Lock )"></ImageUploader>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+    </div>
+
+}
+else
+{
+    <LoadingSpiner IsLoading="true"></LoadingSpiner>
+}
+
+@code {
+
+    [Parameter]
+    public Order Order { get; set; }
+    [Parameter]
+    public int? OrderId { get; set; }
+    [Parameter]
+    public bool Lock { get; set; }
+
+    private ElementReference canvasRef;
+    private string _imageData;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Order == null && OrderId != null)
+        {
+            Order = await UnitOfWork.Order.GetWithProductAndVisAsync((int)OrderId);
+        }
+
+        await ReadImage();
+    }
+
+    private async Task UpdateMaker(Marker marker)
+    {
+        await UnitOfWork.CompleteAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JSRuntime.InvokeVoidAsync("getImgFromBackend", _imageData);
+            await SendMarkers();
+            await JSRuntime.InvokeVoidAsync("initPressCanvas", canvasRef);
+        }
+    }
+
+    private async Task GetMarkersFromClient()
+    {
+        var markers = await JSRuntime.InvokeAsync<List<Marker>>("getPressingMarkersFromClient");
+
+        foreach (var marker in markers)
+        {
+            if (marker.Id == 0)
+            {
+                marker.Department = "Press";
+                Order.VisualInspectionForm.Markers.Add(marker);
+            }
+        }
+    }
+
+    private async Task SendMarkers()
+    {
+        List<MarkerViewModel> markers = new();
+        foreach (var marker in Order.VisualInspectionForm.Markers.Where(m => m.Department == "Press"))
+        {
+            var point = new MarkerViewModel() { X = marker.X, Y = marker.Y, Label = marker.Label };
+            markers.Add(point);
+        }
+        await JSRuntime.InvokeVoidAsync("getPressingMarkersFromBackend", markers);
+    }
+
+    public async Task InitializeCanvas()
+    {
+        await JSRuntime.InvokeVoidAsync("initPressCanvas", canvasRef);
+    }
+
+    private async Task DeleteMarker(Marker marker)
+    {
+        bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", $"Czy na pewno chcesz usunąć znacznik?");
+
+        if (confirmed)
+        {
+            QAContext.Markers.Remove(marker);
+            if (marker.Image != null)
+            {
+                QAContext.Images.Remove(marker.Image);
+            }
+            await QAContext.SaveChangesAsync();
+            NavigationManager.NavigateTo(NavigationManager.Uri, forceLoad: true);
+        }
+    }
+
+    private async Task SaveMarkers()
+    {
+        await GetMarkersFromClient();
+        QAContext.SaveChanges();
+    }
+
+    private async Task ReadImage()
+    {
+        if (Order.VisualInspectionForm.Image != null)
+        {
+            if (File.Exists(Order.VisualInspectionForm.Image.ImageUrl))
+            {
+                byte[] imageBytes;
+
+                using (FileStream fileStream = new FileStream(Order.VisualInspectionForm.Image.ImageUrl, FileMode.Open, FileAccess.Read))
+                {
+                    imageBytes = new byte[fileStream.Length];
+                    await fileStream.ReadAsync(imageBytes, 0, (int)fileStream.Length);
+                }
+
+                _imageData = $"data:image/png;base64,{Convert.ToBase64String(imageBytes)}";
+            }
+        }
+    }
+}

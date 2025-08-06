@@ -1,0 +1,419 @@
+﻿@page "/image-uploader"
+@using QA.BLL.Interfaces
+@using QA.Domain.Models;
+@using QA.Domain.Models.ToolTests
+@using QA.UI.Models;
+@using QA.UI.Pages.VisualInspectionForm;
+
+@inject IConfiguration Configuration
+@inject IUnitOfWork UnitOfWork
+@inject IJSRuntime JsRuntime
+@inject IErrorLogger ErrorLogger
+
+@if (VisualInspectionForm == null )
+{
+    <div>
+        <img src="@_imageData" style="width:@Width; height:@Height;" alt="Image" @onclick=" OpenFullScreenViewer" />
+    </div>
+}
+
+@if (_showFullScreen)
+{
+    <CascadingValue Value="@this">
+        <FullScreenViewer ImageUrl="@_imageData"></FullScreenViewer>
+    </CascadingValue>
+}
+
+<CascadingAuthenticationState>
+    <AuthorizeView Roles="Admin, Manager">
+        @if (ShowFileInput)
+        {
+            <div class="no-print">
+                @* <InputFile OnChange="HandleFileUpload"  /> *@
+@* 
+                <InputFile OnChange="HandleFileUpload"
+                           accept="image/*"
+                           capture="environment"
+                           style="display: block" /> *@@*Kamera*@
+
+                <InputFile OnChange="HandleFileUpload"
+                           accept="image/*"
+                           style="display: block" />@*Kamera/Galeria*@
+
+
+                @if (!String.IsNullOrEmpty(_imageData) && _showSaveButton)
+                {
+                    <button class="btn btn-primary" @onclick="SaveImage">Zapisz</button>
+                }
+            </div>
+        }
+    </AuthorizeView>
+</CascadingAuthenticationState>
+
+@code {
+    [Parameter]
+    public Image Image { get; set; }
+
+    [Parameter]
+    public Product Product { get; set; }
+
+    [Parameter]
+    public Parameter Parameter { get; set; }
+
+    [Parameter]
+    public VisualInspectionForm VisualInspectionForm { get; set; }
+
+    [Parameter]
+    public MRB MRB { get; set; }
+
+    [Parameter]
+    public Marker Marker { get; set; }
+
+    [CascadingParameter]
+    public VisualControl VisualControl { get; set; }
+
+    [Parameter]
+    public ComparisonPoint ComparisonPoint { get; set; }
+
+    [Parameter]
+    public bool ShowFileInput { get; set; } = true;
+
+    [Parameter]
+    public string Width { get; set; }
+
+    [Parameter]
+    public string Height { get; set; }
+
+    private bool _showSaveButton = false;
+
+    private string _imageData;
+    private bool _showFullScreen = false;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Height == null && Width == null)
+        {
+            Height = "200px";
+            Width = "200px";
+        }
+
+        if (Image != null)
+        {
+            await ReadImage();
+
+            if (Image.Destination == Domain.Models.Enums.ImageDestination.VisualInspectionForm)
+            {
+                ShowFileInput = false;
+            }
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await ShowAlertIfImageNotExist();
+
+        if (firstRender)
+        {
+            await SendImageDataToClient();
+            await Task.Delay(30);// dodane przez brak ładowania obrazka - usunąć jeśli nie pomogło
+
+            if (Image == null && VisualInspectionForm != null)
+            {
+                await AssignVIFImageIfExist();
+            }
+        }
+    }
+
+    private async Task AssignVIFImageIfExist()
+    {
+        string desiredImgName = String.Concat(VisualInspectionForm.Order.Product.Symbol, "_fkw");
+
+        if (await UnitOfWork.Image.ImgNameExist(desiredImgName))
+        {
+            Image imgForAssign = await UnitOfWork.Image.GetBy(desiredImgName);
+            imgForAssign.VisualInspectionForms.Add(VisualInspectionForm);
+            await UnitOfWork.CompleteAsync();
+            Image = imgForAssign;
+        }
+    }
+
+    // private async Task HandleFileUpload(InputFileChangeEventArgs e)
+    // {
+    //     var imageFile = e.GetMultipleFiles().FirstOrDefault();
+
+    //     if (imageFile != null)
+    //     {
+    //         var imageStream = imageFile.OpenReadStream();
+    //         _imageData = $"data:image/png;base64,{Convert.ToBase64String(await ReadStream(imageStream))}";
+    //         Console.WriteLine(_imageData);
+    //         await SendImageDataToClient();
+    //     }
+
+    //     if (MRB == null)
+    //     {
+    //         _showSaveButton = true;
+    //     }
+    // }
+
+    private async Task HandleFileUpload(InputFileChangeEventArgs e)
+    {
+        var imageFile = e.File;
+        if (imageFile == null) return;
+
+        try
+        {
+            const long maxSize = 10 * 1024 * 1024;
+
+            using var imageStream = imageFile.OpenReadStream(maxSize);
+            using var ms = new MemoryStream();
+            await imageStream.CopyToAsync(ms);
+
+            var imageBytes = ms.ToArray();
+
+            var contentType = imageFile.ContentType;
+            if (string.IsNullOrWhiteSpace(contentType) || !contentType.StartsWith("image/"))
+            {
+                contentType = "image/jpeg";
+            }
+
+            _imageData = $"data:{contentType};base64,{Convert.ToBase64String(imageBytes)}";
+
+            await SendImageDataToClient();
+        }
+        catch (Exception ex)
+        {
+            throw;
+        }
+
+        if (MRB == null)
+        {
+            _showSaveButton = true;
+        }
+    }
+
+
+    private async Task HandleCamera(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+
+        if (file != null)
+        {
+            using var stream = file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024); // max 10 MB
+            using var memoryStream = new MemoryStream();
+            await stream.CopyToAsync(memoryStream);
+
+            byte[] imageBytes = memoryStream.ToArray();
+            Console.WriteLine(_imageData);
+
+            // Zrób coś z tym obrazem, np. zapisz lub przypisz do modelu
+            // Przykład:
+            // ComparisonPoint.Images.Add(new ComparisonImage
+            //     {
+            //         Id = Guid.NewGuid(),
+            //         ImageData = imageBytes
+            //     });
+
+            // Możesz też wywołać callback do rodzica, jeśli chcesz
+            StateHasChanged();
+        }
+    }
+
+
+    public async Task SaveImage()
+    {
+        bool confirmed = false;
+        if (VisualInspectionForm != null)
+        {
+            confirmed = await JsRuntime.InvokeAsync<bool>("confirm", $"Zapisanie obrazu uniemozliwi jego zamiane. Czy napewno chcesz to zrobic?");
+        }
+        else
+        {
+            confirmed = true;
+        }
+
+        if (confirmed)
+        {
+            string savePath = Configuration["AppSettings:ImagesPath"];
+            string fileName = string.Empty;
+
+            if (Product != null)
+            {
+                fileName = $"{Product.Symbol}_prod.png";
+            }
+            else if (Parameter != null)
+            {
+                fileName = $"{Parameter.Operation.Product.Symbol}_{Parameter.Name}_param.png";
+            }
+            else if (VisualInspectionForm != null)
+            {
+                fileName = $"{VisualInspectionForm.Order.Product.Symbol}_fkw.png";
+            }
+            else if (MRB != null)
+            {
+                fileName = $"{MRB.Order.ShortenedKey}_mrb_{MRB.Images.Count +1}.png";
+            }
+            else if (Marker != null)
+            {
+                fileName = $"{Marker.Id}_defect.png";
+            }
+            //
+            else if (ComparisonPoint != null)//
+            {
+                //Iterate by ControlPointValue
+                fileName = $"{ComparisonPoint.Images.Count +1}_{ComparisonPoint.Id}_tt.png";
+            }
+
+            string fullPath = Path.Combine(savePath, fileName);
+
+            await SaveImageOnDisc(fileName, fullPath);
+
+            if (File.Exists(fullPath))
+            {
+                await AddImageToDb(fullPath);
+            }
+            else
+            {
+                await JsRuntime.InvokeVoidAsync("alert", $"Plik: {fullPath} nie istnieje, rysunek nie został zapisany w bazie. Sprawdź istnienie pliku.");
+            }
+        }
+    }
+
+    private async Task SaveImageOnDisc(string fileName, string fullPath)
+    {
+        if (!string.IsNullOrEmpty(_imageData))
+        {
+            try
+            {
+                byte[] imageBytes = Convert.FromBase64String(_imageData.Split(',')[1]);
+                File.WriteAllBytes(fullPath, imageBytes);
+            }
+            catch (Exception ex)
+            {
+                await ErrorLogger.LogError(ex, nameof(ImageUploader));
+                throw;
+            }
+        }
+    }
+
+    private async Task AddImageToDb(string fullPath)
+    {
+        if (Image == null)
+        {
+            Image = new() { ImageUrl = fullPath };
+
+            if (Product != null)
+            {
+                Image.Name = String.Concat(Product.Symbol, "_prod");
+                Image.Destination = Domain.Models.Enums.ImageDestination.Product;
+                Image.ProductId = Product.Id;
+                Image.Product = Product;
+            }
+            else if (Parameter != null)
+            {
+                Image.Name = String.Concat(Parameter.Operation.Product.Symbol, "_", Parameter.Name, "_param");
+                Image.Destination = Domain.Models.Enums.ImageDestination.Parameter;
+                Image.ParameterId = Parameter.Id;
+                Image.Parameter = Parameter;
+            }
+            else if (VisualInspectionForm != null)
+            {
+                Image.Name = String.Concat(VisualInspectionForm.Order.Product.Symbol, "_fkw");
+                Image.Destination = Domain.Models.Enums.ImageDestination.VisualInspectionForm;
+                Image.VisualInspectionForms.Add(VisualInspectionForm);
+            }
+            else if (MRB != null)
+            {
+                Image.Name = String.Concat(MRB.Order.ShortenedKey, "_mrb_", MRB.Images.Count + 1);
+                Image.Destination = Domain.Models.Enums.ImageDestination.MRB;
+                Image.MRBId = MRB.Id;
+                Image.MRB = MRB;
+            }
+            else if (Marker != null)
+            {
+                Image.Name = String.Concat(Marker.Id, "_defect");
+                Image.Destination = Domain.Models.Enums.ImageDestination.MarkerDefect;
+                Image.MarkerId = Marker.Id;
+                Image.Marker = Marker;
+            }
+            //
+            else if (ComparisonPoint != null)
+            {
+                Image.Name = String.Concat(ComparisonPoint.Images.Count +1,"_", ComparisonPoint.ControlPointValue, "_tt");
+                Image.Destination = Domain.Models.Enums.ImageDestination.ToolTest;
+                Image.ComparisonPointId = ComparisonPoint.Id;
+                Image.ComparisonPoint = ComparisonPoint;
+            }
+            //
+            await UnitOfWork.Image.Add(Image);
+        }
+        else
+        {
+            Image.ImageUrl = fullPath;
+            UnitOfWork.Image.Update(Image);
+        }
+
+        await UnitOfWork.CompleteAsync();
+        _showSaveButton = false;
+
+        if (Image.Destination == Domain.Models.Enums.ImageDestination.VisualInspectionForm)
+        {
+            ShowFileInput = false;
+        }
+    }
+
+    private async Task<byte[]> ReadStream(Stream input)
+    {
+        using (MemoryStream ms = new MemoryStream())
+        {
+            await input.CopyToAsync(ms);
+            return ms.ToArray();
+        }
+    }
+
+    private async Task ReadImage()
+    {
+        if (File.Exists(Image.ImageUrl))
+        {
+            byte[] imageBytes;
+
+            using (FileStream fileStream = new FileStream(Image.ImageUrl, FileMode.Open, FileAccess.Read))
+            {
+                imageBytes = new byte[fileStream.Length];
+                await fileStream.ReadAsync(imageBytes, 0, (int)fileStream.Length);
+            }
+
+            _imageData = $"data:image/png;base64,{Convert.ToBase64String(imageBytes)}";
+        }
+    }
+
+    private async Task ShowAlertIfImageNotExist()
+    {
+        if (Image != null)
+        {
+            if (!File.Exists(Image.ImageUrl))
+            {
+                await JsRuntime.InvokeVoidAsync("alert", $"Plik: {Image.ImageUrl} nie istnieje.");
+            }
+        }
+    }
+
+    private async Task SendImageDataToClient()
+    {
+        if (VisualInspectionForm != null )
+        {
+            await JsRuntime.InvokeVoidAsync("getImgFromBackend", _imageData);
+        }
+    }
+
+    public void CloseFullScreenViewer()
+    {
+        _showFullScreen = false;
+        StateHasChanged();
+    }
+
+    public void OpenFullScreenViewer()
+    {
+        _showFullScreen = true;
+    }
+}

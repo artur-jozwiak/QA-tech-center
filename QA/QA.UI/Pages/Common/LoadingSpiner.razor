@@ -1,0 +1,29 @@
+﻿
+
+@if (IsLoading)
+{
+    <div class="loading-container">
+        <div class="spinner"></div>
+        <span style="font-weight:bold">@Message</span>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public bool IsLoading { get; set; }
+
+    [Parameter]
+    public string? Message { get; set; }
+
+    public void Show()
+    {
+        IsLoading = true;
+        StateHasChanged();
+    }
+
+    public void Hide()
+    {
+        IsLoading = false;
+        StateHasChanged();
+    }
+}

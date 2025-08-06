@@ -1,0 +1,21 @@
+﻿
+.coating-table {
+    min-width: 100%;
+    border-collapse: collapse;
+    border: 1px solid #d1d5db;
+}
+
+    .coating-table thead {
+        background-color: #e5e7eb;
+        color: #1f2937;
+        font-weight: 600;
+        text-align: left;
+    }
+
+    .coating-table th,
+    .coating-table td {
+        padding: 0.5rem 1rem;
+        border: 1px solid #d1d5db;
+    }
+
+

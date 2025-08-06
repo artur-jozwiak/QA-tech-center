@@ -1,0 +1,29 @@
+﻿@page "/"
+@using QA.UI.Pages.Orders
+@using QA.UI.Pages.Start
+@using System.Security.Claims
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
+
+<CascadingAuthenticationState>
+    <AuthorizeView>
+        <Authorized>
+            @* 07.05.25 *@
+            @* <Orders></Orders> *@
+            <Start></Start>
+        </Authorized>
+    </AuthorizeView>
+</CascadingAuthenticationState>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (!user.Identity.IsAuthenticated && !NavigationManager.Uri.Contains("/login"))
+        {
+            NavigationManager.NavigateTo("/login");
+        }
+    }
+}

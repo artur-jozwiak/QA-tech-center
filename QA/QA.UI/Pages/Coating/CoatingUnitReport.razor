@@ -1,0 +1,60 @@
+﻿@page "/report/{RunNo}"
+@using QA.BLL.Interfaces
+@inject IPVDStatsRepository PVDStatsRepository
+@inject IConfiguration Configuration;
+
+@if (_reportFileExist)
+{
+    <div style="height: 160vh;">
+        <iframe src="@ReportUrl" style="width: 100%; height: 100%; border: none;"></iframe>
+    </div>
+}
+
+
+@code {
+    [Parameter]
+    public string RunNo { get; set; }
+    string ReportUrl => $"/coating-unit-report/Polcomm-01_{RunNo}_report.html";
+    private bool _reportFileExist = false;
+
+    protected override void OnInitialized()
+    {
+        ReportFileExist();
+    }
+
+    private bool ReportFileExist()
+    {
+        string path = Configuration["AppSettings:CoatingUnitPath"];
+
+        if (File.Exists($"{path}\\Polcomm-01_{RunNo}_report.html"))
+        {
+            _reportFileExist = true;
+        }
+        return _reportFileExist;
+    }
+}
+
+@* @code {
+    [Parameter]
+    public string RunNo { get; set; }
+    string ReportUrl => $"pvd-reports/Polcomm-01_{RunNo}_report.html";
+    private bool _reportFileExist = false;
+
+    protected override void OnInitialized()
+    {
+        ReportFileExist();
+    }
+
+    private bool ReportFileExist()
+    {
+        string path = Configuration["AppSettings:QAPath"];
+
+        if (File.Exists($"{path}\\PVD\\Polcomm-01_{RunNo}_report.html"))
+        {
+            _reportFileExist = true;
+        }
+        return _reportFileExist;
+    }
+} *@
+
+

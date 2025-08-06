@@ -1,0 +1,221 @@
+﻿@using QA.BLL.Interfaces
+@using QA.DataAccess
+@using QA.Domain.Models
+@using System.Security.Claims
+
+@inject IUnitOfWork UnitOfWork
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ILaboratoryRepository ILaboratoryRepository
+@inject IUnitOfWork UnitOfWork
+@inject IConfiguration Configuration
+
+<style>
+    .tolerance-input {
+        width: 60px;
+        border: none;
+    }
+</style>
+
+@if (!string.IsNullOrEmpty(_errorMessage))
+{
+    <div class="alert alert-danger">
+        @_errorMessage
+    </div>
+}
+
+@if (!string.IsNullOrEmpty(_errorMessage))
+{
+    <div class="alert alert-danger">
+        @_errorMessage
+    </div>
+}
+<input type="number" @bind-value="_sinteringNo" placeholder="Numer mastera: np. 200" />
+<button class="btn btn-primary" @onclick="() => ReadFromCsv()">Pobierz wyniki</button>
+
+
+@if (_parameters.Count != 0)
+{
+
+    <div style="display: flex;">
+        <div>
+            <table class="measurement-table">
+                <tr>
+                    <th>Master</th>
+                    @foreach (var parameter in _parameters)
+                    {
+                        <th>@parameter.Name</th>
+                    }
+                    <th>Spiek</th>
+                </tr>
+
+                <tr>
+                    <th>LSL</th>
+                    <th><input class="tolerance-input" type="number" @bind-value="_hcParameter.LSL" /></th>
+                    <th><input class="tolerance-input" type="number" @bind-value="_msParameter.LSL" /></th>
+                    <th colspan="2" rowspan="2"> <button class="btn btn-primary" @onclick="() => UpdateSpecificationLimits()">Zastosuj granice specyfikacji</button></th>
+                </tr>
+
+                <tr>
+                    <th>USL</th>
+                    <th><input class="tolerance-input" type="number" @bind-value="_hcParameter.USL" /></th>
+                    <th> <input class="tolerance-input" type="number" @bind-value="_msParameter.USL" /></th>
+                </tr>
+
+                @foreach (var measurementSeries in _operation.MeasurementsSeries)
+                {
+                    _master = measurementSeries.Measurements.First().OrderKey;
+                    if (measurementSeries.Measurements != null)
+                    {
+                        if (measurementSeries.Index == 1)
+                        {
+                            <tr><th colspan="5">@_master.Split("-")[0]</th></tr>
+                        }
+
+                        <tr class="measuremnt-series-row">
+                            <td>@measurementSeries.Index</td>
+                            @foreach (var measurement in measurementSeries.Measurements)//
+                            {
+                                if (measurement.Parameter.USL != 0 && measurement.Parameter.LSL != 0)
+                                {
+                                    <td style="@(measurement.Value < measurement.Parameter.LSL || measurement.Value > measurement.Parameter.USL ? "color:darkred; background-color:lightcoral;" : "")">@measurement.Value</td>
+                                }
+                                else
+                                {
+                                    <td>@measurement.Value</td>
+                                }
+                            }
+                            <td>@_master.Split("-")[1]</td>
+                            @if (_user.IsInRole("Admin"))
+                            {
+                                <span class="oi oi-trash disappearing-icon" style=" color:red" @onclick="() => DeleteMeasurementsSeries(measurementSeries)"></span>
+                            }
+                        </tr>
+                    }
+                }
+            </table>
+        </div>
+
+        <div style="width: 100%;">
+            <label>Zakres od:</label>
+            <InputDate ValueExpression="@(() => _minDate)" Value="@_minDate" ValueChanged="@(async (DateTime date) => await FilterByMinDate(date))"></InputDate>
+            <label>Zakres do:</label>
+            <InputDate ValueExpression="@(() => _maxDate)" Value="@_maxDate" ValueChanged="@(async (DateTime date) => await FilterByMaxDate(date))"></InputDate> 
+
+            <SMHCChart Parameter="@_hcParameter" ChartId="@_hcParameter.Id.ToString()" Measurements="_hcMeasurements" @ref="_hcChart" />
+            <SMHCChart Parameter="@_msParameter" ChartId="@_msParameter.Id.ToString()" Measurements="_msMeasurements" @ref="_msChart" />
+            <img src="/images/Furnace.png" alt="Tray" style="width:700px;height:500px; display: block; margin-left: auto; margin-right: auto;" />
+        </div>
+    </div>
+}
+
+@code {
+    private DateTime _minDate = DateTime.Now.AddMonths(-6);
+    private DateTime _maxDate = DateTime.Now;
+
+    private List<Parameter> _parameters = new();
+    private Operation _operation;
+
+    private string? _errorMessage = string.Empty;
+    private string _master;
+    private string _sinteringNo = string.Empty;
+
+    private Parameter _hcParameter;
+    private List<Measurement> _hcMeasurements = new();
+    private Parameter _msParameter;
+    private List<Measurement> _msMeasurements = new();
+
+    private SMHCChart _hcChart = new();
+    private SMHCChart _msChart = new();
+
+    private ClaimsPrincipal _user;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await  GetParameters();
+        _operation = _parameters.First().Operation;
+        _hcParameter = _parameters.First(p => p.Name.Contains("HC"));
+        _msParameter = _parameters.First(p => p.Name.Contains("MS"));
+        GetParametersMeasurementsList();
+        await GetUser();
+    }
+
+    private async Task DeleteMeasurementsSeries(MeasurementsSeries measurementSeries)
+    {
+        try
+        {
+            UnitOfWork.Measurement.DeleteMeasurements(measurementSeries.Measurements);
+            UnitOfWork.MeasurementSeries.Delete(measurementSeries);
+            await UnitOfWork.CompleteAsync();
+            GetParametersMeasurementsList();
+            await UpdateCharts();
+        }
+        catch (Exception e)
+        {
+            throw;
+        }
+    }
+
+    private async Task UpdateSpecificationLimits()
+    {
+        await UnitOfWork.CompleteAsync();
+        await UpdateCharts();
+    }
+
+    private async Task ReadFromCsv()
+    {
+        if (!String.IsNullOrEmpty(_sinteringNo))
+        {
+            string masterName = String.Concat("M", _sinteringNo.ToString());
+            _errorMessage = await ILaboratoryRepository.ReadMeasurementsForMaster(masterName, _user.Identity.Name);
+            await OnInitializedAsync();
+            await UpdateCharts();
+        }
+    }
+
+    private async Task GetUser()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        _user = authState.User;
+    }
+
+    private async Task ApplyFilters()
+    {
+        await OnInitializedAsync();
+        await UpdateCharts();
+        StateHasChanged();
+    }
+
+
+    private async Task FilterByMinDate(DateTime minDate)
+    {
+        _minDate = minDate;
+        await ApplyFilters();
+    }
+
+    private async Task FilterByMaxDate(DateTime maxDate)
+    {
+        _maxDate = maxDate;
+        await ApplyFilters();
+    }
+
+    private void GetParametersMeasurementsList()
+    {
+        _msMeasurements = _msParameter.Measurements.Where(m => m.Date > _minDate && m.Date < _maxDate).OrderBy(m => m.Date).ToList();
+        _hcMeasurements = _hcParameter.Measurements.Where(m => m.Date > _minDate && m.Date < _maxDate).OrderBy(m => m.Date).ToList();
+    }
+
+    private async Task UpdateCharts()
+    {
+        var tasks = new List<Task>();
+        tasks.Add(_hcChart.UpdateChart(_hcParameter.Id.ToString(), _hcMeasurements));
+        tasks.Add(_msChart.UpdateChart(_msParameter.Id.ToString(), _msMeasurements));
+        await Task.WhenAll(tasks);
+    }
+
+    private async Task GetParameters()
+    {
+        int laboratoryMasterOperationId = int.Parse(Configuration["AppSettings:LaboratoryMasterOperationId"]);
+        var laboratoryMastersOperation = await UnitOfWork.Operation.GetMasterControlOperationWithMeasurements(laboratoryMasterOperationId);
+        _parameters = laboratoryMastersOperation.Parameters.ToList();
+    }
+}

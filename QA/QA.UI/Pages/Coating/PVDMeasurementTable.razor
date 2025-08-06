@@ -1,0 +1,264 @@
+﻿@using System.Collections.Generic
+@using QA.BLL.Interfaces
+@using QA.Domain.Models.CoatingModels
+@using System.Security.Claims
+@inject IUnitOfWork UnitOfWork
+@inject IJSRuntime JSRuntime
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+@code {
+    [Parameter]
+    public CoatingProcess CoatingProcess { get; set; }
+    private List<CoatingMeasurementSeries>? _measurementSeriesList { get; set; } = new();
+    private CoatingMeasurementSeries _newSeries = new() { Date = DateTime.Now };
+    private int _rowNumber = 1;
+
+    private ClaimsPrincipal _user;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        _measurementSeriesList = UnitOfWork.Coating.GetProcessMeasurementsBy(CoatingProcess.RunNo);
+        _measurementSeriesList.Add(_newSeries);
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        _user = authState.User;
+    }
+
+    private async Task SaveRecord(CoatingMeasurementSeries series)
+    {
+        if (series.Id == 0)
+        {
+            series.CoatingProcess = CoatingProcess;
+            series.CoatingProcessId = CoatingProcess.Id;
+            series.Operator = _user.Identity.Name;
+
+            UnitOfWork.Coating.Add(series);
+            _measurementSeriesList.Add(new CoatingMeasurementSeries() { Date = DateTime.Now });
+        }
+
+        UnitOfWork.Complete();
+    }
+
+    private async Task HandleKeyPress(KeyboardEventArgs e, int rowIndex, int columnIndex)
+    {
+        int newRow = rowIndex;
+        int newCol = columnIndex;
+
+        switch (e.Key)
+        {
+            case "ArrowRight":
+                newCol++;
+                break;
+            case "ArrowLeft":
+                newCol--;
+                break;
+            case "ArrowDown":
+                newRow++;
+                break;
+            case "ArrowUp":
+                newRow--;
+                break;
+        }
+
+        await JSRuntime.InvokeVoidAsync("focusElement", newRow, newCol);
+    }
+
+    private void DeleteSeries(CoatingMeasurementSeries series)
+    {
+        _measurementSeriesList.Remove(series);
+        UnitOfWork.Coating.RemoveMeasurement(series);
+        UnitOfWork.Complete();
+    }
+}
+
+<div class="table-wrapper">
+    <table class="coating-table">
+        <thead>
+            <tr>
+                <th rowspan="2">Data</th>
+                <th rowspan="2">Wieża</th>
+                <th rowspan="2">Poziom</th>
+                <th rowspan="2">Próbka referencyjna</th>
+                <th rowspan="2">Rotacja zablokowana</th>
+
+                <th colspan="4">
+                    GRUBOŚĆ POWŁOKI [µm]
+                </th>
+                <th colspan="4">
+                    ADHEZJA
+                </th>
+                <th rowspan="2" style="width:200px">Uwagi</th>
+            </tr>
+            <tr>
+                <th>
+                    Strona 1
+                </th>
+                <th>
+                    Strona 2
+                </th>
+                <th>
+                    Strona 3
+                </th>
+                <th>
+                    Strona 4
+                </th>
+                <th>
+                    Strona 1
+                </th>
+                <th>
+                    Strona 2
+                </th>
+                <th>
+                    Strona 3
+                </th>
+                <th>
+                    Strona 4
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @{
+                _rowNumber = 1;
+            }
+            @foreach (var series in _measurementSeriesList)
+            {
+                int rowNumber = _rowNumber;
+                <tr>
+                    <td style="white-space: nowrap;">
+                        @if (series.Id != 0)
+                        {
+                            <span class="oi oi-trash" style="font-size: 10px; color:red; cursor: pointer;" @onclick="() => DeleteSeries(series)"></span>
+                        }
+                        <span style="margin-left: 5px;">@series.Date.ToString("dd.MM.yyyy")</span>
+                    </td>
+
+                    <td>
+                        <select row="@rowNumber" col="1" 
+                                @bind-value="series.TowerNo"
+                                @bind-value:event="oninput"
+                                @onchange="() => SaveRecord(series)"
+                                @onkeydown="@(e => HandleKeyPress(e, rowNumber, 1))">
+                            <option value="">-- Wybierz --</option>
+                            @for (int i = 1; i <= 6; i++)
+                            {
+                                <option value="@i">@i</option>
+                            }
+                        </select>
+                    </td>
+                    <td> 
+                        <select row="@rowNumber" col="2" 
+                                @bind-value="series.Level"
+                                @bind-value:event="oninput"
+                                @onchange="() => SaveRecord(series)"
+                                @onkeydown="@(e => HandleKeyPress(e, rowNumber, 2))">
+                            <option value="">-- Wybierz --</option>
+                            <option value="T">T</option>
+                            <option value="M">M</option>
+                            <option value="B">B</option>
+                        </select>
+                    </td>
+
+                    <td >
+                        <input type="checkbox" row="@rowNumber" col="3" checked="@series.IsReferenceSample"
+                               @bind-value="series.IsReferenceSample"
+                               @bind-value:event="oninput"
+                               @onchange="() => SaveRecord(series)"
+                               @onkeydown="@(e => HandleKeyPress(e, rowNumber, 3))" />
+                    </td>
+
+                    <td>
+                        <input type="checkbox" row="@rowNumber" col="4"  checked="@series.NonRotatingRod"
+                               @bind-value="series.NonRotatingRod"
+                               @bind-value:event="oninput"
+                               @onchange="() => SaveRecord(series)"
+                               @onkeydown="@(e => HandleKeyPress(e, rowNumber, 4))" />
+                    </td>
+
+                    <td style=" background-color:#f0f2f5;">
+                        <input type="number" row="@rowNumber" col="5" style=" background-color:#f0f2f5;"
+                               @bind-value="series.Thickness1"
+                               @bind-value:event="oninput"
+                               @onchange="() => SaveRecord(series)"
+                               @onkeydown="@(e => HandleKeyPress(e, rowNumber, 5))" />
+                    </td>
+                    <td style=" background-color:#f0f2f5;">
+                        <input type="number" row="@rowNumber" col="6" style=" background-color:#f0f2f5;"
+                               @bind-value="series.Thickness2"
+                               @bind-value:event="oninput"
+                               @onchange="() => SaveRecord(series)"
+                               @onkeydown="@(e => HandleKeyPress(e, rowNumber, 6))" />
+                    </td>
+                    <td style=" background-color:#f0f2f5;">
+                        <input type="number" row="@rowNumber" col="7" style=" background-color:#f0f2f5;"
+                               @bind-value="series.Thickness3"
+                               @bind-value:event="oninput"
+                               @onchange="() => SaveRecord(series)"
+                               @onkeydown="@(e => HandleKeyPress(e, rowNumber, 7))" />
+                    </td>
+                    <td style=" background-color:#f0f2f5;">
+                        <input type="number" row="@rowNumber" col="8" style=" background-color:#f0f2f5;"
+                               @bind-value="series.Thickness4"
+                               @bind-value:event="oninput"
+                               @onchange="() => SaveRecord(series)"
+                               @onkeydown="@(e => HandleKeyPress(e, rowNumber, 8))" />
+                    </td>
+                    <td>
+                        <input type="number" row="@rowNumber" col="9"
+                               @bind-value="series.Adhesion1"
+                               @bind-value:event="oninput"
+                               @onchange="() => SaveRecord(series)"
+                               @onkeydown="@(e => HandleKeyPress(e, rowNumber, 9))" />
+                    </td>
+                    <td>
+                        <input type="number" row="@rowNumber" col="10"
+                               @bind-value="series.Adhesion2"
+                               @bind-value:event="oninput"
+                               @onchange="() => SaveRecord(series)"
+                               @onkeydown="@(e => HandleKeyPress(e, rowNumber, 10))" />
+                    </td>
+                    <td>
+                        <input type="number" row="@rowNumber" col="11"
+                               @bind-value="series.Adhesion3"
+                               @bind-value:event="oninput"
+                               @onchange="() => SaveRecord(series)"
+                               @onkeydown="@(e => HandleKeyPress(e, rowNumber, 11))" />
+                    </td>
+
+                    <td>
+                        <input type="number" row="@rowNumber" col="12"
+                               @bind-value="series.Adhesion4"
+                               @bind-value:event="oninput"
+                               @onchange="() => SaveRecord(series)"
+                               @onkeydown="@(e => HandleKeyPress(e, rowNumber, 12))" />
+                    </td>
+                    <td>
+                        <input type="text" row="@rowNumber" col="13"
+                               @bind-value="series.Comment"
+                               @bind-value:event="oninput"
+                               @onchange="() => SaveRecord(series)"
+                               @onkeydown="@(e => HandleKeyPress(e, rowNumber, 13))"
+                               style="width:300px" />
+                    </td>
+                </tr>
+                _rowNumber++;
+            }
+        </tbody>
+    </table>
+</div>
+
+<script>
+    window.focusElement = (row, col) => {
+        const element = document.querySelector(`[row='${row}'][col='${col}']`);
+        if (element) element.focus();
+    };
+</script>
+
+<script>
+    window.addEventListener('keydown', function (event) {
+        // if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.key)) {
+        if (['ArrowUp', 'ArrowDown'].includes(event.key)) {
+            event.preventDefault();
+        }
+    });
+</script>
+

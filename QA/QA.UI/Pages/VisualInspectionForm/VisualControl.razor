@@ -1,0 +1,396 @@
+﻿@page "/visualcontrol"
+
+@using Microsoft.EntityFrameworkCore;
+@using System.Collections.Generic;
+@using Newtonsoft.Json;
+@using QA.DataAccess;
+@using QA.Domain.Models;
+@using QA.UI.Models;
+@using QA.UI.Pages.Develop
+@using QA.UI.Pages.Images;
+@using QA.UI.Pages.PDF
+@using QA.UI.Pages.QCPlan;
+@using System.Drawing;
+@using System.Text.Json;
+@using System.Text.Json.Serialization;
+
+@inject QAContext QAContext;
+@inject NavigationManager NavigationManager;
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IJSRuntime JSRuntime
+
+<style>
+    .category-name {
+        writing-mode: vertical-rl;
+        transform: rotate(180deg);
+        text-align: center;
+    }
+
+    .data-input {
+        border: none;
+        text-align: center;
+    }
+</style>
+
+<div style="display: flex; align-items: flex-start; flex-direction: column; border: 1px solid #ccc; border-radius: 4px; padding: 10px; margin: 10px;">
+    <div style="display: flex; align-items: center; justify-content: center;">
+        <h5 style="margin: 0; font-weight:bold">Formularz kontroli wizualnej @VisualInspectionForm.Order.OrderKey</h5>
+    </div>
+
+    <section class="no-print" style="display: flex; align-items: flex-start; flex-direction: column; border: 1px solid #ccc; border-radius: 4px; padding: 10px; margin: 10px; position: relative;">
+        <h5 style="font-weight:bold ;position: absolute; top: -10px; left: 10px; background-color: white; padding: 0 5px;">Instrukcja</h5>
+
+        <div style="display: inline;">
+            <a href="@_pdfData" @onclick="ShowInstruction">@_instructionName</a>
+
+            @if (_instructionName != null)
+            {
+                <span class="oi oi-pencil functional-icon" @onclick="() => ShowPDFUploader()"></span>
+            }
+
+            @if (_instructionName == null || _showpdfUploader)
+            {
+                <PDFUploader Product="VisualInspectionForm.Order.Product"></PDFUploader>
+            }
+        </div>
+
+        @if (_showInstruction)
+        {
+            <iframe src="@_pdfData" style="width:1500px; height:1500px;" alt="PDF Viewer"></iframe>
+        }
+    </section>
+
+    <div class="form-group col-md-12">
+        <label style="font-weight:bold"> Kontrola geometrii – Keyence</label>
+        <InputCheckbox class="form-check-input" @bind-Value="@VisualInspectionForm.KeyenceIsChecked" />
+    </div>
+
+    <div style="display: flex; align-items: flex-start;">
+        <div style=" margin-right: 20px;">
+            <table class="table-bordered">
+                <thead>
+                    <tr>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @{
+                        Sample[] samples = VisualInspectionForm.Samples.ToArray();
+                        var sample = samples.FirstOrDefault();
+                        int samplesCount = VisualInspectionForm.Samples.Count();
+                        List<string> existingCategoriesNames = new List<string>();
+                    }
+
+                    @if (sample != null)
+                    {
+                        @foreach (var fault in sample.SampleDefects.OrderBy(f => f.Defect.Symbol))
+                        {
+                            if (existingCategoriesNames.All(e => e != fault.Defect.DefectCategory.Name))
+                            {
+                                existingCategoriesNames.Add(fault.Defect.DefectCategory.Name);
+                                int ctegoryElementsQty = sample.SampleDefects.Select(f => f.Defect).Where(e => e.DefectCategoryId == fault.Defect.DefectCategoryId).Count() + 1;
+
+                                <tr>
+                                    <td rowspan="@ctegoryElementsQty" class="category-name">@fault.Defect.DefectCategory.Number. @fault.Defect.DefectCategory.Name</td>
+                                </tr>
+                            }
+
+                            <tr>
+                                <td>@fault.Defect.Name</td>
+                                <td>@fault.Defect.Symbol</td>
+                                @for (int i = 0; i < samples.Length; i++)
+                                {
+                                    if (samples[i]?.SampleDefects?.FirstOrDefault(f => f.Defect?.Symbol == fault.Defect?.Symbol) != null)
+                                    {
+                                        SampleDefect? sampleFault = samples[i]?.SampleDefects?.FirstOrDefault(f => f.Defect?.Symbol == fault.Defect?.Symbol);
+                                        <td>
+                                            <input class="data-input" @bind="@sampleFault.DefectsQty" disabled="@_editingDisabled" />
+                                        </td>
+                                    }
+                                }
+                            </tr>
+                        }
+                    }
+
+                    <tr>
+                        <td colspan="3" style="text-align: right;">Ilość dobrych</td>
+                        @foreach (var trial in samples)
+                        {
+                            <td>
+                                <input class="data-input" @bind="@trial.GoodsQty" disabled="@_editingDisabled" />
+                            </td>
+                        }
+                    </tr>
+
+                    <tr>
+                        <td colspan="3" style="text-align: right;">Liczebność próbki</td>
+
+                        @foreach (var trial in samples)
+                        {
+                            <td>
+                                <input class="data-input" @bind="@trial.SampleQty" disabled="@_editingDisabled" />
+                            </td>
+                        }
+                    </tr>
+
+                    <tr>
+                        <td colspan="3" style="text-align: right;">Kontroler</td>
+
+                        @foreach (var trial in samples)
+                        {
+                            <td>
+                                @trial.Operator
+                            </td>
+                        }
+                    </tr>
+
+                    <tr>
+                        @{
+                            int colspan = samples.Length + 3;
+                        }
+                        <AuthorizeView Roles="Admin,Manager,Kontroler">
+                            <td colspan="@colspan">
+                                <button class="btn btn-primary no-print" @onclick="AddSample" disabled="@_editingDisabled"> Dodaj próbe</button>
+                            </td>
+                        </AuthorizeView>
+                    </tr>
+
+                </tbody>
+            </table>
+        </div>
+
+        <div>
+            <div>
+                <canvas @ref="canvasRef" style="border: 1px solid; border-radius:4px"></canvas>
+            </div>
+                <div>
+                    <CascadingValue Value="@this">
+                        <ImageUploader VisualInspectionForm="@VisualInspectionForm" Image="VisualInspectionForm.Image"></ImageUploader>
+                    </CascadingValue>
+                    <AuthorizeView Roles="Admin,Manager,Kontroler">
+
+                        @if (VisualInspectionForm.Markers.Count > 0)
+                        {
+                            <button class="btn btn-danger no-print" @onclick="DeleteMarkers" disabled="@_editingDisabled"> Usuń wszystkie zanaczniki</button>
+                        }
+                    <button class="btn btn-primary no-print" style="margin-left: 10px;" @onclick="EnableEditing">Edytuj</button>
+                    <button class="btn btn-primary no-print" @onclick="UpdateForm" disabled="@_editingDisabled">Zapisz formularz</button>
+                </AuthorizeView>
+
+            </div>
+        </div>
+
+    </div>
+    <br />
+    <label style="font-weight:bold">Komentarz</label>
+    <InputTextArea @bind-Value="@VisualInspectionForm.Comments" style="width:100%" disabled="@_editingDisabled" />
+</div>
+
+@code {
+    private ElementReference canvasRef;
+    private ElementReference imageRef;
+
+    private bool _showInstruction = false;
+    private bool _showpdfUploader = false;
+
+    private string _pdfData;
+    private string? _instructionName;
+
+    private bool _editingDisabled = true;
+
+    [Parameter]
+    public VisualInspectionForm VisualInspectionForm { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        List<Defect> inspectionFormElemnts = new();
+
+        if (VisualInspectionForm.Order.Product.Symbol.StartsWith("W-B"))
+        {
+            inspectionFormElemnts = QAContext.Defects.Where(d => !d.Symbol.StartsWith("5")).Include(d => d.DefectCategory).ToList();
+        }
+        else
+        {
+            inspectionFormElemnts = QAContext.Defects.Include(d => d.DefectCategory).ToList();
+        }
+
+        foreach (var sample in VisualInspectionForm.Samples)
+        {
+            var assignedElements = sample.SampleDefects.Select(f => f.Defect);
+            inspectionFormElemnts.RemoveAll(d => assignedElements.Contains(d));
+
+            foreach (var element in inspectionFormElemnts)
+            {
+                SampleDefect fault = new SampleDefect { Defect = element, Sample = sample };
+                sample.SampleDefects.Add(fault);
+            }
+        }
+
+        if (VisualInspectionForm.Order.Product.InstructionPath != null)
+        {
+            _instructionName = VisualInspectionForm.Order.Product.InstructionPath.Split('\\').TakeLast(1).FirstOrDefault();
+        }
+
+        await ReadPdf();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await SendMarkers();
+            await JSRuntime.InvokeVoidAsync("initializeCanvas", canvasRef);
+        }
+    }
+
+    private async Task AddSample()
+    {
+        var inspetctionElements = await QAContext.Defects.ToListAsync();
+
+        var sample = new Sample();
+        sample.Operator = await GetUser();
+        sample.SampleNumber = VisualInspectionForm.Samples.OrderByDescending(s => s.SampleNumber).FirstOrDefault().SampleNumber + 1;
+        sample.SampleDefects = new List<SampleDefect>();
+
+        foreach (var element in inspetctionElements)
+        {
+            SampleDefect fault = new SampleDefect { Defect = element, Sample = sample };
+            sample.SampleDefects.Add(fault);
+        }
+        VisualInspectionForm.Samples.Add(sample);
+    }
+
+    private async Task UpdateForm()
+    {
+        List<Sample> emptySamples = new();
+        foreach (var sample in VisualInspectionForm.Samples)
+        {
+            sample.Date = DateTime.Now;
+
+            if (String.IsNullOrEmpty(sample.Operator))
+                sample.Operator = await GetUser();
+
+            var faultsToRemove = new List<SampleDefect>();
+            foreach (var fault in sample.SampleDefects)
+            {
+                if (fault.DefectsQty == 0 || fault.DefectsQty == null)
+                {
+                    faultsToRemove.Add(fault);
+                }
+                else
+                {
+                    fault.DefectSymbol = fault.Defect.Symbol;
+                }
+            }
+
+            foreach (var faultToRemove in faultsToRemove)
+            {
+                sample.SampleDefects.Remove(faultToRemove);
+            }
+
+            if ((sample.GoodsQty == null || sample.GoodsQty == 0) && sample.SampleQty == 0 && sample.SampleDefects.All(sd => sd.DefectsQty == 0))
+            {
+                emptySamples.Add(sample);
+            }
+        }
+
+        if (VisualInspectionForm.Samples.Count != 1)
+        {
+            foreach (var emptySample in emptySamples)
+            {
+                VisualInspectionForm.Samples.Remove(emptySample);
+            }
+        }
+
+        await GetMarkersFromClient();
+
+        QAContext.VisualInspectionForms.Update(VisualInspectionForm);
+        QAContext.SaveChanges();
+        NavigationManager.NavigateTo(NavigationManager.Uri, forceLoad: true);
+    }
+
+    private async Task<string> GetUser()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        return authState.User.Identity.Name;
+    }
+
+    private async Task GetMarkersFromClient()
+    {
+        var markers = await JSRuntime.InvokeAsync<List<Marker>>("getMarkersFromClient");
+
+        foreach (var marker in markers)
+        {
+            if (marker.Id == 0)
+            {
+                marker.Department = "QC";
+            }
+        }
+
+        VisualInspectionForm.Markers.AddRange(markers);
+    }
+
+    private async Task SendMarkers()
+    {
+        List<MarkerViewModel> markers = new();
+
+        foreach (var marker in VisualInspectionForm.Markers.Where(m => m.Department == "QC"))
+        {
+            var point = new MarkerViewModel() { X = marker.X, Y = marker.Y };
+            markers.Add(point);
+        }
+
+        await JSRuntime.InvokeVoidAsync("getMarkersFromBackend", markers);
+    }
+
+    private async Task DeleteMarkers()
+    {
+        VisualInspectionForm.Markers.RemoveAll(m => m.Department == "QC");
+
+        await QAContext.SaveChangesAsync();
+        NavigationManager.NavigateTo(NavigationManager.Uri, forceLoad: true);
+    }
+
+    private async Task ReadPdf()
+    {
+        string path = VisualInspectionForm.Order.Product.InstructionPath;
+        if (File.Exists(path))
+        {
+            byte[] pdfBytes;
+
+            using (FileStream fileStream = new FileStream(path, FileMode.Open, FileAccess.Read))
+            {
+                pdfBytes = new byte[fileStream.Length];
+                await fileStream.ReadAsync(pdfBytes, 0, (int)fileStream.Length);
+            }
+
+            _pdfData = $"data:application/pdf;base64,{Convert.ToBase64String(pdfBytes)}";
+        }
+    }
+
+    private void ShowInstruction()
+    {
+        _showInstruction = true;
+        StateHasChanged();
+    }
+
+    private void AssignInstruction()
+    {
+        NavigationManager.NavigateTo($"/pdf-uploader");
+    }
+
+    private void ShowPDFUploader()
+    {
+        _showpdfUploader = true;
+        StateHasChanged();
+    }
+
+    private void EnableEditing()
+    {
+        _editingDisabled = false;
+        StateHasChanged();
+    }
+}
+
+
+

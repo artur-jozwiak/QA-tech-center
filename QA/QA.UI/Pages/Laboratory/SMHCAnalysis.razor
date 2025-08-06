@@ -1,0 +1,188 @@
+﻿@using QA.BLL.Interfaces
+@using QA.Domain.Models
+@using QA.UI.Pages.Common
+@using QA.UI.Pages.Develop
+
+@inject IUnitOfWork UnitOfWork
+@inject IErpOrderRepository ErpOrderRepository
+@inject ILaboratoryRepository LaboratoryRepository
+
+<div style="width: 100%;">
+    <InputSelect ValueExpression="@(() => _productId)" Value="@_productId" ValueChanged="@(async (int _productId) => await HandleProductSelection(_productId))">
+        <option>Produkt</option>
+        @foreach (var product in _products)
+        {
+            <option value="@product.Id">@product.Description @product.Symbol @product.PdmNo</option>
+        }
+    </InputSelect>
+
+
+
+    <label>Zakres od:</label>
+    <InputDate ValueExpression="@(() => _minDate)" Value="@_minDate" ValueChanged="@(async (DateTime date) => await FilterByMinDate(date))"></InputDate>
+    <label>Zakres do:</label>
+    <InputDate ValueExpression="@(() => _maxDate)" Value="@_maxDate" ValueChanged="@(async (DateTime date) => await FilterByMaxDate(date))"></InputDate>
+
+    @if (_msParameter != null)
+    {
+        if (_msMeasurements.Count != 0)
+        {
+            <SMHCBatchChart Parameter="@_msParameter" Measurements="_msMeasurements" @ref="_msChart" />
+        }
+        else
+        {
+            <h5>BRAK DANYCH POMIAROWYCH</h5>
+        }
+    }
+    else
+    {
+        <h5>BRAK DANYCH POMIAROWYCH</h5>
+
+        <LoadingSpiner IsLoading="@_isLoading" Message="Loading..."></LoadingSpiner>
+    }
+
+    @if (_hcParameter != null)
+    {
+        if (_hcMeasurements.Count != 0)
+        {
+            <SMHCBatchChart Parameter="@_hcParameter" Measurements="_hcMeasurements" @ref="_hcChart" />
+        }
+        else
+        {
+            <h5>BRAK DANYCH POMIAROWYCH</h5>
+        }
+    }
+    else
+    {
+        <h5>BRAK DANYCH POMIAROWYCH</h5>
+
+        <LoadingSpiner IsLoading="@_isLoading" Message="Loading..."></LoadingSpiner>
+    }
+</div>
+
+@code {
+    private DateTime _minDate = DateTime.Now.AddMonths(-6);
+    private DateTime _maxDate = DateTime.Now;
+
+    private List<Product> _products = new();
+    private int _productId;
+
+    private List<PowderSpecification> _powders = new();
+    private int _powderId;
+
+    private Parameter? _hcParameter;
+    private List<Measurement>? _hcMeasurements = new();
+    private Parameter? _msParameter;
+    private List<Measurement>? _msMeasurements = new();
+
+    private SMHCBatchChart? _msChart;
+    private SMHCBatchChart? _hcChart;
+
+    private bool _isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _isLoading = true;
+        _products = await UnitOfWork.Product.GetWBProducts();
+        _powders = await UnitOfWork.Powder.GetAll();
+         //await LoadProductData(_products);///
+        _isLoading = false;
+    }
+
+    private async Task ApplyFilters()
+    {
+        await UpdateCharts();
+    }
+
+    private async Task FilterByMinDate(DateTime minDate)
+    {
+        _minDate = minDate;
+        await ApplyFilters();
+    }
+
+    private async Task FilterByMaxDate(DateTime maxDate)
+    {
+        _maxDate = maxDate;
+        await ApplyFilters();
+    }
+
+    private async Task HandleProductSelection(int productId)
+    {
+        _isLoading = true;
+        _msMeasurements = await UnitOfWork.Measurement.GetAllBy("MS", productId);
+        _msParameter = _msMeasurements.Select(m => m.Parameter).FirstOrDefault();
+
+        _hcMeasurements = await UnitOfWork.Measurement.GetAllBy("HCJ", productId);
+        _hcParameter = _hcMeasurements.Select(m => m.Parameter).FirstOrDefault();
+
+        await UpdateCharts();
+        _isLoading = false;
+    }
+
+
+    private async Task UpdateCharts()
+    {
+        _msMeasurements = _msParameter?.Measurements.Where(m => m.Date > _minDate && m.Date < _maxDate).OrderBy(m => m.Date).ToList();
+
+        _hcMeasurements = _hcParameter?.Measurements.Where(m => m.Date > _minDate && m.Date < _maxDate).OrderBy(m => m.Date).ToList();
+
+        if (_hcChart != null && _msChart != null && _msParameter != null && _hcParameter != null)
+        {
+            try
+            {
+                var tasks = new List<Task>();
+                tasks.Add(_hcChart.UpdateChart(_hcParameter.Name, _hcMeasurements, _hcParameter));
+                tasks.Add(_msChart.UpdateChart(_msParameter.Name, _msMeasurements, _msParameter));
+                await Task.WhenAll(tasks);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+            }
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task LoadProductData(List<Product> products)
+    {
+        _isLoading = true;
+        List<string> notExist = new();
+
+        foreach (var product in products)
+        {
+            var ordersKeys = await ErpOrderRepository.GetOrdersKeyBy(product.Symbol);
+            Console.WriteLine(product.Symbol);
+            foreach (var orderKey in ordersKeys)
+            {
+                string? result = await LaboratoryRepository.ReadMeasurementsForOrder(orderKey, product.Id);
+
+                if (!String.IsNullOrEmpty(result))
+                {
+                    notExist.Add(orderKey + "/" + result);
+                }
+
+                if (String.IsNullOrEmpty(result))
+                {
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.WriteLine(orderKey);
+                    Console.ResetColor();
+                }
+                else
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine(orderKey);
+                    Console.WriteLine(result);
+                    Console.ResetColor();
+                }
+            }
+            Console.WriteLine();
+        }
+        notExist = notExist.Where(e => e.Contains("C:\\Users\\ajozwiak\\")).ToList();
+        Console.WriteLine(notExist.Count);
+        foreach (var e in notExist)
+        {
+            Console.WriteLine(e);
+        }
+        _isLoading = false;
+    }
+}

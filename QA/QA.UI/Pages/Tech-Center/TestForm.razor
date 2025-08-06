@@ -1,0 +1,422 @@
+﻿@page "/test-form/{ComparisonId:int?}"
+
+@using MudBlazor
+@using QA.BLL.Interfaces
+@using QA.Domain.Models
+@using QA.Domain.Models.Enums
+@using QA.Domain.Models.ToolTests
+@using QA.UI.Pages.Common
+@using QA.UI.Pages.Images
+
+@inject ISnackbar Snackbar
+@inject IUnitOfWork UnitOfWork
+
+<MudPaper Class="pa-4 mx-auto" Elevation="1" Style="width: 100%;" @key="ComparisonId">
+    <div style="width: 100%;">
+        <div style="display: flex; align-items: center; gap: 8px; width: 100%; flex-wrap: wrap;">
+
+            <h3>@_tool.Name</h3>
+
+            <MudIconButton Icon="@Icons.Material.Filled.Add"
+                           Color="Color.Primary"
+                           OnClick="() => AddComparison()"
+                           Size="Size.Medium"
+                           Class="no-print" />
+
+            <MudRadioGroup T="TestType"
+                           Label="Test Type"
+                           Value="_selectedTestType"
+                           ValueChanged="OnTestTypeChanged">
+
+                @foreach (TestType type in Enum.GetValues(typeof(TestType)))
+                {
+                    <MudRadio Value="@type">@EnumExtensions.GetDisplayName(type)</MudRadio>
+                }
+
+            </MudRadioGroup>
+        </div>
+
+        <MudPaper Class="pa-4" Elevation="1" Style="width: 100%;">
+
+            <div style="display: flex; align-items: center; gap: 8px; width: 100%; flex-wrap: wrap;">
+                <MudTextField Value="_tool.Name" ValueChanged="@((string e) => {_tool.Name = e; SaveComparison(_comparison);})" Label="Tool" />
+                <MudRadioGroup T="TestType"
+                               Label="Test Type"
+                               @bind-Value="_comparison.TestType">
+                    @foreach (TestType type in Enum.GetValues(typeof(TestType)))
+                    {
+                        <MudRadio Value="@type">@EnumExtensions.GetDisplayName(type)</MudRadio>
+                    }
+                </MudRadioGroup>
+            </div>
+
+            <MudForm>
+                <MudTextField Value="_comparison.TypeOfMachinning" ValueChanged="@((string e) => {_comparison.TypeOfMachinning = e; SaveComparison(_comparison);})" Label="Type of Machinning" FullWidth="true" />
+                <MudTextField Value="_comparison.WorpieceDescription" ValueChanged="@((string e) => {_comparison.WorpieceDescription = e; SaveComparison(_comparison);})" Label="Worpiece Description" FullWidth="true" />
+                <MudTextField Value="_comparison.WorpieceHardness" ValueChanged="@((string e) => {_comparison.WorpieceHardness = e; SaveComparison(_comparison);})" Label="Worpiece Hardness" FullWidth="true" />
+                <MudTextField Value="_comparison.Machine" ValueChanged="@((string e) => {_comparison.Machine = e; SaveComparison(_comparison);})" Label="Machine" FullWidth="true" />
+            </MudForm>
+
+        </MudPaper>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 8px;">
+
+        <MudText Typo="Typo.h6">Tools</MudText>
+
+        <MudIconButton Icon="@Icons.Material.Filled.Add"
+                       Color="Color.Primary"
+                       OnClick="() => AddToolTest()"
+                       Size="Size.Medium"
+                       Class="no-print"
+                       aria-label="Add tool test" />
+    </div>
+
+    <div style="display: flex; justify-content: center;">
+        <MudExpansionPanels MultiExpansion="true" Style="width: 100%;">
+            <MudExpansionPanel Text="Tool Details" Expanded="true" Style="page-break-before:always">
+                <div style="display: flex; justify-content: center; margin-top: 2rem;">
+                    <MudGrid>
+                        @foreach (var toolTest in _comparison.ToolTests.OrderBy(tt => tt.Id))
+                        {
+                            <MudItem Style="position:relative; flex: 1 1 300px; max-width: 100%;">
+
+                                <MudMenu Icon="@Icons.Material.Filled.Menu" AnchorOrigin="Origin.TopRight" TransformOrigin="Origin.TopRight" Style="position: absolute; top: 20px; right: 8px;" Class="no-print">
+                                    <MudMenuItem OnClick="@(() => DeleteToolTest(toolTest))">Usuń</MudMenuItem>
+                                </MudMenu>
+
+                                <MudPaper Class="pa-4">
+                                    <MudText Typo="Typo.h6">@toolTest.ProductSymbol</MudText>
+                                    <MudTextField T="string" Value="@toolTest.HolderType" ValueChanged="@((string e) => { toolTest.HolderType = e; SaveToolTest(toolTest); })" Label="Holder Type" />
+                                    <MudTextField T="string" Value="@toolTest.Manufacturer" ValueChanged="@((string e) => { toolTest.Manufacturer = e; SaveToolTest(toolTest); })" Label="Manufacturer" />
+                                    <MudTextField T="string" Value="@toolTest.ProductSymbol" ValueChanged="@((string e) => { toolTest.ProductSymbol = e; SaveToolTest(toolTest); })" Label="Product Symbol" />
+                                    <MudTextField T="string" Value="@toolTest.Application" ValueChanged="@((string e) => { toolTest.Application = e; SaveToolTest(toolTest); })" Label="Application" />
+                                    <MudTextField T="string" Value="@toolTest.Substrate" ValueChanged="@((string e) => { toolTest.Substrate = e; SaveToolTest(toolTest); })" Label="Substrate" />
+                                    <MudTextField T="string" Value="@toolTest.Coating" ValueChanged="@((string e) => { toolTest.Coating = e; SaveToolTest(toolTest); })" Label="Coating" />
+                                    <MudTextField T="string" Value="@toolTest.CoatingThickness" ValueChanged="@((string e) => { toolTest.CoatingThickness = e; SaveToolTest(toolTest); })" Label="Coating Thickness" />
+                                    <MudTextField T="string" Value="@toolTest.BatchNo" ValueChanged="@((string e) => { toolTest.BatchNo = e; SaveToolTest(toolTest); })" Label="Batch No" />
+                                    <MudTextField T="string" Value="@toolTest.VisualInspection" ValueChanged="@((string e) => { toolTest.VisualInspection = e; SaveToolTest(toolTest); })" Label="Visual" />
+                                </MudPaper>
+                            </MudItem>
+                        }
+                    </MudGrid>
+                </div>
+            </MudExpansionPanel>
+
+            <MudExpansionPanel Text="Machining Parameters" Expanded="true" Style="page-break-before:always">
+                <MudGrid>
+                    @foreach (var toolTest in _comparison.ToolTests.OrderBy(tt => tt.Id))
+                    {
+                        <MudItem Style="flex: 1 1 300px; max-width: 100%;">
+                            <MudPaper Class="pa-4">
+                                <MudText Typo="Typo.h6">@toolTest.ProductSymbol</MudText>
+                                <MudTextField T="string" Value="@toolTest.Feedf" ValueChanged="@((string e) => { toolTest.Feedf = e; SaveToolTest(toolTest); })" Label="Feedf" />
+                                <MudTextField T="string" Value="@toolTest.FeedVf" ValueChanged="@((string e) => { toolTest.FeedVf = e; SaveToolTest(toolTest); })" Label="Feed Vf" />
+                                <MudTextField T="string" Value="@toolTest.SpeedVc" ValueChanged="@((string e) => { toolTest.SpeedVc = e; SaveToolTest(toolTest); })" Label="Speed Vc" />
+                                <MudTextField T="string" Value="@toolTest.ae" ValueChanged="@((string e) => { toolTest.ae = e; SaveToolTest(toolTest); })" Label="ae" />
+                                <MudTextField T="string" Value="@toolTest.CuttingDepth" ValueChanged="@((string e) => { toolTest.CuttingDepth = e; SaveToolTest(toolTest); })" Label="Cutting Depth" />
+                                <MudTextField T="string" Value="@toolTest.NumberOfPasses" ValueChanged="@((string e) => { toolTest.NumberOfPasses = e; SaveToolTest(toolTest); })" Label="Number of Passes" />
+                                <MudTextField T="string" Value="@toolTest.Time" ValueChanged="@((string e) => { toolTest.Time = e; SaveToolTest(toolTest); })" Label="Time" />
+                                <MudTextField T="string" Value="@toolTest.Cooling" ValueChanged="@((string e) => { toolTest.Cooling = e; SaveToolTest(toolTest); })" Label="Cooling" />
+                            </MudPaper>
+                        </MudItem>
+                    }
+                </MudGrid>
+            </MudExpansionPanel>
+
+            <MudExpansionPanel Text="Results" Expanded="true" Style="page-break-before:always">
+                <MudGrid>
+                    @foreach (var toolTest in _comparison.ToolTests.OrderBy(tt => tt.Id))
+                    {
+                        <MudItem Style="flex: 1 1 300px; max-width: 100%;">
+                            <MudPaper Class="pa-4">
+                                <MudText Typo="Typo.h6">@toolTest.ProductSymbol</MudText>
+                                <MudTextField T="string" Value="@toolTest.ChipShape" ValueChanged="@((string e) => { toolTest.ChipShape = e; SaveToolTest(toolTest); })" Label="Chip Shape" />
+                                <MudTextField T="string" Value="@toolTest.WorkpieceRoughness" ValueChanged="@((string e) => { toolTest.WorkpieceRoughness = e; SaveToolTest(toolTest); })" Label="Workpiece Roughness" />
+                                <MudTextField T="string" Value="@toolTest.VisualInspection" ValueChanged="@((string e) => { toolTest.VisualInspection = e; SaveToolTest(toolTest); })" Label="Visual Inspection" />
+                                <MudTextField T="string" Value="@toolTest.VisualDamageDescription" ValueChanged="@((string e) => { toolTest.VisualDamageDescription = e; SaveToolTest(toolTest); })" Label="Visual Damage Description" />
+                                <MudTextField T="string" Value="@toolTest.EdgeWear" ValueChanged="@((string e) => { toolTest.EdgeWear = e; SaveToolTest(toolTest); })" Label="Edge Wear" />
+                                <MudTextField T="string" Value="@toolTest.Chipping" ValueChanged="@((string e) => { toolTest.Chipping = e; SaveToolTest(toolTest); })" Label="Chipping" />
+                                <MudTextField T="string" Value="@toolTest.PlasticDeformation" ValueChanged="@((string e) => { toolTest.PlasticDeformation = e; SaveToolTest(toolTest); })" Label="Plastic Deformation" />
+                                <MudTextField T="string" Value="@toolTest.Other" ValueChanged="@((string e) => { toolTest.Other = e; SaveToolTest(toolTest); })" Label="Other" />
+                            </MudPaper>
+                        </MudItem>
+                    }
+                </MudGrid>
+            </MudExpansionPanel>
+        </MudExpansionPanels>
+    </div>
+
+    <MudDivider Class="my-4" />
+
+    <MudStack Row="false" Spacing="2" Style="width: 100%;">
+        <MudText Typo="Typo.h5" GutterBottom="true">Visual comparison</MudText>
+
+        <MudStack Row="true" Spacing="2" Style="width: 100%; justify-content: space-between; flex-wrap: wrap;">
+            @foreach (var toolTest in _comparison.ToolTests.OrderBy(tt => tt.Id))
+            {
+                <MudPaper Class="pa-4" Elevation="2" Style="flex: 1 1 0; min-width: 300px; width: 100%;">
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                        <MudText Typo="Typo.h6">@toolTest.ProductSymbol</MudText>
+                        <MudIconButton Icon="@Icons.Material.Filled.Add"
+                                       Color="Color.Primary"
+                                       OnClick="() => AddComparePoints(toolTest)"
+                                       Size="Size.Medium"
+                                       Class="no-print"
+                                       aria-label="Add compare point" />
+                    </MudStack>
+                    <MudDivider Class="my-2" />
+                   
+                    <MudStack Row="false" Spacing="2" Style="width: 100%;">
+                        @foreach (var cp in toolTest.ComparisonPoints.OrderBy(cp => cp.Id))
+                        {
+                            <MudCard Elevation="1" Style="width: 100%; page-break-after:always">
+                                <MudCardContent Style="position: relative;">
+                                    <MudTextField T="string"
+                                                  Value="@cp.ControlPointValue"
+                                                  ValueChanged="@((string e) => { cp.ControlPointValue = e; SaveComparisonPoint(cp); })"
+                                                  Label="Value"
+                                                  Style="width: 100%;" />
+
+                                    <MudMenu Icon="@Icons.Material.Filled.Menu"
+                                             Style="position: absolute; top: 8px; right: 8px;"
+                                             IconColor="Color.Info"
+                                             AnchorOrigin="Origin.TopRight"
+                                             TransformOrigin="Origin.TopRight"
+                                             Class="no-print">
+                                        <MudMenuItem OnClick="@(() => AddImage())">Add image</MudMenuItem>
+                                        <MudMenuItem OnClick="@(() => DeleteComparePoint(cp))">Delete compare point</MudMenuItem>
+                                    </MudMenu>
+
+                                    <MudStack Row="false" Spacing="1" Class="mt-2" Style="width: 100%;">
+
+                                        @foreach (var image in cp.Images)
+                                        {
+                                            <MudPaper Elevation="0" Outlined="false" Style="text-align: center; position: relative; box-shadow: none; border: none;">
+                                                <MudMenu Icon="@Icons.Material.Sharp.Edit" IconColor="Color.Error"
+                                                         AnchorOrigin="Origin.BottomLeft"
+                                                         TransformOrigin="Origin.BottomLeft"
+                                                         Style="position: absolute;bottom: 8px; left: 8px;"
+                                                         Class="no-print">
+                                                    <MudMenuItem OnClick="@(() => DeleteImage(image))">Delete Image</MudMenuItem>
+                                                    <MudMenuItem OnClick="@(() => EditImage(image.Id))">Edit Image</MudMenuItem>
+                                                </MudMenu>
+                                                <ImageUploader ComparisonPoint="cp" Image="image" ShowFileInput="@(_editImageId == image.Id)" Width="450px" Height="300px" @key="image.Id" />
+
+                                            </MudPaper>
+                                        }
+
+                                        @if (_showImageInput)
+                                        {
+                                            <ImageUploader ComparisonPoint="cp" />
+
+@*                                             <input type="file"
+                                                   accept="image/*"
+                                                   capture="enviroment"
+                                                   style="display: block " /> *@
+                                        }
+                                    </MudStack>
+
+                                    <MudTextField T="string"
+                                                  Value="@cp.Remarks"
+                                                  ValueChanged="@((string e) => { cp.Remarks = e; SaveComparisonPoint(cp); })"
+                                                  Label="Comment"
+                                                  Style="width: 100%;" />
+                                </MudCardContent>
+                            </MudCard>
+                        }
+                    </MudStack>
+                </MudPaper>
+            }
+        </MudStack>
+    </MudStack>
+
+    <MudPaper>
+        <MudForm>
+            <MudTextField Value="@_comparison.Remarks" ValueChanged="@((string e) => {_comparison.Remarks = e; SaveComparison(_comparison);})" Label="Comment"/>
+            <MudTextField Value="@_comparison.Conclusion" ValueChanged="@((string e) => { _comparison.Conclusion = e; SaveComparison(_comparison); })" Lines="6" Label="Summary & Conclusion" />
+        </MudForm>
+    </MudPaper>
+
+</MudPaper>
+
+@code {
+    IServiceCollection ServiceCollection { get; set; }
+    [Parameter]
+    public int? ComparisonId { get; set; }
+    private Tool _tool = new();
+    private ToolTestComparison _comparison = new();
+    private TestType _selectedTestType;
+    private string? message;
+    private bool success;
+    private int _comparePointEditableId;
+    private bool _showImageInput;
+    private int _editImageId;
+
+    protected override void OnInitialized()
+    {
+        if (ComparisonId != null)
+        {
+            _comparison = UnitOfWork.ToolTesting.GetComparisonById((int)ComparisonId);
+            _tool = _comparison.Tool;
+        }
+        else
+        {
+            _comparison.Tool = _tool;
+            _comparison.ToolId = _tool.Id;
+            _tool.ToolTestComparisons.Add(_comparison);
+        }
+        _selectedTestType = _comparison.TestType;
+    }
+
+    private Task SaveComparison(ToolTestComparison item)
+    {
+        if (item.Id == 0)
+        {
+            UnitOfWork.ToolTesting.AddTestComparison(item);
+        }
+
+        UnitOfWork.Complete();
+        Snackbar.Add($"Auto-saved", Severity.Info);
+        return Task.CompletedTask;
+    }
+
+    private Task SaveToolTest(ToolTest item)
+    {
+        if (item.Id == 0)
+        {
+            UnitOfWork.ToolTesting.AddToolTest(item);
+        }
+
+        item.Comparison = _comparison;
+        item.ComparisonId = _comparison.Id;
+
+        UnitOfWork.Complete();
+        Snackbar.Add($"Auto-saved: {item.ProductSymbol}", Severity.Info);
+        return Task.CompletedTask;
+    }
+
+    private Task SaveComparisonPoint(ComparisonPoint item)
+    {
+        if (item.Id == 0)
+        {
+            UnitOfWork.ToolTesting.AddComparisonPoint(item);
+        }
+
+        if (item.ToolTestComparisonId == null)
+        {
+            item.ToolTestComparison = _comparison;
+            item.ToolTestComparisonId = _comparison.Id;
+        }
+
+        UnitOfWork.Complete();
+        Snackbar.Add($"Auto-saved: {item.ToolTestComparison.ToolTests}", Severity.Info);
+        return Task.CompletedTask;
+    }
+
+    private void AddToolTest()
+    {
+        _comparison.ToolTests.Add(new() { Comparison = _comparison, ComparisonId = _comparison.Id, ComparisonPoints = new List<ComparisonPoint>() });
+    }
+
+    private void AddComparePoints(ToolTest toolTest)
+    {
+        ComparisonPoint cp = new() { ToolTestComparison = _comparison, ToolTestComparisonId = _comparison.Id, ToolTest = toolTest, ToolTestId = toolTest.Id, Images = new List<Image>() };
+        _comparison.ComparisonPoints.Add(cp);
+        toolTest.ComparisonPoints.Add(cp);
+
+        UnitOfWork.Complete();
+    }
+
+    private void DeleteToolTest(ToolTest toolTest)
+    {
+        UnitOfWork.ToolTesting.RemoveToolTest(toolTest);
+        UnitOfWork.Complete();
+    }
+
+    private void AddImage()
+    {
+        _showImageInput = !_showImageInput;
+    }
+
+    private void DeleteComparePoint(ComparisonPoint comparePoint)
+    {
+        UnitOfWork.ToolTesting.RemoveComparePoint(comparePoint);
+        UnitOfWork.Complete();
+    }
+
+    private void DeleteImage(Image img)
+    {
+        UnitOfWork.Image.Delete(img);
+    }
+
+    private void EditImage(int imageId)
+    {
+        _editImageId = imageId;
+    }
+
+
+    private void OnTestTypeChanged(TestType selectedType)
+    {
+        _selectedTestType = selectedType;
+        if (UnitOfWork.ToolTesting.ComparisonExist(_tool.Id, selectedType))
+        {
+            _comparison = UnitOfWork.ToolTesting.GetByToolIdAndType(_tool.Id, selectedType);
+            ComparisonId = _comparison.Id;
+        }
+        StateHasChanged();
+    }
+
+
+    private void AddComparison()
+    {
+        ToolTestComparison sourceComparison = new();
+        sourceComparison = _comparison;
+        _comparison = new();
+        _comparison.Tool = _tool;
+        _comparison.ToolId = _tool.Id;
+        _tool.ToolTestComparisons.Add(_comparison);
+        CopyToolsTests(sourceComparison);
+    }
+
+    private void CopyToolsTests(ToolTestComparison sourceComparison)
+    {
+        foreach (var toolTest in sourceComparison.ToolTests)
+        {
+            ToolTest newTooltest = new()
+            {
+                    HolderType = toolTest.HolderType,
+                    Manufacturer = toolTest.Manufacturer,
+                    ProductSymbol = toolTest.ProductSymbol,
+                    Application = toolTest.Application,
+                    Substrate = toolTest.Substrate,
+                    Coating = toolTest.Coating,
+                    CoatingThickness = toolTest.CoatingThickness,
+                    BatchNo = toolTest.BatchNo,
+                    VisualInspection = toolTest.VisualInspection,
+                    Other = toolTest.Other,
+                    Feedf = toolTest.Feedf,
+                    FeedVf = toolTest.FeedVf,
+                    SpeedVc = toolTest.SpeedVc,
+                    CuttingDepth = toolTest.CuttingDepth,
+                    ae = toolTest.ae,
+                    NumberOfPasses = toolTest.NumberOfPasses,
+                    Time = toolTest.Time,
+                    Cooling = toolTest.Cooling,
+                    ChipShape = toolTest.ChipShape,
+                    WorkpieceRoughness = toolTest.WorkpieceRoughness,
+                    VisualDamageDescription = toolTest.VisualDamageDescription,
+                    EdgeWear = toolTest.EdgeWear,
+                    Chipping = toolTest.Chipping,
+                    PlasticDeformation = toolTest.PlasticDeformation,
+                    ComparisonPoints = new List<ComparisonPoint>(),
+                    ComparisonId = _comparison.Id,
+                    Comparison = _comparison
+            };
+
+                UnitOfWork.ToolTesting.AddToolTest(newTooltest);
+                UnitOfWork.Complete();
+        }
+    }
+}
+

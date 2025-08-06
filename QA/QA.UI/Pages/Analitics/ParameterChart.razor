@@ -1,0 +1,245 @@
+﻿@using System.Text.Json;
+@using QA.Domain.Models;
+
+@inject IJSRuntime JSRuntime;
+@inject NavigationManager NavigationManager;
+
+@if (Parameter != null)
+{
+    <canvas id="@ChartId" style="margin: 5px"></canvas>
+}
+
+@code {
+    [Parameter]
+    public string ChartId { get; set; }
+    [Parameter]
+    public Parameter Parameter { get; set; }
+    private decimal _percentageChartExpansionY = 0.01m;
+    private int _daysChartExpansionX = 5;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await UpdateChart(ChartId);
+        }
+    }
+
+    public async Task UpdateChart(string chartId)
+    {
+        var chartExists = await JSRuntime.InvokeAsync<bool>("eval", $"document.getElementById('{chartId}') !== null");
+        if (chartExists)
+        {
+            await JSRuntime.InvokeVoidAsync("destroyChart", chartId);
+
+            decimal yMin = 0;
+            decimal yMax = 0;
+
+            if(Parameter.LSL == Parameter.USL && Parameter.Measurements.Count != 0)
+            {
+                yMin = Parameter.Measurements.Min(m => m.Value) ;
+                yMax = Parameter.Measurements.Max(m => m.Value) ;
+            }
+            else
+            {
+                yMin = Parameter.LSL - (Parameter.LSL * _percentageChartExpansionY);
+                yMax = Parameter.USL + (Parameter.USL * _percentageChartExpansionY);
+            }
+
+            // var yMin = Parameter.LSL - (Parameter.LSL * _percentageChartExpansionY);
+            // var yMax = Parameter.USL + (Parameter.USL * _percentageChartExpansionY);
+
+            DateTime dateMin = DateTime.Now;
+            DateTime dateMax = DateTime.Now;
+
+            if (Parameter.Measurements.Any())
+            {
+                dateMin = Parameter.Measurements.Min(m => m.Date).AddDays(-_daysChartExpansionX);
+                dateMax = Parameter.Measurements.Max(m => m.Date).AddDays(_daysChartExpansionX);
+            }
+
+            List<DateTime> timePeriod = new List<DateTime> { dateMin, dateMax };
+
+            var data = new
+            {
+                datasets = new[]
+      {
+        new
+        {
+            label = $"LSL={Parameter.LSL}",
+            data = timePeriod.Select(m => new
+            {
+                x = m.Date.ToString("yyyy-MM-dd"),
+                y = Parameter.LSL,
+                order = ""
+            }).ToList(),
+            type = "line",
+            borderColor = "rgba(255, 0, 0, 1)",
+            backgroundcolor = "rgba(255, 0, 0, 1)",
+            pointStyle = "line",
+            pointBackgroundColor = "rgba(255, 0, 0, 0.2)",
+            pointBorderColor = "rgba(255, 0, 0, 1)",
+            borderWidth = 1,
+            pointRadius = 0,
+            borderDash = new int[] { 5, 5 }
+        },
+        new
+        {
+            label = $"{Parameter.Name}({Parameter.Measurements.Count})",
+            data = Parameter.Measurements.OrderBy(m => m.Date).Select(m => new
+            {
+                x = m.Date.ToString("yyyy-MM-dd"),
+                y = m.Value,
+                order = m.OrderKey
+            }).ToList(),
+            type = "line",
+            borderColor = "rgba(75, 192, 192, 1)",
+            backgroundcolor = "rgba(75, 192, 192, 1)",
+            pointStyle = "circle",
+            pointBackgroundColor = "rgba(75, 192, 192, 0.4)",
+            pointBorderColor = "rgba(75, 192, 192, 1",
+            borderWidth = 1,
+            pointRadius = 3,
+            borderDash = new int[] { 0, 0 }
+        },
+                new
+        {
+            label = $"Nominal={Parameter.NominalValue}",
+            data = timePeriod.Select(m => new
+            {
+                x = m.Date.ToString("yyyy-MM-dd"),
+                y = Parameter.NominalValue,
+                order = ""
+            }).ToList(),
+            type = "line",
+            borderColor = "rgb(0, 153, 0)",
+            backgroundcolor ="rgb(0, 153, 0)",
+            pointStyle = "line",
+            pointBackgroundColor = "rgb(0, 153, 0)",
+            pointBorderColor = "rgb(0, 153, 0)",
+            borderWidth = 1,
+            pointRadius = 0,
+            borderDash = new int[] {20, 20},
+        },
+        new
+        {
+            label = $"USL={Parameter.USL}",
+            data = timePeriod.Select(m => new
+            {
+                x = m.Date.ToString("yyyy-MM-dd"),
+                y = Parameter.USL,
+                order = ""
+            }).ToList(),
+            type = "line",
+            borderColor = "rgba(255, 0, 0, 1)",
+            backgroundcolor ="rgba(255, 0, 0, 1)",
+            pointStyle = "line",
+            pointBackgroundColor = "rgba(255, 0, 0, 0.4)",
+            pointBorderColor = "rgba(255, 0, 0, 1)",
+            borderWidth = 1,
+            pointRadius = 0,
+            borderDash = new int[] { 5, 5 },
+        },
+    }
+            };
+
+            var chartJs = @"var canvasId = '" + chartId + @"';
+                 var ctx = document.getElementById(canvasId).getContext('2d');
+                 var data = " + JsonSerializer.Serialize(data) + @";
+                 var config = {
+                                type: 'scatter',
+                                data: data,
+                                options: {
+                                    plugins: {
+                                        legend: {
+                                            position: 'top',
+                                            labels: {
+                                                usePointStyle: true,
+                                                //pointStyle: 'circle',
+                                                boxWidth: 10,
+                                                font: {
+                                                    weight: 'bold',
+                                                }
+                                            }
+                                        },
+                                        tooltip: {
+                                            callbacks: {
+                                                label: function(context) {
+                                                    var label = 'Date: ' + context.raw.x + ', Value: ' + context.raw.y + ', Order: ' + context.raw.order;
+                                                    return label;
+                                                }
+                                            }
+                                        },
+                                        zoom: {
+                                            zoom: {
+                                                wheel: {
+                                                    enabled: true,
+                                                },
+                                                drag: {
+                                                    enabled: true,
+                                                },
+                                                mode: 'xy'
+                                            }
+                                        }
+                                    },
+                                    animation: {
+                                        duration: 1000,
+                                    },
+                                    scales: {
+                                        x: {
+                                            type: 'time',
+                                            time: {
+                                                unit: 'day',
+                                                tooltipFormat: 'dd MMM yy',
+                                                displayFormats: {
+                                                    month: 'MMM yy ',
+                                                    day: 'dd MMM yy ',
+                                                  }
+                                                    },
+
+                                                    ticks: {
+                                                        font: {
+                                                            weight: 'bold',
+                                                        }
+                                                    },
+                                                    grid: {
+                                                        display: true,
+                                                        color: '#e0e0e0',
+                                                        lineWidth: 1,
+                                                        borderDash: [5, 5]
+                                                    }
+                                                },
+                                        y: {
+                                            beginAtZero: false,
+                                            min: " + yMin.ToString("F2", System.Globalization.CultureInfo.InvariantCulture) + @",
+                                            max: " + yMax.ToString("F2", System.Globalization.CultureInfo.InvariantCulture) + @",
+                                            title: {
+                                                display: true,
+                                                text: '" + Parameter.Name + @"',
+                                                font: {
+                                                    size: 16,
+                                                    weight: 'bold',
+                                                }
+                                            },
+                                            ticks: {
+                                                font: {
+                                                    weight: 'bold',
+                                                }
+                                            }
+                                        },
+                                    },
+                                },
+                            };
+
+                 var canvas = document.getElementById(canvasId);
+                 canvas.height = 70;
+                 canvas.style.backgroundColor = '#f3f6f4';
+                 new Chart(ctx, config);";
+
+            await JSRuntime.InvokeVoidAsync("eval", chartJs);
+            StateHasChanged();
+        }
+    }
+}
+
+

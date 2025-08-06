@@ -1,0 +1,21 @@
+
+.coating-table[b-ce0umpltln] {
+    min-width: 100%;
+    border-collapse: collapse;
+    border: 1px solid #d1d5db;
+}
+
+    .coating-table thead[b-ce0umpltln] {
+        background-color: #e5e7eb;
+        color: #1f2937;
+        font-weight: 600;
+        text-align: left;
+    }
+
+    .coating-table th[b-ce0umpltln],
+    .coating-table td[b-ce0umpltln] {
+        padding: 0.5rem 1rem;
+        border: 1px solid #d1d5db;
+    }
+
+

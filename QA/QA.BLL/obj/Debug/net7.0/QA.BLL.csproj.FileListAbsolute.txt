@@ -1,0 +1,42 @@
+C:\Users\ajozwiak\Desktop\QA — kopia\QA\QA.BLL\bin\Debug\net7.0\QA.BLL.deps.json
+C:\Users\ajozwiak\Desktop\QA — kopia\QA\QA.BLL\bin\Debug\net7.0\QA.BLL.dll
+C:\Users\ajozwiak\Desktop\QA — kopia\QA\QA.BLL\bin\Debug\net7.0\QA.BLL.pdb
+C:\Users\ajozwiak\Desktop\QA — kopia\QA\QA.BLL\obj\Debug\net7.0\QA.BLL.csproj.AssemblyReference.cache
+C:\Users\ajozwiak\Desktop\QA — kopia\QA\QA.BLL\obj\Debug\net7.0\QA.BLL.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\ajozwiak\Desktop\QA — kopia\QA\QA.BLL\obj\Debug\net7.0\QA.BLL.AssemblyInfoInputs.cache
+C:\Users\ajozwiak\Desktop\QA — kopia\QA\QA.BLL\obj\Debug\net7.0\QA.BLL.AssemblyInfo.cs
+C:\Users\ajozwiak\Desktop\QA — kopia\QA\QA.BLL\obj\Debug\net7.0\QA.BLL.csproj.CoreCompileInputs.cache
+C:\Users\ajozwiak\Desktop\QA — kopia\QA\QA.BLL\obj\Debug\net7.0\QA.BLL.dll
+C:\Users\ajozwiak\Desktop\QA — kopia\QA\QA.BLL\obj\Debug\net7.0\refint\QA.BLL.dll
+C:\Users\ajozwiak\Desktop\QA — kopia\QA\QA.BLL\obj\Debug\net7.0\QA.BLL.pdb
+C:\Users\ajozwiak\Desktop\QA — kopia\QA\QA.BLL\obj\Debug\net7.0\ref\QA.BLL.dll
+C:\Users\ajozwiak\Desktop\QA Deploy 09.07.24\QA\QA.BLL\bin\Debug\net7.0\QA.BLL.deps.json
+C:\Users\ajozwiak\Desktop\QA Deploy 09.07.24\QA\QA.BLL\bin\Debug\net7.0\QA.BLL.dll
+C:\Users\ajozwiak\Desktop\QA Deploy 09.07.24\QA\QA.BLL\bin\Debug\net7.0\QA.BLL.pdb
+C:\Users\ajozwiak\Desktop\QA Deploy 09.07.24\QA\QA.BLL\bin\Debug\net7.0\QA.Domain.dll
+C:\Users\ajozwiak\Desktop\QA Deploy 09.07.24\QA\QA.BLL\bin\Debug\net7.0\QA.Domain.pdb
+C:\Users\ajozwiak\Desktop\QA Deploy 09.07.24\QA\QA.BLL\obj\Debug\net7.0\QA.BLL.csproj.AssemblyReference.cache
+C:\Users\ajozwiak\Desktop\QA Deploy 09.07.24\QA\QA.BLL\obj\Debug\net7.0\QA.BLL.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\ajozwiak\Desktop\QA Deploy 09.07.24\QA\QA.BLL\obj\Debug\net7.0\QA.BLL.AssemblyInfoInputs.cache
+C:\Users\ajozwiak\Desktop\QA Deploy 09.07.24\QA\QA.BLL\obj\Debug\net7.0\QA.BLL.AssemblyInfo.cs
+C:\Users\ajozwiak\Desktop\QA Deploy 09.07.24\QA\QA.BLL\obj\Debug\net7.0\QA.BLL.csproj.CoreCompileInputs.cache
+C:\Users\ajozwiak\Desktop\QA Deploy 09.07.24\QA\QA.BLL\obj\Debug\net7.0\QA.BLL.csproj.Up2Date
+C:\Users\ajozwiak\Desktop\QA Deploy 09.07.24\QA\QA.BLL\obj\Debug\net7.0\QA.BLL.dll
+C:\Users\ajozwiak\Desktop\QA Deploy 09.07.24\QA\QA.BLL\obj\Debug\net7.0\refint\QA.BLL.dll
+C:\Users\ajozwiak\Desktop\QA Deploy 09.07.24\QA\QA.BLL\obj\Debug\net7.0\QA.BLL.pdb
+C:\Users\ajozwiak\Desktop\QA Deploy 09.07.24\QA\QA.BLL\obj\Debug\net7.0\ref\QA.BLL.dll
+C:\Users\ajozwiak\Desktop\QA\QA\QA.BLL\bin\Debug\net7.0\QA.BLL.deps.json
+C:\Users\ajozwiak\Desktop\QA\QA\QA.BLL\bin\Debug\net7.0\QA.BLL.dll
+C:\Users\ajozwiak\Desktop\QA\QA\QA.BLL\bin\Debug\net7.0\QA.BLL.pdb
+C:\Users\ajozwiak\Desktop\QA\QA\QA.BLL\bin\Debug\net7.0\QA.Domain.dll
+C:\Users\ajozwiak\Desktop\QA\QA\QA.BLL\bin\Debug\net7.0\QA.Domain.pdb
+C:\Users\ajozwiak\Desktop\QA\QA\QA.BLL\obj\Debug\net7.0\QA.BLL.csproj.AssemblyReference.cache
+C:\Users\ajozwiak\Desktop\QA\QA\QA.BLL\obj\Debug\net7.0\QA.BLL.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\ajozwiak\Desktop\QA\QA\QA.BLL\obj\Debug\net7.0\QA.BLL.AssemblyInfoInputs.cache
+C:\Users\ajozwiak\Desktop\QA\QA\QA.BLL\obj\Debug\net7.0\QA.BLL.AssemblyInfo.cs
+C:\Users\ajozwiak\Desktop\QA\QA\QA.BLL\obj\Debug\net7.0\QA.BLL.csproj.CoreCompileInputs.cache
+C:\Users\ajozwiak\Desktop\QA\QA\QA.BLL\obj\Debug\net7.0\QA.BLL.csproj.Up2Date
+C:\Users\ajozwiak\Desktop\QA\QA\QA.BLL\obj\Debug\net7.0\QA.BLL.dll
+C:\Users\ajozwiak\Desktop\QA\QA\QA.BLL\obj\Debug\net7.0\refint\QA.BLL.dll
+C:\Users\ajozwiak\Desktop\QA\QA\QA.BLL\obj\Debug\net7.0\QA.BLL.pdb
+C:\Users\ajozwiak\Desktop\QA\QA\QA.BLL\obj\Debug\net7.0\ref\QA.BLL.dll

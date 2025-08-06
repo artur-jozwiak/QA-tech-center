@@ -1,0 +1,46 @@
+
+.table-wrapper[b-1fgwtvdire] {
+    overflow-x: auto;
+    /*border-radius: 1rem;*/
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.coating-table[b-1fgwtvdire] {
+    min-width: 100%;
+    border-collapse: collapse;
+    border: 1px solid #d1d5db;
+}
+
+    .coating-table thead[b-1fgwtvdire] {
+        background-color: #e5e7eb;
+        color: #1f2937;
+        font-weight: 600;
+        text-align: left;
+    }
+
+    .coating-table th[b-1fgwtvdire],
+    .coating-table td[b-1fgwtvdire] {
+        padding: 0.5rem 1rem;
+        border: 1px solid #d1d5db;
+    }
+
+    .coating-table tr:hover[b-1fgwtvdire] {
+        background-color: #f9fafb;
+    }
+
+    .coating-table input[b-1fgwtvdire] {
+        width: 100%;
+        border: 0;
+        outline: none;
+    }
+
+
+.coating-process-info[b-1fgwtvdire] {
+    margin-bottom: 15px;
+    font-size: 1rem;
+    color: #444;
+}
+
+    .coating-process-info strong[b-1fgwtvdire] {
+        color: #000;
+    }

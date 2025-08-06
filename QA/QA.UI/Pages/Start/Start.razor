@@ -1,0 +1,59 @@
+﻿@using Microsoft.EntityFrameworkCore;
+@using QA.BLL.Interfaces
+@using QA.DataAccess.Repositories.Keyence;
+@using QA.Domain.Models.Erp;
+@using QA.DataAccess;
+@using QA.Domain.Models;
+@using QA.UI.Models;
+@using QA.UI.Pages.Common
+@page "/start"
+@inject ERPContext ErpContext
+@inject QAContext QAContext
+@inject NavigationManager NavigationManager
+@inject IErrorLogger ErrorLogger
+
+
+<div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); display: flex; flex-direction: column; align-items: center;">
+    <EditForm Model="@_hermesOrder" OnSubmit="@HandleSubmit">
+        <div style="display: flex; margin-bottom: 10px;">
+            <InputText id="OrderNo" @bind-Value="_hermesOrder.KluczSkrocony" class="form-control" placeholder="Zlecenie" style="font-size:12px"/>
+            <button type="submit" class="btn-primary oi oi-magnifying-glass" style="font-size:24px; margin-left: 10px;"></button>
+        </div>
+    </EditForm>
+</div>
+
+<LoadingSpiner IsLoading="@_isLoading" Message="Wczytywanie danych..."></LoadingSpiner>
+<SelectOrderModal @ref="_selectOrderModal" Orders="@_erpOrders" OrderNo="@_hermesOrder.KluczSkrocony"></SelectOrderModal>
+
+@code {
+    private ErpOrder _hermesOrder = new();
+    private List<ErpOrder> _erpOrders = new();
+    private SelectOrderModal _selectOrderModal = new();
+    private bool _isLoading = false;
+
+    private async Task HandleSubmit()
+    {
+        _isLoading = true;
+        await GetErpOrders();
+        _selectOrderModal.ShowSelectOrderModal();
+        _isLoading = false;
+    }
+
+    private async Task GetErpOrders()
+    {
+        try
+        {
+            _erpOrders = await ErpContext.ErpOrders.Where(o => o.KluczSkrocony == _hermesOrder.KluczSkrocony 
+                                                          && (o.KluczZp.StartsWith("ZPR/2I") 
+                                                          || o.KluczZp.StartsWith("ZPR/2T")
+                                                          || o.KluczZp.StartsWith("ZPR/2W")
+                                                          ))
+                                                   .ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            ErrorLogger.LogError(ex, nameof(Start));
+            throw;
+        }
+    }
+}

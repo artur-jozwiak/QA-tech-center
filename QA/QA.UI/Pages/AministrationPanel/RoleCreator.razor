@@ -1,0 +1,86 @@
+﻿@using Microsoft.AspNetCore.Identity;
+@using QA.UI.Models;
+@inject IServiceProvider ServiceProvider
+@inject RoleManager<IdentityRole> RoleManager
+@inject NavigationManager NavigationManager;
+@inject IJSRuntime JsRuntime
+@inject IErrorLogger ErrorLogger
+
+@if (_showRoleCreator)
+{
+    <input type="text" class=" col-md-2" placeholder="Nazwa uprawnienia" @oninput="UpdateNewRoleName">
+    <button class="btn btn-success" @onclick="CreateRole" disabled="@(string.IsNullOrEmpty(_newRoleName))">Zapisz</button>
+    <button class="btn btn-secondary" @onclick="HideRoleCreationForm">Anuluj</button>
+}
+
+@code {
+    private bool _showRoleCreator = false;
+    private string _newRoleName = String.Empty;
+
+    private void UpdateNewRoleName(ChangeEventArgs e)
+    {
+        if (!String.IsNullOrEmpty(e.Value!.ToString()))
+        {
+            _newRoleName = e.Value!.ToString()!;
+        }
+    }
+
+    private async Task CreateRole()
+    {
+        var messagePrompt = String.Empty;
+
+        if (!string.IsNullOrEmpty(_newRoleName))
+        {
+            string roleName = _newRoleName;
+            var roleManager = ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+            var roleExists = await roleManager.RoleExistsAsync(roleName);
+
+            if (!roleExists)
+            {
+                try
+                {
+                    var newRole = new IdentityRole(roleName);
+                    var result = await roleManager.CreateAsync(newRole);
+
+                    if (result.Succeeded)
+                    {
+                        _showRoleCreator = false;
+                        NavigationManager.NavigateTo("usersmanager", true);
+                    }
+                    else
+                    {
+                        messagePrompt = "Wystąpił bład podczas próby zapisu uprawnienia";
+                    }
+                }
+                catch (Exception ex)
+                {
+                    await ErrorLogger.LogError(ex, nameof(RoleCreator));
+                }
+            }
+            else
+            {
+                messagePrompt = $"Uprawnienie o nazwie: {roleName} już istnieje";
+            }
+        }
+        else
+        {
+            messagePrompt = "Nazwa uprawnienia nie może być pusta";
+        }
+
+        if (messagePrompt.Length != 0)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", messagePrompt);
+        }
+    }
+
+    internal void ShowRoleCreationForm()
+    {
+        _showRoleCreator = true;
+        StateHasChanged();
+    }
+
+    private void HideRoleCreationForm()
+    {
+        _showRoleCreator = false;
+    }
+}

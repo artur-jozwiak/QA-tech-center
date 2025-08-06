@@ -1,0 +1,219 @@
+﻿@using System.Text.Json;
+@using QA.Domain.Models;
+@using QA.Domain.Models.CoatingModels
+
+@inject IJSRuntime JSRuntime;
+@inject NavigationManager NavigationManager;
+
+@if (Measurements != null)
+{
+    <canvas id="@ChartId" style="margin: 5px"></canvas>
+}
+
+@code {
+    [Parameter]
+    public string ChartId { get; set; }
+    [Parameter]
+    public List<CoatingMeasurementSeries> Measurements { get; set; }
+
+    [Parameter]
+    public decimal USL { get; set; }
+    [Parameter]
+    public decimal LSL { get; set; }
+
+    private decimal _percentageChartExpansionY = 0.1m;
+    private int _daysChartExpansionX = 10;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await UpdateChart(ChartId);
+        }
+    }
+
+    public async Task UpdateChart(string chartId)
+    {
+        var chartExists = await JSRuntime.InvokeAsync<bool>("eval", $"document.getElementById('{chartId}') !== null");
+
+        if (chartExists)
+        {
+            await JSRuntime.InvokeVoidAsync("destroyChartById", chartId);
+
+            decimal yMin = 0;
+            decimal yMax = 0;
+
+            yMin = Measurements.Where(m => m.Thickness1 != null).Select(m => (decimal)m.Thickness1).Min() - 1;
+            yMax = Measurements.Where(m => m.Thickness1 != null).Select(m => (decimal)m.Thickness1).Max() + 1;
+
+            DateTime dateMin = DateTime.Now;
+            DateTime dateMax = DateTime.Now;
+
+            if (Measurements.Any())
+            {
+                dateMin = Measurements.Min(m => m.Date).AddDays(-_daysChartExpansionX);
+                dateMax = Measurements.Max(m => m.Date).AddDays(_daysChartExpansionX);
+            }
+
+            List<DateTime> timePeriod = new List<DateTime> { dateMin, dateMax };
+
+            var data = new
+            {
+                datasets = new[]
+      {
+         new
+         {
+            label = $"LSL={LSL}",
+            data = timePeriod.Select(m => new
+            {
+                x = m.Date.ToString("yyyy-MM-dd"),
+                y = (decimal?)LSL,
+            }).ToList(),
+            type = "line",
+            borderColor = "rgba(255, 0, 0, 1)",
+            backgroundcolor = "rgba(255, 0, 0, 1)",
+            pointStyle = "line",
+            pointBackgroundColor = "rgba(255, 0, 0, 0.2)",
+            pointBorderColor = "rgba(255, 0, 0, 1)",
+            borderWidth = 1,
+            pointRadius = 0,
+            borderDash = new int[] { 5, 5 }
+        },
+        new
+        {
+            label = $"Thickness",
+            data = Measurements.OrderBy(m => m.Date).Select(m => new
+            {
+                x = m.Date.ToString("yyyy-MM-dd"),
+                y = m.Thickness1,
+            }).ToList(),
+            type = "line",
+            borderColor = "rgba(75, 192, 192, 1)",
+            backgroundcolor = "rgba(75, 192, 192, 1)",
+            pointStyle = "circle",
+            pointBackgroundColor = "rgba(75, 192, 192, 0.4)",
+            pointBorderColor = "rgba(75, 192, 192, 1",
+            borderWidth = 1,
+            pointRadius = 3,
+            borderDash = new int[] { 0, 0 }
+        },
+
+        new
+        {
+            label = $"USL={USL}",
+            data = timePeriod.Select(m => new
+            {
+                x = m.Date.ToString("yyyy-MM-dd"),
+                y =(decimal?)USL,
+            }).ToList(),
+            type = "line",
+            borderColor = "rgba(255, 0, 0, 1)",
+            backgroundcolor ="rgba(255, 0, 0, 1)",
+            pointStyle = "line",
+            pointBackgroundColor = "rgba(255, 0, 0, 0.4)",
+            pointBorderColor = "rgba(255, 0, 0, 1)",
+            borderWidth = 1,
+            pointRadius = 0,
+            borderDash = new int[] { 5, 5 },
+        },
+    }
+            };
+
+            var chartJs = @"var canvasId = '" + chartId + @"';
+                 var ctx = document.getElementById(canvasId).getContext('2d');
+                 var data = " + JsonSerializer.Serialize(data) + @";
+                 var config = {
+                                type: 'scatter',
+                                data: data,
+                                options: {
+                                    plugins: {
+                                        legend: {
+                                            position: 'top',
+                                            labels: {
+                                                usePointStyle: true,
+                                                boxWidth: 10,
+                                                font: {
+                                                    weight: 'bold',
+                                                }
+                                            }
+                                        },
+                                        tooltip: {
+                                            callbacks: {
+                                                label: function(context) {
+                                                    var label = 'Date: ' + context.raw.x + ', Value: ' + context.raw.y;
+                                                    // var label = 'Date: ' + context.raw.x + ', Value: ' + context.raw.y + ', Order: ' + context.raw.order;
+                                                    return label;
+                                                }
+                                            }
+                                        },
+                                        zoom: {
+                                            zoom: {
+                                                wheel: {
+                                                    enabled: true,
+                                                },
+                                                drag: {
+                                                    enabled: true,
+                                                },
+                                                mode: 'xy'
+                                            }
+                                        }
+                                    },
+                                    animation: {
+                                        duration: 1000,
+                                    },
+                                    scales: {
+                                        x: {
+                                            type: 'time',
+                                            time: {
+                                                unit: 'day',
+                                                tooltipFormat: 'dd MMM yy',
+                                                displayFormats: {
+                                                    month: 'MMM yy ',
+                                                    day: 'dd MMM yy ',
+                                                  }
+                                                    },
+
+                                                    ticks: {
+                                                        font: {
+                                                            weight: 'bold',
+                                                        }
+                                                    },
+                                                    grid: {
+                                                        display: true,
+                                                        color: '#e0e0e0',
+                                                        lineWidth: 1,
+                                                        borderDash: [5, 5]
+                                                    }
+                                                },
+                                        y: {
+                                            beginAtZero: false,
+                                            min: " + yMin.ToString("F2", System.Globalization.CultureInfo.InvariantCulture) + @",
+                                            max: " + yMax.ToString("F2", System.Globalization.CultureInfo.InvariantCulture) + @",
+                                            title: {
+                                                display: true,
+                                                text: '" + "Thickness[μm]" + @"',
+                                                font: {
+                                                    size: 16,
+                                                    weight: 'bold',
+                                                }
+                                            },
+                                            ticks: {
+                                                font: {
+                                                    weight: 'bold',
+                                                }
+                                            }
+                                        },
+                                     },
+                                 },
+                             };
+
+                  var canvas = document.getElementById(canvasId);
+                  canvas.height = 70;
+                  canvas.style.backgroundColor = '#f3f6f4';
+                  new Chart(ctx, config);";
+
+            await JSRuntime.InvokeVoidAsync("eval", chartJs);
+            StateHasChanged();
+        }
+    }
+}

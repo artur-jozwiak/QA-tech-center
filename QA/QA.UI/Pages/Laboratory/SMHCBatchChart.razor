@@ -1,0 +1,320 @@
+﻿@using System.Text.Json;
+@using QA.DataAccess
+@using QA.Domain.Models;
+@using QA.UI.Models
+@using QA.UI.Pages.Common
+@inject IJSRuntime JSRuntime
+@inject ERPContext ERPContext
+
+<canvas id="@Parameter.Name" style="margin: 5px"></canvas>
+
+@code {
+    [Parameter]
+    public Parameter Parameter { get; set; }
+    [Parameter]
+    public List<Measurement> Measurements { get; set; }
+
+    private decimal _percentageChartExpansionY = 0.1m;
+    private int _daysChartExpansionX = 5;
+
+    List<IGrouping<string, MeasurementsGroup>> _batchMeasurementsGroups = new();
+    private List<dynamic> _datasets = new List<dynamic>();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await UpdateChart(Parameter.Name, Measurements, Parameter);
+        }
+    }
+
+    private void InitializeDatasets()
+    {
+        _datasets = new();
+        int colorIndex = 0;
+        List<MeasurementsGroup> batchMeasurementsGroups = new();
+
+        var dateMin = Measurements.Min(m => m.Date).AddDays(-_daysChartExpansionX);
+        var dateMax = Measurements.Max(m => m.Date).AddDays(_daysChartExpansionX);
+        List<DateTime> timePeriod = new List<DateTime> { dateMin, dateMax };
+
+        _datasets.Add(new
+        {
+            label = $"LSL[{Parameter.LSL}]",
+            data = timePeriod.Select(m => new
+            {
+                x = m.ToString("yyyy-MM-dd"),
+                y = Parameter.LSL,
+                order = ""
+            }).ToList(),
+            type = "line",
+            borderColor = "red",
+            backgroundcolor = "red",
+            pointStyle = "line",
+            pointBackgroundColor = "red",
+            pointBorderColor = "red",
+            borderWidth = 1,
+            pointRadius = 0,
+            borderDash = new int[] { 10, 10 }
+        });
+
+        _datasets.Add(new
+        {
+            label = $"Nominal[{Parameter.NominalValue}]",
+            data = timePeriod.Select(m => new
+            {
+                x = m.ToString("yyyy-MM-dd"),
+                y = Parameter.NominalValue,
+                order = ""
+            }).ToList(),
+            type = "line",
+            // borderColor = "#00FF00",
+            borderColor = "rgb(0, 153, 0)",
+            backgroundcolor = "rgb(0, 153, 0)",
+            pointStyle = "line",
+            pointBackgroundColor = "rgb(0, 153, 0)",
+            pointBorderColor = "rgb(0, 153, 0)",
+            borderWidth = 1,
+            pointRadius = 0,
+            borderDash = new int[] { 20, 20 }
+        });
+
+        _datasets.Add(new
+        {
+            label = $"USL[{Parameter.USL}]",
+            data = timePeriod.Select(m => new
+            {
+                x = m.ToString("yyyy-MM-dd"),
+                y = Parameter.USL,
+                order = ""
+            }).ToList(),
+            type = "line",
+            borderColor = "red",
+            backgroundcolor = "red",
+            pointStyle = "line",
+            pointBackgroundColor = "red",
+            pointBorderColor = "red",
+            borderWidth = 1,
+            pointRadius = 0,
+            borderDash = new int[] { 10, 10 }
+        });
+
+        var groupedMeasurements = Measurements.GroupBy(m => m.OrderKey);
+
+        foreach (var group in groupedMeasurements)
+        {
+            string? powderBatch = ERPContext.ErpOrders.FirstOrDefault(o => o.KluczSkrocony == group.Key && o.SymbolWyr.StartsWith("W-B"))?.NrPartiiProszku?.Trim();//sprawdzić czy zapytanie nie zwróci więcej wyników
+            MeasurementsGroup batchMeasurements = new();
+            batchMeasurements.GrouppingKey = powderBatch;
+            batchMeasurements.Measurements = group.Select(m => m).ToList();
+            batchMeasurementsGroups.Add(batchMeasurements);
+            _batchMeasurementsGroups = batchMeasurementsGroups.GroupBy(e => e.GrouppingKey).ToList();
+        }
+
+        foreach (var b in _batchMeasurementsGroups)
+        {
+            var color = colors[colorIndex % colors.Count];
+            colorIndex++;
+
+            _datasets.Add(new
+            {
+                label = b.Key,
+                data = b.SelectMany(m => m.Measurements.OrderBy(m => m.Date)).Select(m => new
+                {
+                    x = m.Date.ToString("yyyy-MM-dd"),
+                    y = m.Value,
+                    order = m.OrderKey
+                }).ToList(),
+                // type = "scatter",
+                type = "line",
+                borderColor = color,
+                backgroundcolor = color,
+                pointStyle = "circle",
+                pointBackgroundColor = color,
+                pointBorderColor = color,
+                borderWidth = 1,
+                pointRadius = 3,
+                borderDash = new int[] { 0, 0 }
+            });
+        }
+    }
+
+    public async Task UpdateChart(string chartId, List<Measurement> measurements, Parameter parameter)
+    {
+        var chartExists = await JSRuntime.InvokeAsync<bool>("eval", $"document.getElementById('{chartId}') !== null");
+
+        Measurements = measurements;
+        Parameter = parameter;
+
+        if (chartExists)
+        {
+            await JSRuntime.InvokeVoidAsync("destroyChart", chartId);
+
+            var yMin = Parameter.LSL - (Parameter.LSL * _percentageChartExpansionY);
+            var yMax = Parameter.USL + (Parameter.USL * _percentageChartExpansionY);
+
+            InitializeDatasets();
+            var data = new
+            {
+                datasets = _datasets
+            };
+
+
+            var chartJs = @"var canvasId = '" + chartId + @"';
+                    console.log('" + chartId + @"')
+                 var ctx = document.getElementById(canvasId).getContext('2d');
+                 var data = " + JsonSerializer.Serialize(data) + @";
+                 var config = {
+    type: 'scatter',
+    data: data,
+    options: {
+        plugins: {
+            legend: {
+                position: 'top',
+                labels: {
+                    usePointStyle: true,
+                    boxWidth: 10,
+                    //color: '#afa821cc',
+                    font: {
+                        weight: 'bold',
+                    }
+                }
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        var label = context.dataset.label || '';
+                        if (label) {
+                            label += ': ';
+                        }
+                        label += 'Date: ' + context.raw.x + ', Value: ' + context.raw.y + ' ,';
+                        label +=  context.raw.order;
+                        return label;
+                    }
+                }
+            },
+            zoom: {
+                zoom: {
+                    wheel: {
+                        enabled: true,
+                    },
+                    // drag: { // powoduje przyblizanie podczas wyklucznia danych
+                    //     enabled: true,
+                    // },
+                    mode: 'xy'
+                }
+            }
+        },
+        animation: {
+            duration: 0,
+        },
+        scales: {
+            x: {
+
+                type: 'time',
+                time: {
+                    unit: 'day',
+                    tooltipFormat: 'dd MMM yy',
+                    displayFormats: {
+                        month: 'MMM yy ',
+                        day: 'dd MMM yy ',
+                        week: 'dd MMM yy ',
+
+                    }
+                },
+
+                ticks: {
+                    // color: '#afa821cc',
+                    font: {
+                         weight: 'bold',
+                    }
+                },
+                grid: {
+                    display: true,
+                    // color: 'yellow',
+                    //lineWidth: 0.1,
+
+                    color: '#e0e0e0',
+                    lineWidth: 1,
+
+                    borderDash: [5, 5]
+                }
+            },
+            y: {
+
+                beginAtZero: false,
+                min: " + yMin.ToString("F2", System.Globalization.CultureInfo.InvariantCulture) + @",
+                max: " + yMax.ToString("F2", System.Globalization.CultureInfo.InvariantCulture) + @",
+                title: {
+
+                    display: true,
+                    text: '" + Parameter.Name + @"',
+                    // color: '#afa821cc',
+                    font: {
+                        size: 16,
+                         weight: 'bold',
+                    }
+                },
+                ticks: {
+                    // color: '#afa821cc',
+
+                    font: {
+                        weight: 'bold',
+                    }
+                },
+                    grid: {
+                    display: true,
+
+                    // color: 'yellow',
+                    //lineWidth: 0.1,
+
+                    color: '#e0e0e0',
+                    lineWidth: 1,
+
+                    borderDash: [0, 0]
+                }
+            },
+        },
+    },
+};
+
+                 var canvas = document.getElementById(canvasId);
+                 canvas.height = 70;
+                  canvas.style.backgroundColor = '#f3f6f4';
+                 //canvas.style.backgroundColor = '#1e1e1e';
+                 new Chart(ctx, config);";
+
+            await JSRuntime.InvokeVoidAsync("eval", chartJs);
+            StateHasChanged();
+        }
+    }
+
+    List<string> colors = new List<string>
+{
+    "rgb(0, 0, 153)",      
+    "rgb(0, 153, 0)",       
+    "rgb(204, 132, 0)",    
+    "rgb(102, 0, 102)",    
+    "rgb(204, 204, 0)", 
+    "rgb(0, 204, 204)",  
+    "rgb(204, 0, 204)",  
+    "rgb(0, 153, 0)",   
+    "rgb(204, 92, 143)",  
+    "rgb(0, 102, 102)",  
+    "rgb(58, 0, 102)", 
+    "rgb(187, 102, 187)",
+    "rgb(128, 29, 29)",  
+    "rgb(102, 102, 102)", 
+    "rgb(0, 0, 0)",
+    "rgb(204, 172, 0)", 
+    "rgb(153, 153, 153)", 
+    "rgb(204, 102, 64)", 
+    "rgb(192, 179, 120)", 
+    "rgb(179, 16, 48)",
+    "rgb(0, 0, 102)",  
+    "rgb(102, 102, 0)" 
+};
+
+}
+
+

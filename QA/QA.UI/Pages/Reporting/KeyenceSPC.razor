@@ -1,0 +1,43 @@
+﻿@using Microsoft.EntityFrameworkCore
+@using QA.DataAccess
+@using QA.Domain.Models
+@using QA.Domain.Models.Keyence
+@using QA.UI.Pages.Common
+@using QA.UI.Pages.Reporting
+
+@if (Parameter != null)
+{
+    if (Parameter.Measurements.Where(m => m.OrderNo.ToUpper() == OrderNo.ToUpper()).Count() == 0)
+    {
+        <h3>@Parameter.Name</h3>
+        <h3>BRAK DANYCH</h3>
+    }
+    else
+    {
+        <div>
+            <KeyenceSPCHistogram Parameter="@Parameter" Measurements="Parameter.Measurements.Where(m => m.OrderNo.ToUpper() == OrderNo).Select(m => m.Value).ToList()" @ref="_histogram" Trial="@OrderNo"></KeyenceSPCHistogram>
+            <KeyenceSPCTable Parameter="@Parameter" Measurements="Parameter.Measurements.Where(m => m.OrderNo.ToUpper() == OrderNo).Select(m => m.Value).ToList()" @ref="_spcTable"></KeyenceSPCTable>
+        </div>
+    }
+}
+else
+{
+    <LoadingSpiner Message="Trwa oblicznie..."></LoadingSpiner>
+    <p>Loading...</p>
+}
+
+@code {
+    [Parameter]
+    public KeyenceParameter Parameter { get; set; }
+    [Parameter]
+    public string OrderNo { get; set; }
+
+    private KeyenceSPCHistogram _histogram = new();
+    private KeyenceSPCTable _spcTable = new();
+
+    public async Task UpdateChildComponents(int parameterId)
+    {
+        await _histogram.UpdateHistogram(parameterId);
+        await _spcTable.UpdateTable();
+    }
+}

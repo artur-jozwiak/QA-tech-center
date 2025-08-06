@@ -1,0 +1,609 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using QA.BLL.Interfaces
+@using QA.Domain.Models
+@using QA.Domain.Models.Enums
+@using QA.UI.Models
+@using QA.UI.Pages.Images
+@using System.Security.Claims
+@using System.Collections.ObjectModel
+
+@inject IUnitOfWork UnitOfWork
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+@inject IEmailService EmailService
+@inject IImgService ImgService
+@inject IJSRuntime JSRuntime;
+
+@if (_mrb != null)
+{
+    <div class="mrb-section" disabled="@true">
+        <strong class="fw-bold" style="font-size:16px">
+            Material Review Board
+            <span class="text-primary">@_mrb.Symbol - @_mrb.Status</span>
+        </strong>
+
+        <div class=" d-flex justify-content-center">
+            <div class="form-container col-md-9">
+                <EditForm Model="@_mrb">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+                    <div class="form-group text-left">
+                        <p class="mrb-header">Description of Non-Conformance</p>
+                        <InputTextArea class="form-control" style="height:100px; margin-top:0;"
+                                       Value="@_mrb.NonConformanceDescription"
+                                       ValueChanged="@(async e => { _mrb.NonConformanceDescription = e;await SaveMrb(); })"
+                                       ValueExpression="() => _mrb.NonConformanceDescription" disabled="@_isController" />
+                    </div>
+
+                    <br />
+
+                    <div class="form-group text-left">
+                        <p class="mrb-header">Root Cause</p>
+                        <InputTextArea class="form-control" style="height:100px"
+                                       Value="@_mrb.RootCause"
+                                       ValueChanged="@(async e => { _mrb.RootCause = e;await SaveMrb(); })"
+                                       ValueExpression="() => _mrb.RootCause" disabled="@_isController" />
+                    </div>
+
+                    <br />
+
+                    <table class="mrb-table">
+                        <thead>
+                            <tr>
+                                <th>Instruction</th>
+                                <th>Staff Responsible</th>
+                                <th>Due Date</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            <tr>
+                                <td class="text-area-column">
+                                    <InputTextArea class="form-control border-0" style="height:100px"
+                                                   Value="@_mrb.Instruction.Instruction"
+                                                   ValueChanged="@(async e => { _mrb.Instruction.Instruction = e;await SaveMrbInstruction(_mrb.Instruction); })"
+                                                   ValueExpression="() => _mrb.Instruction.Instruction" disabled="@_isController" />
+                                </td>
+
+                                <td>
+                                    <InputText class="form-control border-0"
+                                               Value="@_mrb.Instruction.StaffResponsible"
+                                               ValueChanged="@(async e => {_mrb.Instruction.StaffResponsible = e;await SaveMrb(); })"
+                                               ValueExpression="() => _mrb.Instruction.StaffResponsible" disabled="@_isController" />
+                                </td>
+
+                                <td>
+                                    <InputDate class="form-control"
+                                               Value="@_mrb.Instruction.DueDate"
+                                               ValueChanged="@(async  (DateTime? e)  => {_mrb.Instruction.DueDate = e;await SaveMrb(); })"
+                                               ValueExpression="() => _mrb.Instruction.DueDate" disabled="@_isController" />
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <br />
+
+                    <h5 class="bold text-left">Corrective Actions</h5>
+                    <table class="mrb-table">
+
+                        <thead>
+                            <tr>
+                                <th class="text-area-column">Action</th>
+                                <th>Staff Responsible</th>
+                                <th>Due Date</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @foreach (var correctiveAction in _mrb.CorrectiveActions)
+                            {
+                                <tr class="action-item">
+                                    <td>
+                                        <InputTextArea class="form-control border-0" style="height:75px"
+                                                       Value="@correctiveAction.Action"
+                                                       ValueChanged="@(async e => { correctiveAction.Action = e; await SaveMrbCorrectiveAction(correctiveAction); })"
+                                                       ValueExpression="() => correctiveAction.Action" disabled="@_isController" />
+                                    </td>
+
+                                    <td>
+                                        <InputText class="form-control border-0"
+                                                   Value="@correctiveAction.StaffResponsible"
+                                                   ValueChanged="@(async e => {correctiveAction.StaffResponsible = e;await SaveMrb(); })"
+                                                   ValueExpression="() => correctiveAction.StaffResponsible" disabled="@_isController" />
+                                    </td>
+
+                                    <td>
+                                        <InputDate class="form-control"
+                                                   Value="@correctiveAction.DueDate"
+                                                   ValueChanged="@(async  (DateTime? e)  => {correctiveAction.DueDate = e;await SaveMrb(); })"
+                                                   ValueExpression="() => correctiveAction.DueDate"
+                                                   disabled="@_isController" />
+
+                                        <AuthorizeView Roles="Admin, Manager">
+                                            <ChildContent Context="authContext">
+                                                <span class="oi oi-trash action-icon m-1" @onclick="() => RemoveAction(correctiveAction)"></span>
+                                            </ChildContent>
+                                        </AuthorizeView>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+
+                    <button type="button" class="btn btn-primary  no-print" @onclick="AddCorrectiveAction" disabled="@_isController">Add corrective action</button>
+
+                    <br />
+
+                    <h5 class="bold text-left mr-3">MRB Members</h5>
+                    <table class="mrb-table table-bordered">
+                        <thead>
+                            <tr>
+                                <th style="text-align:center">Member</th>
+                                <th class="text-area-column" style="text-align:center">Opinion and recommendations</th>
+                                <th class="rotate">Use as it is</th>
+                                <th class="rotate">Scrap All</th>
+                                <th class="rotate">Complaint To Supplier</th>
+                                <th class="rotate">Notify Customer</th>
+                                <th class="rotate">Rework</th>
+                                <th class="rotate">Selection</th>
+                                <th class="rotate">Other</th>
+                                <th>Modification date</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @foreach (var memberSummary in _mrb.MemberSummary.OrderByDescending(ms => ms.PositionInQueue))
+                            {
+                                bool lockRow = memberSummary.Member != null && _user.Identity.Name != memberSummary.Member;
+                                string color;
+
+                                @if (memberSummary.Completed)
+                                {
+                                    color = "green";
+                                }
+                                else
+                                {
+                                    color = "black";
+                                }
+
+                                if (memberSummary.PositionInQueue == 1)
+                                {
+                                    <tr style="text-align: center;">
+                                        <td colspan="11" style="text-align: center;">Final disposition</td>
+                                    </tr>
+                                }
+
+                                <tr class="action-item" title="Select your disposition, then send the notification to next member.">
+                                    <td>
+                                        <InputSelect class="form-control"
+                                                     Value="@memberSummary.Member"
+                                                     ValueChanged="@(async (string e) => { memberSummary.Member = e; await SaveMrb(); })"
+                                                     ValueExpression="() => memberSummary.Member"
+                                                     disabled="@lockRow" style="width:230px">
+                                            <option value=""></option>
+
+                                            @foreach (var user in _users)
+                                            {
+                                                <option value="@user.Email">@user.NormalizedUserName</option>
+                                            }
+                                        </InputSelect>
+                                    </td>
+
+                                    <td>
+                                        <InputTextArea class="form-control border-0" style="height:75px"
+                                                       Value="@memberSummary.Summary"
+                                                       ValueChanged="@(async e => { memberSummary.Summary = e; await SaveMrb(); })"
+                                                       ValueExpression="() => memberSummary.Summary"
+                                                       disabled="@lockRow" />
+                                    </td>
+
+                                    @foreach (var disposition in _mrbDispositions.Where(md => md.MemberSummaryId == memberSummary.Id))
+                                    {
+                                        <td style="text-align:center">
+
+                                            <InputCheckbox class="form-check-input"
+                                                           Value="disposition.IsSelected"
+                                                           ValueChanged="@(async  e => { disposition.IsSelected = e;await HandleDisposition(memberSummary.Id,disposition);})"
+                                                           ValueExpression="() => disposition.IsSelected"
+                                                           disabled="@lockRow" />
+                                        </td>
+                                    }
+                                    <td style="position: relative; display: flex; flex-direction: column; align-items: flex-start; border:none">
+                                        <span>@memberSummary.ModificationDate</span>
+
+                                        @if (!lockRow)
+                                        {
+
+                                            @* nowe 23.05.25*@
+                                            if (memberSummary.PositionInQueue == 1 && _mrb.Status == MRBStatus.Completed)
+                                            {
+                                                <button type="submit" class="btn btn-primary m-2 no-print" style="background-color: green"
+                                                        title="Pressing the button will send notification to the next member."
+                                                        @onclick="@(async () => await NotivyAllMembers())">
+                                                    Notify all members
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <button type="submit" class="btn btn-primary m-2 no-print"
+                                                        title="Pressing the button will send notification to the next member."
+                                                        @onclick="@(async () => await SendNotification(memberSummary.PositionInQueue))">
+                                                    Send notification
+                                                </button>
+                                            }
+@* 
+                                            <button type="submit" class="btn btn-primary m-2 no-print"
+                                                    title="Pressing the button will send notification to the next member."
+                                                    @onclick="@(async () => await SendNotification(memberSummary.PositionInQueue))">
+                                                Send notification
+                                            </button> *@
+                                        }
+
+                                        @if (memberSummary.PositionInQueue != 1)
+                                        {
+                                            <AuthorizeView Roles="Admin, Manager">
+                                                <ChildContent Context="authContext">
+                                                    <span class="oi oi-trash action-icon" @onclick="() => RemoveMemberSummary(memberSummary)"></span>
+                                                </ChildContent>
+                                            </AuthorizeView>
+                                        }
+                                        <span style="position: absolute; top: 5px; right: 5px; width: 15px; height: 15px; background-color: @color; border-radius: 50%;"></span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+
+                    <AuthorizeView Roles="Admin, Manager">
+                        <ChildContent Context="authContext">
+                            <button class="btn btn-primary m-1 no-print" @onmousedown="@(async () => await AddMemberSummary(null))">Add Member</button>
+                            <button type="button" class="btn btn-primary m-1 no-print" @onclick="LoadDeafaultMemberList">Load default members</button>
+                        </ChildContent>
+                    </AuthorizeView>
+
+                    <br />
+
+                    <div class="form-group text-left">
+                        <p class="mrb-header">Additional Comments</p>
+
+                        <InputTextArea class="form-control" style="height:75px"
+                                       Value="@_mrb.Comment"
+                                       ValueChanged="@(async e => {_mrb.Comment = e; await SaveMrb(); })"
+                                       ValueExpression="() => _mrb.Comment" disabled="@_isController" />
+                    </div>
+
+                </EditForm>
+
+                <div class="image-grid">
+                    @foreach (var image in _mrb.Images)
+                    {
+                        <div class="image-container" @key="image">
+                            <ImageUploader MRB="_mrb" Image="@image" ShowFileInput="false" Width="500px" Height="500px"></ImageUploader>
+                            <button type="button" class="btn btn-danger  no-print" @onclick="@(async () => await DeleteImage(image))">Remove</button>
+                        </div>
+                    }
+                </div>
+
+                @if (_showImageUploader)
+                {
+                    <ImageUploader MRB="_mrb" Width="500px" Height="500px" @ref="@_imageUploader"></ImageUploader>
+
+                    <button type="button" class="btn btn-primary m-1 no-print" @onclick="@(() => SaveImage())">Save</button>
+                }
+
+                <AuthorizeView Roles="Admin, Manager">
+                    <ChildContent Context="authContext">
+                        @if (_mrb.Id != 0)
+                        {
+                            <button type="button" class="btn btn-primary m-1  no-print" @onclick="ShowImageUploader">Add image</button>
+                        }
+                    </ChildContent>
+                </AuthorizeView>
+
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public Order Order { get; set; }
+    private List<IdentityUser> _users;
+    private ClaimsPrincipal _user;
+    public bool _isEditMode = false;
+    private List<MRBDispositionViewModel> _mrbDispositions = new();
+    private MRB _mrb;
+    private bool _showImageUploader = false;
+    private ImageUploader _imageUploader = new();
+    private bool _isController;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        _user = authState.User;
+        _users = await UnitOfWork.User.GetAllAsync();
+        await GetMRB();
+        MapDispositionsToViewModel();
+        _isController = _user.IsInRole("Kontroler");
+    }
+
+    private void ReorganizeQueue()
+    {
+        int position = 1;
+        foreach (var memberSummary in _mrb.MemberSummary.OrderBy(ms => ms.PositionInQueue))
+        {
+            memberSummary.PositionInQueue = position;
+            position++;
+            UnitOfWork.MRB.UpdateMemberSummary(memberSummary);
+        }
+    }
+
+    private async Task LoadDeafaultMemberList()
+    {
+        var defaultMembers = EmailService.GetDefaultMrbMembers();
+
+        var membersToAdd = defaultMembers.Intersect(_mrb.MemberSummary.Select(ms => ms.Member));
+
+        foreach (var member in defaultMembers)
+        {
+            if (_mrb.MemberSummary.All(ms => ms.Member != member))
+            {
+                await AddMemberSummary(member);
+            }
+        }
+    }
+
+    private async Task SaveImage()
+    {
+        await _imageUploader.SaveImage();
+        _showImageUploader = false;
+    }
+
+    private async Task GetMRB()
+    {
+        if (Order.MRBId == null)
+        {
+            _mrb = new MRB
+                {
+                    Order = Order,
+                    OrderId = Order.Id,
+                    Creator = _user.Identity.Name,
+                    CreationDate = DateTime.Now,
+                    ModificationDate = DateTime.Now,
+                    Instruction = new(),
+                    Status = MRBStatus.InProgress,
+                    CorrectiveActions = new List<MRBCorrectiveAction>(),
+                    MemberSummary = new List<MRBMemberSummary>(),
+                    Images = new List<Image>()
+                };
+
+            _mrb.CorrectiveActions.Add(new MRBCorrectiveAction());
+            _mrb.MemberSummary.Add(new MRBMemberSummary() { Member = _user.Identity.Name, PositionInQueue = 1 });
+
+        }
+        else
+        {
+            _isEditMode = true;
+            _mrb = await UnitOfWork.MRB.GetBy(Order.MRBId);
+        }
+    }
+
+    private void MapDispositionsToViewModel()
+    {
+        _mrbDispositions = new();
+        foreach (var memberSummary in _mrb.MemberSummary)
+        {
+            foreach (MRBDiposition dispositionEnum in Enum.GetValues(typeof(MRBDiposition)))
+            {
+                MRBDispositionViewModel mrbDisposition = new();
+                mrbDisposition.Disposition = dispositionEnum;
+                mrbDisposition.MemberSummaryId = memberSummary.Id;
+
+                if (memberSummary.MRBDipositions.Contains((int)dispositionEnum))
+                {
+                    mrbDisposition.IsSelected = true;
+                }
+                _mrbDispositions.Add(mrbDisposition);
+            }
+        }
+    }
+
+    private async Task HandleDisposition(int memberSummaryId, MRBDispositionViewModel disposition)
+    {
+        MRBMemberSummary memberSummary = _mrb.MemberSummary.First(ms => ms.Id == memberSummaryId);
+
+        if (disposition.IsSelected)
+        {
+            memberSummary.MRBDipositions.Add((int)disposition.Disposition);
+        }
+        else
+        {
+            memberSummary.MRBDipositions.Remove((int)disposition.Disposition);
+        }
+
+        if (memberSummary.PositionInQueue == 1)
+        {
+            if (_mrb.MemberSummary.Where(ms => ms.PositionInQueue != 1).All(ms => ms.Completed))
+            {
+                memberSummary.Completed = true;
+                _mrb.Status = MRBStatus.Completed;
+            }
+        }
+
+        memberSummary.ModificationDate = DateTime.Now;
+        UnitOfWork.MRB.UpdateMemberSummary(memberSummary);
+        await UnitOfWork.CompleteAsync();
+    }
+
+    private async Task SaveMrb()
+    {
+        try
+        {
+            if (!_isEditMode)
+            {
+                int annualMrbCount = await UnitOfWork.MRB.CountAnnualMRB() + 1;
+                _mrb.Symbol = DateTime.Now.Year % 100 + "/" + annualMrbCount.ToString("D3");
+                await UnitOfWork.MRB.Add(_mrb);
+                _isEditMode = true;
+            }
+            else
+            {
+                _mrb.ModificationDate = DateTime.UtcNow;
+                UnitOfWork.MRB.Update(_mrb);
+            }
+            await UnitOfWork.CompleteAsync();
+        }
+        catch (Exception ex)
+        {
+            throw;
+        }
+    }
+
+    private async Task SaveMrbInstruction(MRBInstruction instruction)
+    {
+        instruction.Creator = _user.Identity.Name;
+        await SaveMrb();
+    }
+
+    private async Task SaveMrbCorrectiveAction(MRBCorrectiveAction action)
+    {
+        action.Creator = _user.Identity.Name;
+        await SaveMrb();
+    }
+
+    private void ShowImageUploader()
+    {
+        _showImageUploader = true;
+    }
+
+    private async Task AddMemberSummary(string? member)
+    {
+        MRBMemberSummary newMemberSummary = new();
+        newMemberSummary.MRBDipositions = new();
+        newMemberSummary.MRB = _mrb;
+        newMemberSummary.MRBId = _mrb.Id;
+        newMemberSummary.PositionInQueue = _mrb.MemberSummary.Count + 1;
+
+        if (member != null)
+        {
+            newMemberSummary.Member = member;
+        }
+
+        _mrbDispositions = new();
+        _mrb.MemberSummary.Add(newMemberSummary);
+
+        await SaveMrb();
+
+        MapDispositionsToViewModel();
+    }
+
+    private void AddCorrectiveAction()
+    {
+        _mrb.CorrectiveActions.Add(new MRBCorrectiveAction());
+    }
+
+
+    private async Task NotivyAllMembers()
+    {
+        var currentUrl = Navigation.Uri;
+        bool notificationSended = await EmailService.SendMrbCompleteNotivication(_mrb.MemberSummary.Select(ms => ms.Member).ToList(), _mrb, currentUrl);
+
+        if (notificationSended)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "All members will be notified.");
+        }
+    }
+
+
+
+    private async Task SendNotification(int queuePosition)
+    {
+        bool confirmed = false;
+        var currentMember = _mrb.MemberSummary.FirstOrDefault(ms => ms.PositionInQueue == queuePosition);
+
+        MRBMemberSummary recipient = new();
+
+        if (currentMember.PositionInQueue == 1)
+        {
+            recipient = _mrb.MemberSummary.OrderByDescending(ms => ms.PositionInQueue).FirstOrDefault()!;
+        }
+        else
+        {
+            recipient = _mrb.MemberSummary.FirstOrDefault(ms => ms.PositionInQueue == queuePosition - 1)!;
+        }
+
+        if (currentMember.PositionInQueue != 1 && !currentMember.NotificationReceived)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "You cannot send a notification out of the queue order.");
+            return;
+        }
+
+        if (currentMember.PositionInQueue == 1 && _mrb.MemberSummary.Where(ms => ms.PositionInQueue != 1).All(ms => ms.Completed))
+        {
+            await JSRuntime.InvokeVoidAsync("alert", "MRB completed.");
+        }
+
+        confirmed = await JSRuntime.InvokeAsync<bool>("confirm", $"Are you sure you want to send notification to {recipient.Member}?");
+
+        if (recipient.NotificationReceived)
+        {
+            confirmed = await JSRuntime.InvokeAsync<bool>("confirm", $"A notification to the member: {recipient.Member} has already been sent. Make sure he received it. Do you want to send the notification again?");
+        }
+
+        if (confirmed)
+        {
+            var currentUrl = Navigation.Uri;
+            bool notificationSended = await EmailService.SendMRBNotificationEmail(recipient.Member, _mrb, currentUrl);
+
+            if (notificationSended)
+            {
+                if (currentMember.PositionInQueue != 1)
+                {
+                    currentMember.ModificationDate = DateTime.Now;
+                    currentMember.Completed = true;
+                }
+
+                recipient.NotificationReceived = true;
+                await UnitOfWork.CompleteAsync();
+                await JSRuntime.InvokeVoidAsync("alert", "Notification sent successfully");
+            }
+            else
+            {
+                await JSRuntime.InvokeVoidAsync("alert", "An error occurred while sending the message.");
+            }
+        }
+    }
+
+    private async Task RemoveMemberSummary(MRBMemberSummary memberSummary)
+    {
+        bool confirmed = false;
+        confirmed = await JSRuntime.InvokeAsync<bool>("confirm", "Are you sure you want to delete the member");
+
+        if (confirmed)
+        {
+            _mrb.MemberSummary.Remove(memberSummary);
+            ReorganizeQueue();
+            await UnitOfWork.CompleteAsync();
+        }
+    }
+
+    private async Task RemoveAction(MRBCorrectiveAction correctiveAction)
+    {
+        bool confirmed = false;
+        confirmed = await JSRuntime.InvokeAsync<bool>("confirm", "Are you sure you want to delete the corrective action?");
+
+        if (confirmed)
+        {
+            _mrb.CorrectiveActions.Remove(correctiveAction);
+            await UnitOfWork.CompleteAsync();
+        }
+    }
+
+    private async Task DeleteImage(Image img)
+    {
+        await ImgService.DeleteImage(img);
+        _mrb.Images.Remove(img);
+        await InvokeAsync(StateHasChanged);
+    }
+}

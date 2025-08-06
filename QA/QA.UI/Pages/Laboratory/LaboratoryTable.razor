@@ -1,0 +1,456 @@
+﻿@using QA.BLL.Interfaces
+@using QA.DataAccess
+@using QA.Domain.Models
+@using System.Security.Claims
+@using QA.Domain.Models.SinteringModels
+@using QA.UI.Pages.Reporting
+
+@inject QAContext QAContext
+@inject ILaboratoryRepository LaboratoryRepository
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IMeasurementService MeasurementService
+@inject ISinteringOrdersRepository SinteringOrdersRepository
+@inject IJSRuntime JSRuntime
+@inject IUnitOfWork UnitOfWork
+
+@if (!string.IsNullOrEmpty(_errorMessage))
+{
+    <div class="alert alert-danger">
+        @_errorMessage
+    </div>
+}
+
+<table class="laboratory-table">
+    <tr>
+        <td colspan="20">
+            <h5 style="font-weight:bold">
+                @Order.OrderKey
+                @Operation.Product.Symbol
+                @Operation.Product.Description
+            </h5>
+        </td>
+    </tr>
+
+    <tr>
+        <th>Nr.</th>
+        <th rowspan="5">Lokalizacja w piecu</th>
+
+     <th rowspan="5">Stos No.</th>
+        <th rowspan="5">Tacka No.</th>
+        <th rowspan="5">
+            <div style="text-align: center;">
+                <div style="margin-bottom: 10px;">Pozycja na tacy</div>
+                <img src="/images/tray.png" alt="Tray" style="width:180px;height:150px;" />
+            </div>
+        </th>
+
+        @foreach (var parameter in Parameters)
+        {
+            <th>@parameter.Name</th>
+        }
+
+        <th rowspan="5">Porowatość</th>
+        <th rowspan="5">Wielkośc Ziarna</th>
+        <th rowspan="5">
+            Lokalizacja próbki
+        </th>
+
+        <th rowspan="5">Info</th>
+    </tr>
+
+    <tr>
+        <th>LSL</th>
+        @foreach (var parameter in Parameters)
+        {
+            <th>@(parameter.LSL != 0 ? parameter.LSL : "")</th>
+        }
+    </tr>
+
+    <tr>
+        <th>&gt;0&lt;</th>
+
+        @foreach (var parameter in Parameters)
+        {
+            <th>@(parameter.NominalValue != 0 ? parameter.NominalValue : "")</th>
+        }
+    </tr>
+
+    <tr>
+        <th>USL</th>
+
+        @foreach (var parameter in Parameters)
+        {
+            <th>@(parameter.USL != 0 ? parameter.USL : "")</th>
+        }
+    </tr>
+
+    <tr style="background-color:#CCECFF">
+        <td style="font-weight:bold"> AVG</td>
+        @foreach (var parameter in Parameters)
+        {
+            <td style="font-weight:bold">
+                @if (parameter.Measurements.Where(m => m.OrderId == Order.Id).Any())
+                {
+                    @parameter.Measurements.Where(m => m.OrderId == Order.Id).Average(m => m.Value != 0 ? m.Value : null).GetValueOrDefault().ToString("F3")
+                }
+            </td>
+        }
+    </tr>
+
+    @foreach (var measurementSeries in Operation.MeasurementsSeries.Where(m => m.OrderId == Order.Id).OrderBy(ms => ms.Index))
+    {
+        if (measurementSeries.Measurements != null)
+        {
+            int rowNumber = _rowNumber;
+            int colNumber = 0;
+
+            <tr class="measuremnt-series-row">
+                <td>@measurementSeries.Index</td>
+
+                @*<InputSelect Value="@measurementSeries.TrayLocationId" ValueExpression="() => measurementSeries.TrayLocationId" ValueChanged=" async (int? e)  => await SaveEditedMeasurementSeries(measurementSeries)"> *@
+
+                <InputSelect Value="@measurementSeries.TrayLocationId"
+                             ValueExpression="() => measurementSeries.TrayLocationId"
+                             ValueChanged="async (int? e) => {measurementSeries.TrayLocationId = e; await UpdateLocation(measurementSeries); }">
+
+                    <option value="">-- Wybierz --</option>
+
+                    @foreach (var location in _sampleLocations.OrderBy(sl => sl.StackNo).ThenBy(sl => sl.LevelNo))
+                    {
+                        <option value="@location.Id">@location.StackNo / @location.LevelNo</option>
+                    }
+                </InputSelect>
+
+                <td>
+                    <InputNumber order="@Order.OrderKey" row="@rowNumber" col="0"
+                                 Value="@measurementSeries.StackNo"
+                                 ValueChanged="@(async (int? e) => { measurementSeries.StackNo = e;await SaveEditedMeasurementSeries(measurementSeries); })"
+                                 ValueExpression="() => measurementSeries.StackNo"
+                                 style="width:50px"
+                                 @onkeydown="@(e => HandleKeyPress(e, rowNumber, 0))" />
+                </td>
+
+                <td>
+                    <InputText order="@Order.OrderKey" row="@rowNumber" col="1"
+                               Value="@measurementSeries.TrayNo"
+                               ValueChanged="@(async  e => { measurementSeries.TrayNo = e;await SaveEditedMeasurementSeries(measurementSeries); })"
+                               ValueExpression="() => measurementSeries.TrayNo"
+                               style="width:50px"
+                               @onkeydown="@(e => HandleKeyPress(e, rowNumber, 1))" />
+                </td>
+
+                <td>
+                    <InputText order="@Order.OrderKey" row="@rowNumber" col="2"
+                               Value="@measurementSeries.PositionOnTray"
+                               ValueChanged="@(async e => { measurementSeries.PositionOnTray = e;await SaveEditedMeasurementSeries(measurementSeries); })"
+                               ValueExpression="() => measurementSeries.PositionOnTray"
+                               style="width:50px"
+                               @onkeydown="@(e => HandleKeyPress(e, rowNumber, 2))" />
+                </td>
+
+                @{
+                    colNumber = 3;
+                }
+
+                @foreach (var measurement in measurementSeries.Measurements.OrderBy(m => m.Parameter.Id))
+                {
+                    int innerRow = colNumber;
+                    if (measurement.Parameter.USL != 0 && measurement.Parameter.LSL != 0 && measurement.Value != 0)
+                    {
+                        <td style="@(measurement.Value < measurement.Parameter.LSL || measurement.Value > measurement.Parameter.USL ? "color:darkred; background-color:lightcoral;" : "")">
+                            <InputNumber order="@Order.OrderKey" row="@rowNumber" col="@innerRow"
+                                         Value="@measurement.Value"
+                                         ValueChanged="@(async (decimal e) => { measurement.Value = e; await SaveEditedMeasurementSeries(measurementSeries); })"
+                                         ValueExpression="() => measurement.Value"
+                                         style="width:60px;"
+                                         @onkeydown="@(e => HandleKeyPress(e, rowNumber, innerRow))" />
+                        </td>
+                    }
+                    else
+                    {
+                        if (measurement.Parameter.Name == "K1C")
+                        {
+                            <td order="@Order.OrderKey" row="@rowNumber" col="@innerRow" contenteditable="true" @onkeydown="@(e => HandleKeyPress(e, rowNumber, innerRow))">
+                                @CalculateK1C(measurementSeries.Measurements)
+                            </td>
+                        }
+                        else
+                        {
+                            <td>
+                                <InputNumber order="@Order.OrderKey" row="@rowNumber" col="@innerRow"
+                                             Value="@measurement.Value"
+                                             ValueChanged="@(async (decimal e) => { measurement.Value = e; await SaveEditedMeasurementSeries(measurementSeries); })"
+                                             ValueExpression="() => measurement.Value"
+                                             style="width:60px"
+                                             @onkeydown="@(e => HandleKeyPress(e, rowNumber, innerRow))" />
+                            </td>
+                        }
+                    }
+
+                    innerRow = colNumber++;
+                }
+
+                <td>
+                    <InputText order="@Order.OrderKey" row="@rowNumber" col="14"
+                               Value="@measurementSeries.PorosityClass"
+                               ValueChanged="@(async e => { measurementSeries.PorosityClass = e;await SaveEditedMeasurementSeries(measurementSeries); })"
+                               ValueExpression="() => measurementSeries.PorosityClass"
+                               style="width:50px"
+                               @onkeydown="@(e => HandleKeyPress(e, rowNumber, 14))" />
+                </td>
+
+                <td>
+                    <InputText order="@Order.OrderKey" row="@rowNumber" col="15"
+                               Value="@measurementSeries.GrainSize"
+                               ValueChanged="@(async e => { measurementSeries.GrainSize = e;await SaveEditedMeasurementSeries(measurementSeries); })"
+                               ValueExpression="() => measurementSeries.GrainSize"
+                               style="width:50px"
+                               @onkeydown="@(e => HandleKeyPress(e, rowNumber, 15))" />
+                </td>
+
+                <td>
+                    <InputText order="@Order.OrderKey" row="@rowNumber" col="16"
+                               Value="@measurementSeries.StorageLocation"
+                               ValueChanged="@(async e => { measurementSeries.StorageLocation = e;await SaveEditedMeasurementSeries(measurementSeries); })"
+                               ValueExpression="() => measurementSeries.StorageLocation"
+                               style="width:50px"
+                               @onkeydown="@(e => HandleKeyPress(e, rowNumber, 16))" />
+                </td>
+
+                <td>
+                    <InputText order="@Order.OrderKey" row="@rowNumber" col="17"
+                               Value="@measurementSeries.Comment"
+                               ValueChanged="@(async e => { measurementSeries.Comment = e;await SaveEditedMeasurementSeries(measurementSeries); })"
+                               ValueExpression="() => measurementSeries.Comment"
+                               @onkeydown="@(e => HandleKeyPress(e, rowNumber, 17))" />
+                </td>
+
+                <span class="oi oi-trash disappearing-icon" style=" color:red" @onclick="() => DeleteMeasurementsSeries(measurementSeries)"></span>
+            </tr>
+            _rowNumber++;
+        }
+    }
+
+    @{
+        _rowNumber = 1;
+    }
+
+    <tr>
+        <td colspan="19">
+            <CascadingAuthenticationState>
+                <AuthorizeView Roles="Admin, Manager, Kontroler">
+                    <button class="btn btn-primary" type="submit" @onclick="@LoadLaboratoryMeasurements">Pobierz wyniki pomiarów</button>
+                </AuthorizeView>
+            </CascadingAuthenticationState>
+        </td>
+    </tr>
+</table>
+
+@if (ShowStats)
+{
+    <div style="display: flex;">
+        <div>
+            <SPC Parameter="@Parameters.FirstOrDefault(p => p. Name.Contains("HC"))" OrderId="Order.Id" @ref="@_HCComponent"></SPC>
+        </div>
+
+        <div>
+            <SPC Parameter="@Parameters.FirstOrDefault(p => p. Name.Contains("MS"))" OrderId="Order.Id" @ref="@_MSComponent"></SPC>
+        </div>
+
+        <div>
+            <SPC Parameter="@Parameters.FirstOrDefault(p => p. Name.Contains("Gęstość"))" OrderId="Order.Id" @ref="@_densityComponent"></SPC>
+        </div>
+    </div>
+}
+
+@* <script>
+    window.addEventListener('keydown', function (event) {
+        if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.key)) {
+            event.preventDefault();
+        }
+    });
+</script> *@
+
+@*nowe 25.04.25*@
+<script>
+    window.addEventListener('keydown', function (event) {
+        if (['ArrowUp', 'ArrowDown'].includes(event.key)) {
+            event.preventDefault();
+        }
+    });
+</script>
+
+<script>
+    window.focusElement = (row, col, order) => {
+        const element = document.querySelector(`[row='${row}'][col='${col}'][order='${order}']`);
+        if (element) {
+
+            element.focus();
+        }
+    };
+</script>
+
+@inject IServiceScopeFactory ServiceScopeFactory
+@code {
+    private int _rowNumber = 1;
+    private string alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+    [Parameter]
+    public Operation Operation { get; set; }
+
+    [Parameter]
+    public List<Parameter> Parameters { get; set; }
+
+    [Parameter]
+    public Order Order { get; set; }
+
+    [Parameter]
+    public string TrialNo { get; set; }
+
+    [Parameter]
+    public bool ShowStats { get; set; }
+
+    private string _errorMessage = string.Empty;
+
+    private SPC _densityComponent = new();
+    private SPC _HCComponent = new();
+    private SPC _MSComponent = new();
+
+    private List<TrayLocation> _sampleLocations = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Parameters = Parameters.OrderBy(p => p.Id).ToList();
+
+        using (var scope = ServiceScopeFactory.CreateScope()) // Nowy scope
+        {
+            var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+            _sampleLocations = await unitOfWork.Sintering.GetBy(Order.Id);
+        }
+    }
+
+    private async Task HandleKeyPress(KeyboardEventArgs e, int rowIndex, int columnIndex)
+    {
+        int newRow = rowIndex;
+        int newCol = columnIndex;
+
+        switch (e.Key)
+        {
+            case "ArrowRight":
+                newCol++;
+                await JSRuntime.InvokeVoidAsync("focusElement", newRow, newCol, Order.OrderKey);
+                break;
+            case "ArrowLeft":
+                newCol--;
+                await JSRuntime.InvokeVoidAsync("focusElement", newRow, newCol, Order.OrderKey);
+                break;
+            case "ArrowDown":
+                newRow++;
+                await JSRuntime.InvokeVoidAsync("focusElement", newRow, newCol, Order.OrderKey);
+                break;
+            case "ArrowUp":
+                newRow--;
+                await JSRuntime.InvokeVoidAsync("focusElement", newRow, newCol, Order.OrderKey);
+                break;
+        }
+    }
+
+    private async Task SaveEditedMeasurementSeries(MeasurementsSeries series)
+    {
+        QAContext.MeasurementsSeries.Update(series);
+
+        foreach (var measurement in series.Measurements)
+        {
+            QAContext.Measurements.Update(measurement);
+        }
+
+        await QAContext.SaveChangesAsync();
+
+        if (ShowStats)
+        {
+            await UpdateSpcComponents();
+        }
+    }
+
+    private async Task UpdateLocation(MeasurementsSeries series)
+    {
+        if(series.TrayLocationId != null && series.TrayLocationId != 0)
+        {
+            var location = _sampleLocations.First(sl => sl.Id == series.TrayLocationId);
+
+            if(location != null)
+            {
+                series.StackNo = location.StackNo;
+                series.TrayNo = location.LevelNo.ToString();
+
+                if(location.SinteringId != null)
+                {
+                    var sintering = UnitOfWork.Sintering.GetSinteringBatchBy(location.SinteringId);
+                    if(sintering != null)
+                    {
+                        sintering.IsLocked = true;
+                    }
+                }
+            }
+        }
+
+        QAContext.MeasurementsSeries.Update(series);
+        await QAContext.SaveChangesAsync();
+    }
+
+    private async Task DeleteMeasurementsSeries(MeasurementsSeries measurementSeries)
+    {
+        try
+        {
+            QAContext.MeasurementsSeries.Remove(measurementSeries);
+            QAContext.Measurements.RemoveRange(measurementSeries.Measurements);
+            await QAContext.SaveChangesAsync();
+            if (ShowStats)
+            {
+                await UpdateSpcComponents();
+            }
+        }
+        catch (Exception e)
+        {
+            throw;
+        }
+    }
+
+    private async Task LoadLaboratoryMeasurements()
+    {
+        var user = await GetUser();
+        var result = await LaboratoryRepository.ReadMeasurementsForOrder(Order, TrialNo, Parameters, user.Identity.Name);
+        if (ShowStats)
+        {
+            await UpdateSpcComponents();
+        }
+
+        _errorMessage = result;
+    }
+
+    private async Task<ClaimsPrincipal> GetUser()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        return user;
+    }
+
+    private double? CalculateK1C(List<Measurement> measurements)
+    {
+        var cracksMeasurements = measurements.Where(m => m.Parameter.Name.Contains("Wąs")).Select(m => m.Value);
+        if (cracksMeasurements.All(e => e != 0))
+        {
+            return Math.Round((0.0335f * 30) / Math.Pow((double)(cracksMeasurements.Average() / 1000), 1.5f), 2);
+        }
+        return null;
+    }
+
+    private async Task UpdateSpcComponents()
+    {
+        var tasks = new List<Task>();
+        tasks.Add(_densityComponent.UpdateChildComponents(Parameters.FirstOrDefault(p => p.Name.Contains("Gęstość")).Id));
+        tasks.Add(_HCComponent.UpdateChildComponents(Parameters.FirstOrDefault(p => p.Name.Contains("HC")).Id));
+        tasks.Add(_MSComponent.UpdateChildComponents(Parameters.FirstOrDefault(p => p.Name.Contains("MS")).Id));
+        await Task.WhenAll(tasks);
+    }
+}

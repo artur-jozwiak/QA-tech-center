@@ -1,0 +1,78 @@
+﻿.operation-section {
+    border: 2px solid #ccc;
+    padding: 15px;
+    margin: 20px;
+    border-radius: 5px;
+}
+
+.empty-operation {
+    border: 2px solid #ccc;
+    padding: 15px;
+    margin-bottom: 5px;
+    border-radius: 5px;
+}
+
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+.grid-item {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    text-align: center;
+}
+
+h5 {
+    text-align: center;
+    font-weight: bold;
+}
+
+.report-order-table {
+    font-size: 14px;
+    font-weight: bold;
+    border: 1px solid #ccc;
+    margin: 0 auto;
+    width:auto;
+}
+    .report-order-table th, td {
+        border: 1px solid #ccc;
+    }
+
+.report {
+    justify-content: center;
+    align-items: center;
+    text-align:center;
+}
+
+@media print {
+    .report {
+        /*margin: 30px;*/
+        /*transform: scale(0.72);*/
+        transform-origin: top left;
+        width: 100%;
+        /*margin: 0 auto;*/
+    }
+
+    .report-order-table {
+        margin-top: 30px;
+    }
+
+    .newpage-onprint {
+        margin-top:40px;
+        page-break-before: always;
+    }
+
+    .operation-section {
+        margin-top: 30px;
+        page-break-after: always;
+        page-break-inside: avoid;
+    }
+
+    .grid-item {
+        page-break-inside: avoid;
+        margin-top: 20px;
+    }
+}

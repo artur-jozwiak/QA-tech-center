@@ -1,0 +1,426 @@
+﻿@page "/measurementpanel/{ParametersIds}"
+@page "/measurementpanel/{ParametersIds}/{OrderId}"
+
+@using Microsoft.JSInterop;
+@using QA.BLL.Interfaces
+@using QA.Domain.Models;
+@using Microsoft.EntityFrameworkCore;
+@using QA.DataAccess;
+@using QA.UI.Models;
+@using System.Globalization;
+@using QA.UI.Pages.Common
+@using QA.UI.Pages.Images;
+@using System.Security.Claims
+@using QA.UI.Pages.Reporting
+
+@inject IErrorLogger ErrorLogger
+@inject IOperationService IOperationService
+@inject IJSRuntime JSRuntime
+@inject IUnitOfWork UnitOfWork
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
+
+@if (!_isLoading)
+{
+    <QA.UI.Pages.ProcessParameters.ProcesParametersTable Order="@_order" Operation="@_operation"></QA.UI.Pages.ProcessParameters.ProcesParametersTable>
+        <div style="display: flex; align-items: center;">
+            <div class="heading">
+                @_order.OrderKey
+                @_productNo
+            </div>
+
+            @if (_isTrialOrder)
+            {
+                <label style=" padding-left: 10px; padding-right: 10px;"> Próba:</label>
+                <InputSelect @bind-Value="_trialNo">
+                    <option value="">Wybierz próbe</option>
+
+                    @for (int i = 1; i <= 10; i++)
+                    {
+                        <option value="@i">@i</option>
+                    }
+                </InputSelect>
+                @if (!String.IsNullOrEmpty(_trialNo))
+                {
+                    <button style=" margin-left: 10px; " class="btn-primary" @onclick="() => HandleTrialChange()">Przejdź próby: @_trialNo</button>
+                }
+            }
+        </div>
+
+        <label style="font-weight:bold">Komentarz</label>
+
+        <div class="row">
+
+            <div class="col">
+                <InputTextArea @bind-Value="@_parameters.FirstOrDefault().Operation.Comment" style="width:100%" />
+            </div>
+
+            <div class="col-auto">
+                <button class="btn btn-primary" onclick="@(() => SaveComment())" style="height:25px">Zapisz</button>
+            </div>
+        </div>
+
+    @* } *@
+
+    @if (_user.IsInRole("Admin") || _user.IsInRole("Manager"))
+    {
+        <InputRadioGroup ValueExpression="@(() => _controlerMeasurementsOnly)"
+                         Value="@_controlerMeasurementsOnly"
+                         ValueChanged="@(async (bool? value) => await OnRadioChange(value))">
+
+            <label>Pomiary kontrolera </label>
+            <InputRadio Value="true"></InputRadio>
+
+            <label style="margin-left:10px">Pomiary operatora </label>
+            <InputRadio Value="false"></InputRadio>
+        </InputRadioGroup>
+    }
+
+    <div class="measurement-panel-container">
+        <table class="measurement-table @( _isTrialOrder ? "table-disabled" : "")">
+            <tr>
+                <th>Lp</th>
+                @foreach (var parameter in _parameters)
+                {
+                    <th>@parameter.Name</th>
+                }
+            </tr>
+
+            <tr>
+                <th>LSL</th>
+                @foreach (var parameter in _parameters)
+                {
+                    <th>@parameter.LSL</th>
+                }
+            </tr>
+
+            <tr>
+                <th>NOMINAŁ</th>
+                @foreach (var parameter in _parameters)
+                {
+                    <th>@parameter.NominalValue</th>
+                }
+            </tr>
+
+            <tr>
+                <th>USL</th>
+                @foreach (var parameter in _parameters)
+                {
+                    <th>@parameter.USL</th>
+                }
+            </tr>
+
+            <tr>
+                <td>
+                    @(_measurementsQty + 1)
+                </td>
+
+                @foreach (var parameter in _parameters)
+                {
+                    var index = _parameters.IndexOf(parameter);
+
+                    <td>
+                        <input type="number" @onchange="(e) => HandleInput(e, parameter.Id, index)" style="color: white; background-color: black; border:none; width:50px" @ref="_inputRefs[index]" disabled="@_isTrialOrder" />
+
+                    </td>
+                }
+            </tr>
+
+            @for (int i = 0; i <= _measurementsQty; i++)
+            {
+                <tr>
+                    <td>
+                        @if (_measurementsQty - i != 0)
+                        {
+                            @(_measurementsQty - i)
+                        }
+                    </td>
+
+                    @foreach (var parameter in _parameters)
+                    {
+                        @if (parameter.Measurements.Where(m => m.OrderId == _orderId && (_controlerMeasurementsOnly == null || m.IsControllerMeasuremnt == _controlerMeasurementsOnly)).Count() > i)
+                        {
+                            var measurement = parameter.Measurements.Where(m => m.OrderId == _orderId && (_controlerMeasurementsOnly == null || m.IsControllerMeasuremnt == _controlerMeasurementsOnly)).OrderByDescending(m => m.Date).ToArray()[i];
+
+                            <td class="measuremnt-cell" style="@(measurement.Value < measurement.Parameter.LSL || measurement.Value > measurement.Parameter.USL ? "color:darkred; background-color:lightcoral;" : "")">
+                                <input type="number" @bind-value="measurement.Value" @bind-value:event="oninput" @onchange="() => UpdateMeasurement(measurement)" style="border:none; width:50px; background-color:inherit" disabled="@_isTrialOrder" />
+                                <span class="oi oi-trash disappearing-icon" style="font-size: 10px; color:red" @onclick="() => DeleteMeasurement(measurement)"></span>
+                            </td>
+                        }
+                        else
+                        {
+                            <td></td>
+                        }
+                    }
+                </tr>
+            }
+        </table>
+
+        @foreach (var parameter in _parameters)
+        {
+            <div class="chart">
+                <MeasurementsChart Parameter="@parameter" ChartId="@parameter.Id.ToString()" OnlyControlerMeasurements="@_controlerMeasurementsOnly" @ref="_chartComponent" OrderId="_orderId" />
+                <SPC Parameter="@parameter" OrderId="@_orderId" @ref="_spcComponents[parameter.Id]" @key="parameter.Id"></SPC>
+                <ImageUploader Image="@parameter.Image" ShowFileInput="false"></ImageUploader>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <LoadingSpiner Message="Trwa pobieranie danych..."></LoadingSpiner>
+}
+
+@code {
+    [Parameter]
+    public string ParametersIds { get; set; }
+    [Parameter]
+    public string OrderId { get; set; }
+
+    private ElementReference[] _inputRefs;
+    private List<Parameter> _parameters = new();
+    private MeasurementsChart _chartComponent = new();
+    private Dictionary<int, SPC> _spcComponents = new();
+    private Order _order;
+
+    private int _orderId;
+    private string _productNo = String.Empty;
+    private int _measurementsQty;
+
+    private bool _isTrialOrder;
+    public string? _trialNo = null;
+    private ClaimsPrincipal _user;
+    private bool _isLoading = true;
+
+    private bool? _controlerMeasurementsOnly = null;
+    private Operation _operation;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _orderId = int.Parse(OrderId);
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        _user = authState.User;
+        SetMeasurementFilter();
+
+        // _parameters = await GetParameters();
+        var allParameters = await GetParameters();
+
+        _order = await UnitOfWork.Order.GetByAsync(Int32.Parse(OrderId));
+        _parameters = FilterOutTrialParameters(allParameters);
+
+
+        _productNo = _parameters.FirstOrDefault().Operation.Product.Symbol;
+        _inputRefs = new ElementReference[_parameters.Count];
+        CalclulateMeasurementsQty();
+
+        _isTrialOrder = _order.ShortenedKey.StartsWith("TA");
+
+        _operation = _parameters.FirstOrDefault().Operation;
+
+
+        _isLoading = false;
+    }
+
+    //dodano 06.02.25
+    private List<Parameter> FilterOutTrialParameters(List<Parameter> allparameters)
+    {
+        List <Parameter> parameters = new();
+
+        if (!_order.ShortenedKey.StartsWith("TA"))
+        {
+            parameters = allparameters.Where(p => p.IsTrialParameter == false).ToList();
+        }
+        else
+        {
+            parameters = allparameters;
+        }
+
+        return parameters;
+    }
+    //dodano 06.02.25
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !_isLoading)
+        {
+            await JSRuntime.InvokeVoidAsync("setFocus", _inputRefs[0]);
+        }
+    }
+
+    public async Task<List<Parameter>> GetParameters()
+    {
+        string[] parametersIds = ParametersIds.Split(',');
+        int[] parametersIdsInt = parametersIds.Select(int.Parse).ToArray();
+
+        return await UnitOfWork.Parameter.GetParametersWithMeasurementsBy(parametersIdsInt);
+    }
+
+    private async Task SaveMeasurement(Measurement newMeasurement)
+    {
+        try
+        {
+            AssignOrderKey(newMeasurement);
+            newMeasurement.OrderId = _orderId;
+            newMeasurement.Date = DateTime.Now;
+
+            if (_user.IsInRole("Kontroler") || _user.IsInRole("Manager") || _user.IsInRole("Admin"))
+            {
+                newMeasurement.IsControllerMeasuremnt = true;
+            }
+            newMeasurement.Operator = _user.Identity.Name;
+
+            await UnitOfWork.Measurement.Add(newMeasurement);
+            await UnitOfWork.CompleteAsync();
+
+            await _chartComponent.UpdateChart(newMeasurement.Parameter.Id.ToString(), newMeasurement.Parameter, _controlerMeasurementsOnly);
+            await _spcComponents[newMeasurement.ParameterId].UpdateChildComponents(newMeasurement.ParameterId);
+            CalclulateMeasurementsQty();
+        }
+        catch (Exception ex)
+        {
+            ErrorLogger.LogError(ex, nameof(MeasurementPanel));
+            throw;
+        }
+
+        newMeasurement = new Measurement();
+    }
+
+    private async Task HandleInput(ChangeEventArgs e, int parameterId, int index)
+    {
+        string inputValue = e.Value?.ToString();
+
+        if (inputValue != null)
+        {
+            Measurement newMeasurement = new();
+            var culture = CultureInfo.InvariantCulture;
+
+            if (decimal.TryParse(inputValue, culture, out decimal parsedValue))
+            {
+                newMeasurement.Value = decimal.Parse(inputValue, culture);
+                newMeasurement.Parameter = _parameters.FirstOrDefault(p => p.Id == parameterId);
+
+                await SaveMeasurement(newMeasurement);
+
+                if (index == _inputRefs.Length - 1)
+                {
+                    await JSRuntime.InvokeVoidAsync("setFocus", _inputRefs[0]);
+                    await ClearAllInputs();
+                }
+                else
+                {
+                    await JSRuntime.InvokeVoidAsync("setFocus", _inputRefs[index + 1]);
+                }
+            }
+        }
+    }
+
+    private async Task ClearAllInputs()
+    {
+        foreach (var inputRef in _inputRefs)
+        {
+            await JSRuntime.InvokeVoidAsync("clearInput", inputRef);
+        }
+    }
+
+    private async Task DeleteMeasurement(Measurement measurement)
+    {
+
+        UnitOfWork.Measurement.Remove(measurement);
+        await UnitOfWork.CompleteAsync();
+
+        await _chartComponent.UpdateChart(measurement.Parameter.Id.ToString(), measurement.Parameter, _controlerMeasurementsOnly);
+        await _spcComponents[measurement.ParameterId].UpdateChildComponents(measurement.ParameterId);
+        CalclulateMeasurementsQty();
+    }
+
+    private async void SaveComment()
+    {
+        await UnitOfWork.CompleteAsync();
+    }
+
+    private void AssignOrderKey(Measurement measurement)
+    {
+        if (_isTrialOrder && !String.IsNullOrEmpty(_trialNo))
+        {
+            measurement.OrderKey = string.Concat(_order.ShortenedKey, "-", _trialNo);
+        }
+        else
+        {
+            measurement.OrderKey = _order.ShortenedKey;
+        }
+    }
+
+    private async Task HandleTrialChange()
+    {
+        var url = $"/TrialMeasurementPanel/{ParametersIds}/{OrderId}/{_trialNo}/";
+        await JSRuntime.InvokeVoidAsync("openInNewTab", url);
+    }
+
+    private async Task UpdateMeasurement(Measurement measurement)
+    {
+        UnitOfWork.Measurement.Update(measurement);
+        await UnitOfWork.CompleteAsync();
+    }
+
+    private void CalclulateMeasurementsQty()
+    {
+        if (_controlerMeasurementsOnly != null)
+        {
+            _measurementsQty = _parameters.OrderByDescending(p => p.Measurements.Count()).First().Measurements.Where(m => m.OrderId == _orderId && m.IsControllerMeasuremnt == _controlerMeasurementsOnly).Count();
+        }
+        else
+        {
+            _measurementsQty = _parameters.OrderByDescending(p => p.Measurements.Count()).First().Measurements.Where(m => m.OrderId == _orderId).Count();
+        }
+    }
+
+    private void SetMeasurementFilter()
+    {
+        if (_user.IsInRole("Kontroler"))
+        {
+            _controlerMeasurementsOnly = true;
+        }
+        else if (_user.IsInRole("Kontrola jakości Blanks"))
+        {
+            _controlerMeasurementsOnly = false;
+        }
+        else if (_user.IsInRole("Manager") || _user.IsInRole("Admin"))
+        {
+            _controlerMeasurementsOnly = null;
+        }
+    }
+
+    private async Task OnRadioChange(bool? radioValue)
+    {
+        _controlerMeasurementsOnly = radioValue;
+        CalclulateMeasurementsQty();
+
+        foreach (var parameter in _parameters)
+        {
+            await _chartComponent.UpdateChart(parameter.Id.ToString(), parameter, _controlerMeasurementsOnly);
+        }
+    }
+
+    //Wydzielić do oddzienego komponentu
+    // private void CreateOperationDetailsIfNotExist()
+    // {
+    //     if (_operation.OperationDetails == null || _operation.OperationDetails.All(od => od.OrderKey != _order.OrderKey))
+    //     {
+    //         var newOperationDetails = new OperationDetails() { OperationId = _operation.Id, Operation = _operation, OperationType = Domain.Models.Enums.OperationType.GrindinTopAndBottom, OrderKey = _order.OrderKey };
+    //         _operation.OperationDetails.Add(newOperationDetails);
+    //     }
+    // }
+
+    // private async Task Savechanges()
+    // {
+    //     _operationDetails.ModificationDate = DateTime.UtcNow;
+    //     await UnitOfWork.CompleteAsync();
+    // }
+
+    // private void DisplayOperationDetailsHistory()
+    // {
+    //     _showOperationDetailsHistory = !_showOperationDetailsHistory;
+    // }
+    //
+}

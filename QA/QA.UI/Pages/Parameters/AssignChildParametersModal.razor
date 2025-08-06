@@ -1,0 +1,108 @@
+﻿@using Microsoft.EntityFrameworkCore
+@using QA.BLL.Interfaces
+@using QA.DataAccess
+@using QA.Domain.Models
+@using QA.Domain.Models.Enums
+@* @inject QAContext QAContext *@
+@inject IParameterRepository IParameterRepository
+@inject IChildParameterAssignementRepository IChildParameterAssignementRepository
+
+@if (_showModal)
+{
+    <div class="modal" style="display: block; width: 20%; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+        <div class="modal-content col-md-2">
+            <div class="modal-header">
+                <h5 class="modal-title" style="font-weight:bold">@_parentParameter.Name</h5>
+                <button class="btn btn-close" @onclick="HideModal"></button>
+            </div>
+            <EditForm Model="@_parentParameter.ChildParametersAssignements" OnValidSubmit="@AssignChildParameters">
+                <ValidationSummary />
+                <DataAnnotationsValidator />
+                <div class="form-group col-md-12">
+                    @foreach (var childParametersAssignement in _parentParameter.ChildParametersAssignements)
+                    {
+                        <label for="Name">Parametr </label>
+                        <InputSelect class="form-control" id="ParameterId" TValue="int" @bind-Value="@childParametersAssignement.ChildParameter.Id">
+                            @foreach (var parameter in _parametersForAssign)
+                            {
+
+                                <option value="@parameter.Id"> @parameter.Name </option>
+                            }
+                        </InputSelect>
+                        <ValidationMessage For="@(() => _parentParameter.ChildParametersAssignements)" />
+                    }
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-success">Zapisz</button>
+                    <button type="button" class="btn btn-secondary" @onclick="HideModal">Anuluj</button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+}
+
+@code {
+    private bool _showModal = false;
+    private Parameter _parentParameter = new();
+    private List<Parameter> _parametersForAssign = new();
+
+    public void ShowModal(int parameterId)
+    {
+        var parameter = IParameterRepository.GetBy(parameterId);
+        _parentParameter = parameter;
+        _parametersForAssign = IParameterRepository.GetByOperationId(parameter.OperationId);
+        _parametersForAssign.Remove(parameter);
+        CreateChildParameters();
+        _showModal = true;
+        StateHasChanged();
+    }
+
+    private void HideModal()
+    {
+        _showModal = false;
+        StateHasChanged();
+    }
+
+    private void AssignChildParameters()
+    {
+        foreach(var childParameterAssignement in _parentParameter.ChildParametersAssignements)
+        {
+            var parameterForAssign = _parametersForAssign.FirstOrDefault(p => p.Id == childParameterAssignement.ChildParameter.Id);
+            parameterForAssign.IsChildParameter = true;
+            childParameterAssignement.ChildParameter = parameterForAssign;
+            childParameterAssignement.ChildParameterId = parameterForAssign.Id;
+            IChildParameterAssignementRepository.Add(childParameterAssignement);
+        }
+        IChildParameterAssignementRepository.SaveChanges();
+        HideModal();
+    }
+
+    private void CreateChildParameters()
+    {
+        int childParametersToAdd = 0;
+        _parentParameter.ChildParametersAssignements = new List<ChildParametersAssignement>();
+
+        if (_parentParameter.ParameterType == ParameterType.Różnica)
+        {
+            childParametersToAdd = 2;
+        }
+       else if (_parentParameter.ParameterType == ParameterType.Symetria_Jednostronna)
+        {
+            childParametersToAdd = 4;
+        }
+        else if (_parentParameter.ParameterType == ParameterType.Symetria)
+        {
+            childParametersToAdd = 8;
+        }
+        else if (_parentParameter.ParameterType == ParameterType.K1C)
+        {
+            childParametersToAdd = 4;
+        }
+
+        for (int i = 0; i < childParametersToAdd; i++)
+        {
+            _parentParameter.ChildParametersAssignements.Add(new() { ChildParameter = new(), ParameterOrder = i + 1, ParentParameterId = _parentParameter.Id });
+        }
+    }
+}

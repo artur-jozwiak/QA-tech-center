@@ -1,0 +1,67 @@
+﻿@page "/laboratory"
+@page "/laboratory/{ActiveTab:int}"
+@using QA.BLL.Interfaces
+@using QA.UI.Pages.Coating
+@using QA.UI.Pages.Sintering
+
+@* Czy Wyswietlić powlekanie tylko Admin, manager, QC *@
+<div class="tabs">
+    <button @onclick="() => SelectTab(_sinteringProcessTabNo)" class="tab-button @(ActiveTab == _sinteringProcessTabNo ? "active" : "")">Proces spiekania</button>
+
+    <CascadingAuthenticationState>
+        <AuthorizeView Roles="Admin, Manager, Kontroler, Viewer,">
+            <button @onclick="() => SelectTab(_coatingProcessTabNo)" class="tab-button @(ActiveTab == _coatingProcessTabNo ? "active" : "")">Proces powlekania</button>
+            <button @onclick="() => SelectTab(_powdersSpecificationTabNo)" class="tab-button @(ActiveTab == _powdersSpecificationTabNo ? "active" : "")">Specyfikacja proszków</button>
+            <button @onclick="() => SelectTab(_coatingSpeacificationTabNo)" class="tab-button @(ActiveTab == _coatingSpeacificationTabNo ? "active" : "")">Specyfikacja powłok</button>
+        </AuthorizeView>
+    </CascadingAuthenticationState>
+</div>
+
+<div class="tab-content">
+    @if (ActiveTab == _sinteringProcessTabNo)
+    {
+        <div>
+            <Sinterings></Sinterings>
+        </div>
+    }
+    else if (ActiveTab == _coatingProcessTabNo)
+    {
+        <div>
+            <PVDProcesses></PVDProcesses>
+        </div>
+    }
+    else if (ActiveTab == _powdersSpecificationTabNo)
+    {
+        <div>
+            <PowdersSpecificationTable></PowdersSpecificationTable>
+        </div>
+    }
+    else if (ActiveTab == _coatingSpeacificationTabNo)
+    {
+        <div>
+            <PVDSpecificationTable></PVDSpecificationTable>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public int ActiveTab { get; set; }
+
+    private int _sinteringProcessTabNo = 0;
+    private int _coatingProcessTabNo = 1;
+    private int _powdersSpecificationTabNo = 2;
+    private int _coatingSpeacificationTabNo = 3;
+
+    // private int activeTab = 0;
+    protected override void OnInitialized()
+    {
+        ActiveTab = 0;
+    }
+
+    private void SelectTab(int index)
+    {
+        ActiveTab = index;
+    }
+}
+

@@ -1,0 +1,241 @@
+﻿@using Microsoft.EntityFrameworkCore;
+@using Newtonsoft.Json;
+@using QA.BLL.Interfaces
+@using QA.DataAccess;
+@using QA.Domain.Models.Erp;
+@using QA.Domain.Models;
+@using QA.UI.Models;
+
+@inject IUnitOfWork UnitOfWork;
+@inject IJSRuntime JsRuntime;
+@inject IErpOperationRepository ErpOperationRepository
+@inject NavigationManager NavigationManager;
+@inject IErrorLogger ErrorLogger;
+@inject IOperationService IOperationService;
+
+@if (_isModalVisible)
+{
+    <div class="modal" style="display: block; width: 20%; position: fixed; top: 60%; left: 50%; transform: translate(-50%, -50%);">
+        <div class="modal-content col-md-2">
+            <div class="modal-header">
+                <h5 class="modal-title" style="font-weight:bold">@OrderNo</h5>
+                <button class="btn btn-close" @onclick="HideSelectOrderModal"></button>
+            </div>
+
+            <div class="modal-body">
+                @foreach (var order in Orders)
+                {
+                    <div style="font-weight:bold; cursor: pointer; padding: 10px; border: 1px solid #ccc; margin-bottom: 5px;
+                background-color: @(_highlightedOrder == order ? "#e8f0fe" : "white");"
+                         @onmouseover="() => HandleMouseOver(order)"
+                         @onmouseout="() => HandleMouseOut(order)"
+                         @onclick="() => HandleOrderClick(order)">
+                        @order.KluczZp || @order.QasymbWnd || @order.SymbolWyr
+                    </div>
+                }
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" @onclick=HideSelectOrderModal>Anuluj</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public List<ErpOrder> Orders { get; set; }
+    [Parameter]
+    public string OrderNo { get; set; }
+
+    private ErpOrder _highlightedOrder;
+    private bool _isModalVisible;
+
+    private async Task HandleOrderClick(ErpOrder hermesOrder)
+    {
+        var orderKey = hermesOrder.KluczZp;
+
+        if (!await UnitOfWork.Order.OrderExist(hermesOrder.KluczZp))
+        {
+            bool confirmed = await JsRuntime.InvokeAsync<bool>("confirm", $"Zlecenie: {hermesOrder.KluczSkrocony} nie istnieje w bazie aplikacji. Czy chesz je zapisać?");
+
+            if (confirmed)
+            {
+                List<ErpOperation> hermesOperations = await ErpOperationRepository.GetOperationsByTechId(hermesOrder.IdTech);
+
+                Order order = new();
+                order.HermesId = hermesOrder.Id;
+                order.OrderKey = hermesOrder.KluczZp;
+                order.ShortenedKey = hermesOrder.KluczSkrocony;
+                order.RowDatetime = DateTime.Now;
+                order.PowderSymbol = hermesOrder.SymbolProszku;
+                order.PowderBatch = hermesOrder.NrPartiiProszku;
+                order.Qty = hermesOrder.Ilosc;
+
+                if (!await UnitOfWork.Product.ProductExist(hermesOrder.SymbolWyr.Trim()))
+                {
+                    Product product = new Product
+                        {
+                            Symbol = hermesOrder.SymbolWyr.Trim(),
+                            PdmNo = hermesOrder.QasymbWnd.Trim(),
+                            Description = hermesOrder.NazwaArt.Trim(),
+                            TechnologyId = hermesOrder.IdTech,
+                            Orders = new List<Order>(),
+                            Operations = new List<Operation>()
+                        };
+                    product.Orders.Add(order);
+
+                    order.Product = product;
+
+                    foreach (var hermesOperation in hermesOperations)
+                    {
+                        Operation operation = new Operation
+                            {
+                                Name = hermesOperation.NazwaOp.Trim(),
+                                Symbol = hermesOperation.SymbolOp.Trim(),
+                                Product = product,
+                                TechnologyId = hermesOperation.IdTechnolog
+                            };
+                        product.Operations.Add(operation);
+                    }
+                }
+                else
+                {
+                    var product = await UnitOfWork.Product.GetProductWitchOrdersBySymbol(hermesOrder.SymbolWyr.Trim());
+
+                    //
+                    var missingOperations = IOperationService.ReturnMissingOperationsIfExist(hermesOperations, product.Operations.ToList());
+
+                    if (missingOperations.Any())
+                    {
+                        string missingOperationsMessage = string.Join("\n", missingOperations);
+                        await JsRuntime.InvokeVoidAsync("alert", $"ZMIANA OPERACJI W TECHNOLOGII:\n {missingOperationsMessage}");
+                    }
+                    //
+
+                    foreach (var hermesOperation in hermesOperations)
+                    {
+                        if (!product.Operations.Any(o => o.Name == hermesOperation.NazwaOp.Trim()))
+                        // if (!product.Operations.Any(o => o.Symbol == hermesOperation.SymbolOp.Trim())) / symbol powtarza się w gratowanie Honowanie 
+                        {
+                            Operation operation = new Operation
+                                {
+                                    Name = hermesOperation.NazwaOp.Trim(),
+                                    Symbol = hermesOperation.SymbolOp.Trim(),
+                                    Product = product,
+                                    TechnologyId = hermesOperation.IdTechnolog
+                                };
+                            product.Operations.Add(operation);
+                        }
+                    }
+
+                    if (product.Orders == null)
+                    {
+                        product.Orders = new List<Order>();
+                    }
+                    product.Orders.Add(order);
+                    order.Product = product;
+                }
+
+                try
+                {
+                    await UnitOfWork.Order.Add(order);
+                    await UnitOfWork.CompleteAsync();
+                }
+                catch (Exception ex)
+                {
+                    await ErrorLogger.LogError(ex, nameof(SelectOrderModal));
+                    throw;
+                }
+            }
+        }
+        //dodane do przypisania nowej daty dla istniejącego zlecenia
+        else
+        {
+            var order = await UnitOfWork.Order.GetBy(orderKey);
+
+            if (order.RowDatetime == new DateTime(1900, 1, 1))
+            {
+                order.RowDatetime = DateTime.Now;
+            }
+
+            await UnitOfWork.CompleteAsync();
+        }
+        //
+
+        string encodedOrderKey = Uri.EscapeDataString(orderKey);
+        NavigationManager.NavigateTo($"/orderqcplan/{encodedOrderKey}");
+    }
+
+    private void HandleMouseOver(ErpOrder order)
+    {
+        _highlightedOrder = order;
+    }
+
+    private void HandleMouseOut(ErpOrder order)
+    {
+        _highlightedOrder = null;
+    }
+
+    public void ShowSelectOrderModal()
+    {
+        _isModalVisible = true;
+    }
+
+    private void HideSelectOrderModal()
+    {
+        _isModalVisible = false;
+    }
+
+    // private async Task<bool> ProductExist(string productSymbol)
+    // {
+    //     try
+    //     {
+    //         return await QAContext.Products.AnyAsync(p => p.Symbol == productSymbol);
+    //     }
+    //     catch (Exception)
+    //     {
+    //         throw;
+    //     }
+    // }
+
+    // public async Task<bool> OrderExist(string orderKey)
+    // {
+    //     try
+    //     {
+    //         return await QAContext.Orders.AnyAsync(o => o.OrderKey == orderKey);
+    //     }
+    //     catch (Exception)
+    //     {
+    //         throw;
+    //     }
+    // }
+
+    // //TODO do repo
+    // public async Task<Product> GetProductWitchOrdersBySymbolAsync(string productSymbol)
+    // {
+    //     try
+    //     {
+    //         return await QAContext.Products.Include(p => p.Orders).Include(p => p.Operations).FirstOrDefaultAsync(p => p.Symbol == productSymbol);
+    //     }
+    //     catch (Exception)
+    //     {
+    //         throw;
+    //     }
+    // }
+
+    // public async Task<List<ErpOperation>> GetOperationsByTechId(int IdTechnology)
+    // {
+    //     return await HermesContext.ErpOperations.Where(o => o.IdTechnolog == IdTechnology).ToListAsync();
+    // }
+
+    // public async Task AddOrder(Order order)
+    // {
+    //     await QAContext.Orders.AddAsync(order);
+    // }
+
+    // public async Task Complete()
+    // {
+    //     await QAContext.SaveChangesAsync();
+    // }
+}

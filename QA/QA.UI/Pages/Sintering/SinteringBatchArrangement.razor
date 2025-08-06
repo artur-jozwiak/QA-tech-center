@@ -1,0 +1,901 @@
+﻿@using QA.BLL.Interfaces
+@using QA.Domain.Models
+@using QA.Domain.Models.Erp
+@using QA.Domain.Models.SinteringModels
+@inject ISinteringRepository SinteringRepository
+@inject ISinteringOrdersRepository SinteringOrdersRepository
+@inject IJSRuntime JSRuntime
+@inject IUnitOfWork UnitOfWork
+@inject IProductService ProductService
+
+@*
+    Deploy
+    backup
+    zmiana nazwy Sintering na SinteringBatch w QAcontext
+    jedna migracja
+    update database
+    Przypisanie ilości do orders await HelperService.AssignQtyToOrders();
+    przypisanie wagi w product //HelperService.AssignProductWeight();
+    zasianie lokalizacji pieca    //SinteringRepository.SeedFurnaceLocalization();
+*@
+
+@*
+    Pomysł
+    wyswietlanie na tacach wartosci parametrów (Min, avg, max) zamiast zleceń i produktów
+*@
+
+@*
+    Czy usunąc przycisk blokady? - zostawic dla admin
+    Teraz
+    pokazać Łukaszowi przykład
+    walidacja zasad?
+    czyszczenie
+    autoryzacja
+*@
+
+@*
+    tosie nie pojawi bo zadno zlecenie nie bedzie zarejestrowane
+*@
+
+@code {
+    [Parameter]
+    public int SinteringNo { get; set; }
+    public List<Order> _orders { get; set; } = new();
+    public List<GreenStock> _greensStock = new();
+    private SinteringBatch _sintering;
+    private List<TrayLocation> _trayLocations = new();
+    private List<FurnaceLocalization> _furnaceLocalizations = new();
+    private TrayLocation? _selectedTray;
+    private int? _selectedOrderId;
+    private static string[] _parameters = { "MS", "HCJ" };
+    private string _selectedParameter = _parameters[0];
+    private int[] stacks = new int[] { 1, 2, 3, 4, 5, 6, 7, 8 };
+    private int _stacksQty = 8;
+    private List<TrayLocation> _sourceTrays = new();
+
+    private void GetOrders()
+    {
+        _orders = new();
+        if (_trayLocations.Any())
+        {
+            var orderIds = _trayLocations.Select(tl => tl.OrderId).Distinct().ToList();
+            foreach (var orderId in orderIds)
+            {
+                if (orderId != null)
+                {
+                    var order = UnitOfWork.Order.GetBy((int)orderId);
+                    _orders.Add(order);
+                }
+            }
+
+            //dobieranie zleceń z m10
+            // if(!_sintering.IsLocked)
+            // {
+            //     foreach (var greenStock in _greensStock)
+            //     {
+            //         if (!_orders.Any(o => o.Id == greenStock.ErpOrderId))
+            //         {
+            //             var order = UnitOfWork.Order.GetByErpId(greenStock.ErpOrderId);
+            //
+            //             if(order != null)
+            //             {
+            //                 _orders.Add(order);
+            //             }
+            //         }
+            //     }
+            // }
+        }
+        else
+        {
+            foreach (var greenStock in _greensStock.OrderByDescending(gn => gn.Zapas))
+            {
+                var order = UnitOfWork.Order.GetByErpId(greenStock.ErpOrderId);
+
+                if (order != null)
+                {
+                    _orders.Add(order);
+                }
+            }
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        UnitOfWork.Sintering.AddIfNotExist(SinteringNo);
+        _sintering = UnitOfWork.Sintering.GetSinteringBy(SinteringNo);
+        _trayLocations = UnitOfWork.Sintering.GetTrayLocationsBy(_sintering.Id);
+        _greensStock = SinteringOrdersRepository.GetGreensStocks();
+        GetOrders();
+        var pr = _orders.Select(o => o.Product);
+        ProductService.AssignProductsWeights(_orders.Select(o => o.Product));
+
+        await LoadTrayLocations();
+        _furnaceLocalizations = await SinteringRepository.GetAllLocations();
+        CreateSourceTrays();
+    }
+
+    private void CreateSourceTray(Order order)
+    {
+        TrayLocation orderTray = new()
+            {
+                Order = order,
+                OrderId = order.Id,
+                Qty = order.Product.UnitsPerSinteringTray > order.Qty ? (int)order.Qty : order.Product.UnitsPerSinteringTray,
+                Sintering = _sintering,
+                SinteringId = _sintering.Id,
+            };
+
+        _sourceTrays.Add(orderTray);
+    }
+
+    private void CreateSourceTrays()
+    {
+        @foreach (var order in _orders.OrderByDescending(o => o.Qty))// zmienić na iteracje  po orders z M10
+        {
+            CreateSourceTray(order);
+        }
+
+        TrayLocation scrapTray = new()
+            {
+                IsScrapTray = true,
+                Sintering = _sintering,
+                SinteringId = _sintering.Id,
+            };
+
+        TrayLocation emptyTray = new()
+            {
+                IsEmptyTray = true,
+                Sintering = _sintering,
+                SinteringId = _sintering.Id,
+            };
+        _sourceTrays.Add(scrapTray);
+        _sourceTrays.Add(emptyTray);
+    }
+
+    private void HandleDeleteDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Delete")
+        {
+            DeleteTrayLocation();
+        }
+    }
+
+    private void DeleteTrayLocation()
+    {
+        if (_selectedTray != null)
+        {
+            UnitOfWork.Sintering.Remove(_selectedTray);
+            UnitOfWork.Complete();
+            _trayLocations.Remove(_selectedTray);
+            SortStack(_selectedTray.StackNo);
+            _selectedTray = null;
+        }
+    }
+
+    private async Task LoadTrayLocations()
+    {
+        foreach (var order in _orders)
+        {
+            order.TrayLocations = await UnitOfWork.Sintering.GetBy(order.Id);
+        }
+    }
+
+    private void SelectTray(TrayLocation location)
+    {
+        _selectedTray = location;
+    }
+
+    private void SelectOrder(int orderId)
+    {
+        _selectedOrderId = orderId;
+    }
+
+    private string HighlightOrderTray(int? orderId)
+    {
+        if (orderId != null)
+        {
+            return (_selectedOrderId == orderId) ? "blue" : "";
+        }
+        return String.Empty;
+    }
+
+    private void UpdateTrayLocation(TrayLocation trayLocation)
+    {
+        UnitOfWork.Complete();
+    }
+
+    private async Task GetAditionalOrder(ChangeEventArgs e)
+    {
+        string orderShortenedKey = e.Value?.ToString();
+        var order = await UnitOfWork.Order.GetByShortenedKey(orderShortenedKey);
+
+        if (order != null)
+        {
+            _orders.Add(order);
+            ProductService.AssignProductWeight(order.Product);
+            CreateSourceTray(order);
+        }
+    }
+
+    private string HighlightParameter(Parameter parameter, decimal value)
+    {
+        return (value < parameter.LSL || value > parameter.USL) ? "red" : "green";
+    }
+
+    private void ArrangeOrders()
+    {
+        List<TrayLocation> trays = new();
+
+        foreach (var order in _orders)
+        {
+            int quantity = (int)_greensStock.Where(gs => gs.KluczZp == order.OrderKey).Sum(gs => gs.Zapas);
+
+            if (quantity == 0)
+            {
+                quantity = (int)order.Qty;
+            }
+
+            int orderTraysQty = order.TraysPerSintering;
+            order.TraysPerSintering = orderTraysQty;
+
+            for (int i = 1; i <= orderTraysQty; i++)
+            {
+                int qtyToAssign = 0;
+
+                if ((quantity - order.DistributedQty) < order.Product.UnitsPerSinteringTray)
+                {
+                    qtyToAssign = quantity - order.DistributedQty;
+                }
+                else
+                {
+                    qtyToAssign = order.Product.UnitsPerSinteringTray;
+                }
+
+                if (qtyToAssign != 0)
+                {
+                    TrayLocation trayLocation = new()
+                        {
+                            Qty = qtyToAssign,
+                            Order = order,
+                            OrderId = order.Id,
+                            Sintering = _sintering,
+                            SinteringId = _sintering.Id,
+                            RowDt = DateTime.Now,
+                        };
+
+                    order.TrayLocations.Add(trayLocation);
+                    trays.Add(trayLocation);
+                }
+            }
+        }
+
+        var allTraysHeight = trays.Sum(tl => tl.TrayHeight) + (2 * 14.5m);
+        var avgHightOfStac = allTraysHeight / _stacksQty;
+
+        var trialsTrays = trays.Where(t => t.Order.ShortenedKey.StartsWith("TA")).ToList();
+        trays.RemoveAll(t => t.Order.ShortenedKey.StartsWith("TA"));
+        trays = trays.OrderBy(t => t.Order.Product.Weight).ToList();
+
+        decimal currentStackHeight = 0;
+        int currentStackNo = 1;
+        int currentTrayIndex = 0;
+
+        while (currentStackNo <= _stacksQty)
+        {
+            int currentLevel = 2;
+            int stackPosition = 0;
+            currentStackHeight = 0;
+            int intermediateLevel = 0;
+
+            switch (currentStackNo)
+            {
+                // |7||1||3||5|
+                // |8||2||4||6|
+                case 1: stackPosition = 2; break;
+                case 2: stackPosition = 6; break;
+                case 3: stackPosition = 3; break;
+                case 4: stackPosition = 7; break;
+                case 5: stackPosition = 4; break;
+                case 6: stackPosition = 8; break;
+                case 7: stackPosition = 1; break;
+                case 8: stackPosition = 5; break;
+            }
+
+            if (trialsTrays.Any())
+            {
+                if (_stacksQty > 3 && currentStackNo == 4)
+                {
+                    intermediateLevel = trays.Count / _stacksQty / 2;
+
+
+                    if (intermediateLevel == 0)
+                    {
+                        intermediateLevel = 1;
+                    }
+
+                    foreach (var tray in trialsTrays)
+                    {
+                        AssignTrayLocation(tray, stackPosition, intermediateLevel);
+                        currentStackHeight += tray.TrayHeight;
+                        intermediateLevel++;
+                    }
+                }
+                else if (_stacksQty <= 3 && currentStackNo == 1)
+                {
+                    intermediateLevel = trays.Count / _stacksQty / 2;
+                    if (intermediateLevel == 0)
+                    {
+                        intermediateLevel = 1;
+                    }
+
+                    foreach (var tray in trialsTrays)
+                    {
+                        AssignTrayLocation(tray, stackPosition, intermediateLevel);
+                        currentStackHeight += tray.TrayHeight;
+                        intermediateLevel++;
+                    }
+                }
+            }
+
+            while (currentStackHeight < avgHightOfStac && currentTrayIndex < trays.Count)
+            {
+                var tray = trays[currentTrayIndex];
+                currentStackHeight += tray.TrayHeight;
+                AssignTrayLocation(tray, stackPosition, currentLevel);
+                currentTrayIndex++;
+                currentLevel++;
+
+                if ((currentStackNo == 4 || currentStackNo == 1) && trialsTrays.Any(t => t.LevelNo == currentLevel))
+                {
+                    currentLevel = intermediateLevel + 1;
+                }
+            }
+            currentStackNo++;
+        }
+        _trayLocations.AddRange(trays);
+        _trayLocations.AddRange(trialsTrays);
+
+        AddEmptyTraysOnBottom();
+        FillByScrapTrays();
+        AddEmptyTraysOnTop();
+        CoverStacksByScrap();
+        PlaceMasterSamples();
+        UnitOfWork.Complete();
+    }
+
+    private void AssignTrayLocation(TrayLocation tray, int stackPosition, int currentLevel)
+    {
+        var location = _furnaceLocalizations.FirstOrDefault(fl => fl.StackNo == stackPosition && fl.LevelNo == currentLevel);
+
+        if (location != null)
+        {
+            tray.FuranceLocalization = location;
+            tray.FuranceLocalizationId = location.Id;
+            location.TrayLocations.Add(tray);
+
+            tray.StackNo = stackPosition;
+            tray.LevelNo = currentLevel;
+
+            UnitOfWork.Sintering.AddTrayLocation(tray);
+        }
+    }
+
+    private void ClearBatch()
+    {
+        UnitOfWork.Sintering.RemoveSinteringTrayLocations(_sintering.Id);
+        _trayLocations.Clear();
+        UnitOfWork.Complete();
+    }
+
+    private void UpdateTrayLocationComment(TrayLocation trayLocation)
+    {
+        UnitOfWork.Complete();
+    }
+
+    private void TransformBatch()
+    {
+        ClearBatch();
+        ArrangeOrders();
+    }
+
+    private void AddEmptyTraysOnBottom()
+    {
+        for (int stackNo = 1; stackNo <= 8; stackNo++)
+        {
+            CreateEmptyTray(stackNo, 1);
+        }
+    }
+
+    private void AddEmptyTraysOnTop()
+    {
+        if (_sintering.BatchWeight > 120)
+        {
+            for (int stackNo = 1; stackNo <= 8; stackNo++)
+            {
+                if (_trayLocations.Where(tl => tl.StackNo == stackNo).Any())
+                {
+                    int nextLevel = _trayLocations.Where(tl => tl.StackNo == stackNo).Max(tl => tl.LevelNo) + 1;
+                    CreateEmptyTray(stackNo, nextLevel);
+                }
+            }
+        }
+    }
+
+    private void FillByScrapTrays()
+    {
+        var batchHeight = _sintering.BatchHeight;
+        for (int stackNo = 1; stackNo <= 8; stackNo++)
+        {
+            var stackHeight = (_trayLocations.Where(tl => tl.StackNo == stackNo).Sum(tl => tl.TrayHeight));
+
+            if (!_trayLocations.Where(tl => tl.Order != null).Any(tl => tl.StackNo == stackNo))
+            {
+                int levelNo = 2;
+                do
+                {
+                    CreateScrapTray(stackNo, levelNo);
+                    stackHeight = (_trayLocations.Where(tl => tl.StackNo == stackNo).Sum(tl => tl.TrayHeight));
+                    levelNo++;
+                }
+                while (batchHeight - 14 > stackHeight);
+            }
+        }
+    }
+
+    private void CoverStacksByScrap()
+    {
+        if (_sintering.BatchWeight < 120)
+        {
+            for (int stackNo = 1; stackNo <= 8; stackNo++)
+            {
+                var stackHeight = (_trayLocations.Where(tl => tl.StackNo == stackNo).Sum(tl => tl.TrayHeight));
+
+                for (int i = 1; i <= 5; i++)
+                {
+                    if (stackHeight + 14 < 435)
+                    {
+                        if (_trayLocations.Where(tl => tl.StackNo == stackNo).Any())
+                        {
+                            int nextLevel = _trayLocations.Where(tl => tl.StackNo == stackNo).Max(tl => tl.LevelNo) + 1;
+                            CreateScrapTray(stackNo, nextLevel);
+                            stackHeight = (_trayLocations.Where(tl => tl.StackNo == stackNo).Sum(tl => tl.TrayHeight));
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void CreateScrapTray(int stackNo, int levelNo)
+    {
+        var location = _furnaceLocalizations.FirstOrDefault(fl => fl.StackNo == stackNo && fl.LevelNo == levelNo);
+
+        TrayLocation trayLocation = new()
+            {
+                Qty = 0,
+                Sintering = _sintering,
+                SinteringId = _sintering.Id,
+                RowDt = DateTime.Now,
+                IsScrapTray = true,
+                StackNo = stackNo,
+                LevelNo = levelNo,
+                FuranceLocalization = location,
+                FuranceLocalizationId = location.Id
+            };
+
+        _trayLocations.Add(trayLocation);
+        UnitOfWork.Sintering.AddTrayLocation(trayLocation);
+    }
+
+    private void CreateEmptyTray(int stackNo, int levelNo)
+    {
+        var location = _furnaceLocalizations.FirstOrDefault(fl => fl.StackNo == stackNo && fl.LevelNo == levelNo);
+        TrayLocation trayLocation = new()
+            {
+                Qty = 0,
+                Sintering = _sintering,
+                SinteringId = _sintering.Id,
+                RowDt = DateTime.Now,
+                IsEmptyTray = true,
+                StackNo = stackNo,
+                LevelNo = levelNo,
+                FuranceLocalization = location,
+                FuranceLocalizationId = location.Id
+            };
+
+        _trayLocations.Add(trayLocation);
+        UnitOfWork.Sintering.AddTrayLocation(trayLocation);
+    }
+
+
+    private void OnDropTray(TrayLocation sourceTray, int targetTrayId)
+    {
+        var targetLocation = _trayLocations.FirstOrDefault(tl => tl.Id == targetTrayId);
+        var tagetStackTraysAbove = _trayLocations.Where(tl => tl.StackNo == targetLocation.StackNo && tl.LevelNo > targetLocation.LevelNo);
+        var sourceStackTraysAbove = _trayLocations.Where(tl => tl.StackNo == sourceTray.StackNo && tl.LevelNo > sourceTray.LevelNo);
+
+        foreach (var tray in tagetStackTraysAbove)
+        {
+            tray.LevelNo++;
+        }
+
+        foreach (var tray in sourceStackTraysAbove)
+        {
+            tray.LevelNo--;
+        }
+
+        sourceTray.StackNo = targetLocation.StackNo;
+        sourceTray.LevelNo = targetLocation.LevelNo + 1;
+
+        if (sourceTray.Id == 0)
+        {
+            AssignTrayLocation(sourceTray, sourceTray.StackNo, sourceTray.LevelNo);
+            _trayLocations.Add(sourceTray);
+        }
+
+        UnitOfWork.Complete();
+        StateHasChanged();
+    }
+
+    private void SortStack(int stackNo)
+    {
+        int levelNo = 1;
+        foreach (var tray in _trayLocations.Where(tl => tl.StackNo == stackNo).OrderBy(tl => tl.LevelNo))
+        {
+            tray.LevelNo = levelNo;
+            levelNo++;
+        }
+    }
+
+    private void UpdateMasterSampleTray(bool containsMaterSample)
+    {
+        _selectedTray.ContainsMasterSample = containsMaterSample;
+        UnitOfWork.Complete();
+    }
+
+    private void PlaceMasterSamples()
+    {
+        int fourtthStackMaxLevel = _trayLocations.Where(tl => tl.StackNo == 4).Max(tl => tl.LevelNo) - 1;
+        int secondStackMidlle = _trayLocations.Where(tl => tl.StackNo == 2).Max(tl => tl.LevelNo) / 2;
+        var traysForMastersamples = _trayLocations.Where(tl => (tl.StackNo == 5 && tl.LevelNo == 2) || (tl.StackNo == 2 && tl.LevelNo == secondStackMidlle) || (tl.StackNo == 4 && tl.LevelNo == fourtthStackMaxLevel));
+
+        foreach (var tray in traysForMastersamples)
+        {
+            tray.ContainsMasterSample = true;
+        }
+    }
+
+    private bool _showInfo = false;
+
+    private void ToggleInfo()
+    {
+        _showInfo = !_showInfo;
+    }
+
+    private void UpdateSpacerHeight()
+    {
+        UnitOfWork.Complete();
+    }
+    private void UpdateTraysQty()
+    {
+        UnitOfWork.Complete();
+    }
+
+    private void UpdateUnitsPerTray()
+    {
+        UnitOfWork.Complete();
+    }
+
+    private void LockModifications()
+    {
+        _sintering.IsLocked = !_sintering.IsLocked;
+        UnitOfWork.Complete();
+    }
+}
+
+<button class="btn-primary" @onclick="ArrangeOrders" disabled="@_sintering.IsLocked">Rozmiesc</button>
+<button class="btn-danger" @onclick="ClearBatch" disabled="@_sintering.IsLocked">Wyczyść</button>
+
+<label>Ilość stosów</label>
+<input type="number" @bind="@_stacksQty" disabled="@_sintering.IsLocked" />
+<button class="btn-primary" @onclick="TransformBatch" disabled="@_sintering.IsLocked">Przekształć</button>
+
+@*
+    Zostawić adminowi
+*@
+
+<CascadingAuthenticationState>
+    <AuthorizeView Roles="Admin, Manager">
+        <button class="btn-primary" @onclick="LockModifications">Zablokuj</button>
+    </AuthorizeView>
+</CascadingAuthenticationState>
+
+<div class="main-container">
+    <div style="display: flex; gap: 20px; align-items: flex-start;">
+        <div class="orders-list">
+
+            <label><strong>Pobierz dodatkowe zlecenie:</strong></label>
+            <input type="text" @onchange="GetAditionalOrder" />
+            <br />
+            <div style="font-size: 0.65rem; display: flex; align-items: center; justify-content: flex-start; width: 520px; gap: 5px; font-weight: bold;">
+                <span style="flex: 0 0 180px;">Produktu</span>
+                <span style="flex: 0 0 80px;">Zlecenie</span>
+                <span style="flex: 0 0 30px;">Ilość</span>
+                <span style="flex: 0 0 60px;">Rozmieszczono</span>
+                <span style="flex: 0 0 40px;">szt./taca</span>
+                <span style="flex: 0 0 40px;">Ilośc tac</span>
+                <span style="flex: 0 0 50px;">H przekładki</span>
+            </div>
+
+            @foreach (var tray in _sourceTrays)
+            {
+                if (tray.OrderId != null)
+                {
+                    @* var quantity = (int)_greensStock.Where(gn => gn.KluczZp == tray.Order.OrderKey).Sum(gn => gn.Zapas); *@
+                    int quantity = (int)_greensStock.Where(gn => gn.ErpOrderId == tray.Order.HermesId).Sum(gn => gn.Zapas);
+
+                    if (quantity == 0)
+                    {
+                        quantity = (int)tray.Order.Qty;
+                    }
+
+                    @**@
+
+                    <Draggable Data="@tray">
+                        <div class="tray-item @(tray.OrderId == _selectedOrderId ? "selected" : "" )"
+                             style="display: flex; align-items: center; justify-content: flex-start; width: 510px; gap: 5px;"
+                             @onclick="@(() => _selectedOrderId = tray.OrderId)">
+
+                            <span style="flex: 0 0 180px; overflow: hidden; text-overflow: ellipsis;">
+                                @tray.Order.Product.Description
+                            </span>
+
+                            <span style="flex: 0 0 80px;">
+                                @tray.Order.ShortenedKey
+                            </span>
+
+                            @{
+                                string qtyColor = (quantity != tray.Order.DistributedQty) ? "red" : "darkgreen";
+                                string icon = (quantity < tray.Order.DistributedQty) ? "fa-arrow-up" : (quantity > tray.Order.DistributedQty ? "fa-arrow-down" : "");
+                            }
+
+                            <span style="flex: 0 0 30px; font-weight: bold; color: @qtyColor; display: flex; justify-content: flex-start;">
+                                @quantity.ToString("F0")
+                            </span>
+
+                            <span style="flex: 0 0 60px; font-weight: bold; color: @qtyColor; display: flex; justify-content: flex-start;">
+                                @tray.Order.DistributedQty
+                                @if (!string.IsNullOrEmpty(icon))
+                                {
+                                    <span style="color:red; margin-left: 6px;">
+                                        <i class="fas @icon"></i>
+                                    </span>
+                                }
+                            </span>
+
+                            <input type="number"
+                                   @bind-value="@tray.Order.Product.UnitsPerSinteringTray"
+                                   @bind-value:event="oninput"
+                                   @onchange="() => UpdateUnitsPerTray()"
+                                   style="flex: 0 0 40px; min-width: 40px; height: 14px;  border:@(tray.Order.Product.UnitsPerSinteringTray == 0 ? "1px solid red" : "1px solid black");" />
+
+                            <input type="number"
+                                   @bind-value="@tray.Order.TraysPerSintering"
+                                   @bind-value:event="oninput"
+                                   @onchange="() => UpdateTraysQty()"
+                                   style="flex: 0 0 40px; min-width: 40px; height: 14px; border:@(tray.Order.TraysPerSintering == 0 ? "1px solid red" : "1px solid black");" />
+
+                            <input type="number"
+                                   @bind-value="@tray.Order.Product.SpacerHeight"
+                                   @bind-value:event="oninput"
+                                   @onchange="() => UpdateSpacerHeight()"
+                                   style="flex: 0 0 40px; min-width: 40px; height: 14px; border:@(tray.Order.Product.SpacerHeight == 0 ? "1px solid red" : "1px solid black");" />
+
+                        </div>
+                    </Draggable>
+                }
+                else
+                {
+                    <Draggable Data="@tray">
+                        <div class="tray-item" style="display: flex; align-items: center; justify-content: space-between;">
+                            @if (tray.IsEmptyTray)
+                            {
+                                <span>EMPTY</span>
+                            }
+                            else if (tray.IsScrapTray)
+                            {
+                                <span>SCRAP</span>
+                            }
+                        </div>
+                    </Draggable>
+                }
+            }
+            <InputRadioGroup @bind-Value="_selectedParameter">
+                @foreach (var param in _parameters)
+                {
+                    <div>
+                        <InputRadio Value="@param" /> @param
+                    </div>
+                }
+            </InputRadioGroup>
+
+            <h5 style="font-weight:bold">Waga wsadu: @_sintering.BatchWeight.ToString("F2") kg</h5>
+            <h5 style="font-weight:bold; color: @(_sintering.BatchHeight > 435 ? "red" : "darkgreen" );">Wysokość wsadu: @_sintering.BatchHeight mm</h5>
+        </div>
+
+        <!-- Tray Details -->
+        @if (_selectedTray != null)
+        {
+            <div class="details">
+                <h4>Szczegóły </h4>
+                <p><strong>Stos:</strong> @_selectedTray.StackNo</p>
+                <p><strong>Taca:</strong> @_selectedTray.LevelNo</p>
+
+                <p><strong>Wysokość przekładki:</strong> @_selectedTray.Order?.Product.SpacerHeight mm</p>
+                <p><strong>Wysokość tacy:</strong> @_selectedTray.TrayHeight mm</p>
+                <p><strong>Waga tacy:</strong> @_selectedTray.TrayWeight g</p>
+
+                <label><strong>Zawiera próbke master:</strong></label>
+                <InputCheckbox class="form-check-input"
+                               Value="@_selectedTray.ContainsMasterSample"
+                               ValueChanged="@(val => UpdateMasterSampleTray(val))"
+                               ValueExpression="() => _selectedTray.ContainsMasterSample" />
+
+                <p><strong>Komentarz:</strong> </p>
+                <textarea @bind-value="@_selectedTray.Comment"
+                          style="width:100%; height:40px; resize:vertical;"
+                          @bind-value:event="oninput"
+                          @onchange="() => UpdateTrayLocationComment(_selectedTray)" />
+
+                @if (_selectedTray.Order != null)
+                {
+                    <p><strong>Zlecenie:</strong> @_selectedTray.Order.ShortenedKey</p>
+                    <p><strong>PDM:</strong> @_selectedTray.Order.Product.PdmNo</p>
+                    <p><strong>Symbol:</strong> @_selectedTray.Order.Product.Symbol</p>
+                    <p><strong>Opis:</strong> @_selectedTray.Order.Product.Description</p>
+
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Parametr</th>
+                                <th>LSL</th>
+                                <th>Nominal</th>
+                                <th>USL</th>
+                                <th style="min-width:100px;">Min</th>
+                                <th style="min-width:100px;">Avg</th>
+                                <th style="min-width:100px;">Max</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var parameterName in _parameters)
+                            {
+                                var groupedMeasurements = _selectedTray.MeasurementsSeries?.SelectMany(ms => ms.Measurements?.Where(m => m.Parameter.Name == parameterName));
+                                if (groupedMeasurements != null && groupedMeasurements.Any())
+                                {
+                                    var parameter = groupedMeasurements.FirstOrDefault().Parameter;
+
+                                    var parameterMin = groupedMeasurements.Min(gm => gm.Value);
+                                    var parameterAvg = groupedMeasurements.Average(gm => gm.Value);
+                                    var parameterMax = groupedMeasurements.Max(gm => gm.Value);
+
+                                    <tr>
+                                        <td><strong>@parameterName</strong></td>
+                                        <td>@parameter.LSL.ToString("F1")</td>
+                                        <td>@parameter.NominalValue.ToString("F1")</td>
+                                        <td>@parameter.USL.ToString("F1")</td>
+                                        <td style="color:@HighlightParameter(parameter, parameterMin)">@parameterMin.ToString("F2")</td>
+                                        <td style="color:@HighlightParameter(parameter, parameterAvg)">@parameterAvg.ToString("F2")</td>
+                                        <td style="color:@HighlightParameter(parameter, parameterMax)">@parameterMax.ToString("F2")</td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        }
+        @**@
+
+        <i class="oi oi-info" style=";font-size: 1.5rem; color: #007bff;" @onclick="ToggleInfo"></i>
+
+        @if (_showInfo)
+        {
+            <Info></Info>
+        }
+        @**@
+    </div>
+    <div class="grid-container">
+
+        @**@
+        <div class="side-label left-label">FRONT</div>
+        <div class="side-label right-label">PIEC</div>
+        <div class="center-label top-center">LEWA</div>
+        <div class="center-label bottom-center">PRAWA</div>
+        @**@
+        @foreach (int stackNo in stacks)
+        {
+            var stackHeight = (_trayLocations.Where(tl => tl.StackNo == stackNo).Sum(tl => tl.TrayHeight));
+            <div class="stack-container">
+                <div class="stack-label-container">
+                    <strong class="stack-label">@stackNo</strong>
+                    <strong class="stack-label" style=" color: @(stackHeight> 435 ? "red" : "darkgreen" )">H: @stackHeight mm</strong>
+                </div>
+                <div class="tray-grid">
+                    @foreach (var trayLocation in _trayLocations.Where(tl => tl.StackNo == stackNo).OrderByDescending(tl => tl.LevelNo))
+                    {
+                        <DropTarget T="TrayLocation" Zone="@trayLocation.Id" Drop="@(OnDropTray)">
+                        </DropTarget>
+
+                        <div class="tray-container">
+                            <span style="font-size:8px; min-width: 20px; display: inline-block; text-align: right; font-weight:bold">@trayLocation.LevelNo</span>
+                            @{
+                                string color = "lightgray";
+                                var groupedMeasurements = trayLocation.MeasurementsSeries?.SelectMany(ms => ms.Measurements?.Where(m => m.Parameter.Name == _selectedParameter));
+                                if (groupedMeasurements != null && groupedMeasurements.Any())
+                                {
+                                    var parameter = groupedMeasurements.FirstOrDefault().Parameter;
+                                    var parameterAvg = groupedMeasurements.Average(gm => gm.Value);
+
+                                    var parameterMin = groupedMeasurements.Min(gm => gm.Value);
+                                    var parameterMax = groupedMeasurements.Max(gm => gm.Value);
+
+                                    if (parameter != null && parameterMin < parameter.LSL || parameterMax > parameter.USL)
+                                    {
+                                        color = "red";
+                                    }
+                                    else
+                                    {
+                                        color = "green";
+                                    }
+                                }
+                            }
+
+                            <Draggable Data="@trayLocation">
+                                <div class="tray-item @(trayLocation == _selectedTray ? "selected" : "")" style=" background-color:@color; color:@HighlightOrderTray(trayLocation.OrderId); display: flex; justify-content: space-between; align-items: center; margin-bottom:@($"{trayLocation.TrayHeight /10}px"); margin-top:@($"{trayLocation.TrayHeight /10}px"); height:@($"{trayLocation.TrayHeight}px")"
+                                     tabindex="0"
+                                     @onkeydown="@HandleDeleteDown"
+                                     @onclick="@(() => _selectedTray = trayLocation)">
+
+                                    <span style="color:red;">
+                                        @if (!String.IsNullOrEmpty(trayLocation.Comment))
+                                        {
+                                            <span class="oi oi-bookmark"></span>
+                                        }
+                                        @if (trayLocation.ContainsMasterSample)
+                                        {
+                                            <strong>M</strong>
+                                        }
+                                    </span>
+
+                                    @if (!trayLocation.IsEmptyTray && !trayLocation.IsScrapTray)
+                                    {
+                                        <span>@trayLocation.Order.Product.Description | @trayLocation.Order.ShortenedKey  </span>
+                                        <span style="font-size:0.75rem; font-weight:bold; color: red">@trayLocation.Order.Product.Weight</span>
+                                        <input type="number" @bind-value="trayLocation.Qty" style="width: 40px; height: inherit; text-align: right;" @bind-value:event="oninput" @onchange="() => UpdateTrayLocation(trayLocation)" />
+                                    }
+                                    else
+                                    {
+                                        if (trayLocation.IsEmptyTray)
+                                        {
+                                            <span>EMPTY</span>
+                                        }
+                                        else if (trayLocation.IsScrapTray)
+                                        {
+                                            <span>SCRAP</span>
+                                        }
+                                    }
+                                </div>
+                            </Draggable>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+    </div>
+</div>
+
+
+
+
+

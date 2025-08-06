@@ -1,0 +1,176 @@
+﻿@using System.Text.Json;
+@using QA.Domain.Models;
+@inject IJSRuntime JSRuntime
+@inherits ComponentBase
+@inject NavigationManager NavigationManager;
+
+@* to powinno przyjmować List<decimal> albo List<Measurement> i parametr*@
+
+<style>
+    .chart {
+        margin: 2px;
+    }
+</style>
+
+@if (Parameter.ParameterType == Domain.Models.Enums.ParameterType.Standard)
+{
+    <span style="font-weight:bold">
+        @Parameter.Name: @Parameter.DevicePort.MeasuringDevice.Name - @Parameter.DevicePort.Name
+        (@(Parameter.AutomaticMeasurement ? "Auto" : "Manual"))
+    </span>
+}
+else
+{
+    <span style="font-weight:bold">
+        @Parameter.Name
+    </span>
+}
+
+<canvas class="chart" id="@ChartId"></canvas>
+
+@code {
+    private string chartJs;
+    [Parameter]
+    public string ChartId { get; set; }
+    [Parameter]
+    public Parameter Parameter { get; set; }
+    [Parameter]
+    public int OrderId { get; set; }
+
+    private List<Measurement> _measurements = new();
+    private int _measurementsQty;
+    public List<decimal> Values = new();
+    public string[] Labels { get; set; }
+
+    [Parameter]
+    public bool? OnlyControlerMeasurements { get; set; }
+
+    protected override void OnInitialized()
+    {
+        if (OnlyControlerMeasurements != null)
+        {
+            _measurements = Parameter.Measurements.Where(m => m.OrderId == OrderId && m.IsControllerMeasuremnt == OnlyControlerMeasurements).OrderByDescending(m => m.Date).ToList();
+        }
+        else
+        {
+            _measurements = Parameter.Measurements.Where(m => m.OrderId == OrderId).OrderByDescending(m => m.Date).ToList();
+        }
+
+        _measurementsQty = _measurements.Count();
+        Values = new();
+        Labels = new string[_measurementsQty];
+        int i = 0;
+
+        foreach (var measurement in _measurements)
+        {
+            if (measurement.Value != null)
+            {
+                Values.Add((decimal)measurement.Value);
+                Labels[i] = (_measurementsQty - i).ToString();
+                i++;
+            }
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await UpdateChart(ChartId, null, OnlyControlerMeasurements);
+            // await UpdateChart(ChartId, null);
+        }
+    }
+
+    public async Task UpdateChart(string chartId, Parameter? parameter, bool? onlyControlerMeasurements = null)
+    {
+        var chartExists = await JSRuntime.InvokeAsync<bool>("eval", $"document.getElementById('{chartId}') !== null");
+        if (chartExists)
+        {
+
+            OnlyControlerMeasurements = onlyControlerMeasurements;
+
+            if (parameter != null)
+            {
+                Parameter = parameter;
+            }
+
+            await JSRuntime.InvokeVoidAsync("destroyChart", chartId);
+            OnInitialized();
+
+            var data = new
+            {
+                labels = Labels,
+                datasets = new[]
+                {
+                new
+                {
+                    label = "LSL",
+                    data = Enumerable.Repeat(Parameter.LSL, _measurementsQty).ToList(),
+                    borderColor = "red",
+                    borderWidth = 2,
+                    pointRadius= 0,
+                    borderDash= new int[] {5, 5 }
+                },
+                new
+                {
+                    label = Parameter.Name,
+                    data = Values,
+                    borderColor = "black",
+                    borderWidth = 2,
+                    pointRadius= 2,
+                    borderDash= new int[] { 0, 0 }
+                },
+                new
+                {
+                    label = "Nominał",
+                    data = Enumerable.Repeat(Parameter.NominalValue, _measurementsQty).ToList(),
+                    borderColor = "rgb(50, 205, 50)",
+                    borderWidth = 2,
+                    pointRadius= 0,
+                    borderDash= new int[] { 15, 4 }
+                },
+                new
+                {
+                    label = "USL",
+                    data = Enumerable.Repeat(Parameter.USL, _measurementsQty).ToList(),
+                    borderColor = "red",
+                    borderWidth = 2,
+                    pointRadius= 0,
+                    borderDash= new int[] { 5, 5 }
+                },
+            }
+            };
+
+            chartJs = @"
+    var canvasId = '" + chartId + @"';
+    var ctx = document.getElementById(canvasId).getContext('2d');
+
+    var data = " + JsonSerializer.Serialize(data) + @";
+    var config = {
+        type: 'line',
+        data: data,
+        options: {
+            plugins:{
+                legend: {
+                        position:'top',
+                        labels: {
+                                usePointStyle: true,
+                                pointStyle: 'circle',
+                                boxWidth: 10
+                                },
+                        },
+                    },
+            indexAxis: 'y',
+            animation: {
+                duration: 0,
+            },
+        },
+    };
+    document.getElementById(canvasId).style.backgroundColor = '#e5e5e5';
+    document.getElementById(canvasId).height = window.innerHeight -150;
+    new Chart(ctx, config);";
+            await JSRuntime.InvokeVoidAsync("eval", chartJs);
+            StateHasChanged();
+        }
+    }
+}

@@ -1,0 +1,631 @@
+﻿@* @page "/resultparameterspanel/{ParameterId}/{OrderId}" *@
+@using QA.DataAccess
+@using QA.Domain.Models
+@using QA.Domain.Models.Enums
+@using QA.UI.Models
+@using Microsoft.JSInterop;
+@using QA.Domain
+@using Microsoft.EntityFrameworkCore;
+@using System.Globalization;
+@using QA.UI.Pages.Images;
+@using QA.UI.Pages.MeasurmentPanel;
+@using System.Security.Claims
+
+@inject IErrorLogger ErrorLogger
+@inject IJSRuntime JSRuntime
+@inject QAContext QAContext
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+@*
+wyświetlić parametry nie brane do obliczeń
+Róznica
+*@
+
+<div class="heading">
+    @_order.OrderKey
+    @_productNo
+</div>
+
+<label style="font-weight:bold">Komentarz</label>
+
+<div class="row">
+
+    <div class="col">
+        <InputTextArea @bind-Value="@_parentParameter.Operation.Comment" style="width:100%" />
+    </div>
+
+    <div class="col-auto">
+        <button class="btn btn-primary" onclick="@(() => SaveComment())" style="height:25px">Zapisz</button>
+    </div>
+
+</div>
+
+<div class="measurement-panel-container">
+    <table class="measurement-table">
+        <tr>
+            <th>Lp</th>
+            @foreach (var parameter in _childParameters)
+            {
+                <th>@parameter.Name</th>
+            }
+            @foreach (var parameter in _symetryParameters)
+            {
+                <th>@parameter.Name</th>
+            }
+            <th>@_parentParameter.Name</th>
+        </tr>
+
+        <tr>
+            <th>LSL</th>
+            @foreach (var parameter in _childParameters)
+            {
+                <th>@parameter.LSL</th>
+            }
+            @foreach (var parameter in _symetryParameters)
+            {
+                <th>@parameter.LSL</th>
+            }
+            <th>@_parentParameter.LSL</th>
+        </tr>
+
+        <tr>
+            <th>NOMINAŁ</th>
+            @foreach (var parameter in _childParameters)
+            {
+                <th>@parameter.NominalValue</th>
+            }
+            @foreach (var parameter in _symetryParameters)
+            {
+                <th>@parameter.NominalValue</th>
+            }
+            <th>@_parentParameter.NominalValue</th>
+        </tr>
+
+        <tr>
+            <th>USL</th>
+            @foreach (var parameter in _childParameters)
+            {
+                <th>@parameter.USL</th>
+            }
+            @foreach (var parameter in _symetryParameters)
+            {
+                <th>@parameter.USL</th>
+            }
+            <th>@_parentParameter.USL</th>
+        </tr>
+
+        <tr>
+            <td>
+                @(_measurementsQty + 1)
+            </td>
+
+            @foreach (var parameter in _childParameters)
+            {
+                var index = _childParameters.IndexOf(parameter);
+
+                <td>
+                    @if (parameter.ParameterType == ParameterType.Standard)
+                    {
+                        <input type="number" @onchange="(e) => HandleInput(e, parameter.Id, index)" style="color: white; background-color: black; border:none; width:50px" @ref="_inputRefs[index]" />
+                    }
+                </td>
+            }
+        </tr>
+
+        @for (int i = 0; i <= _measurementsQty; i++)
+        {
+            List<Measurement> measurementsForRemove = new();
+            <tr>
+                <td>
+                    @if (_measurementsQty - i != 0)
+                    {
+                        @(_measurementsQty - i)
+                    }
+                </td>
+
+                @foreach (var parameter in _childParameters)
+                {
+                    @if (parameter.Measurements.Where(m => m.OrderId == _orderId).Count() > i)
+                    {
+                        var measurement = parameter.Measurements.Where(m => m.OrderId == _orderId).OrderByDescending(m => m.Date).ToArray()[i];
+                        measurementsForRemove.Add(measurement);
+                        <td class="measuremnt-cell">
+                            @measurement.Value
+                            <span class="oi oi-trash disappearing-icon" style="font-size: 10px; color:red" @onclick="() => DeleteMeasurements(measurementsForRemove)"></span>
+                        </td>
+                    }
+                    else
+                    {
+                        <td></td>
+                    }
+                }
+
+                @foreach (var parameter in _symetryParameters)
+                {
+                    @if (parameter.Measurements.Where(m => m.OrderId == _orderId).Count() > i)
+                    {
+                        var measurement = parameter.Measurements.Where(m => m.OrderId == _orderId).OrderByDescending(m => m.Date).ToArray()[i];
+                        measurementsForRemove.Add(measurement);
+                        <td class="measuremnt-cell" style="@(measurement.Value < measurement.Parameter.LSL || measurement.Value > measurement.Parameter.USL ? "color:darkred; background-color:lightcoral;" : "")">
+                            @measurement.Value
+                            <span class="oi oi-trash disappearing-icon" style="font-size: 10px; color:red" @onclick="() => DeleteMeasurements(measurementsForRemove)"></span>
+                        </td>
+                    }
+                    else
+                    {
+                        <td></td>
+                    }
+                }
+
+                @if (_parentParameter.Measurements.Where(m => m.OrderId == _orderId).Count() > i)
+                {
+                    var parentMeasurement = _parentParameter.Measurements.Where(m => m.OrderId == _orderId).OrderByDescending(m => m.Date).ToArray()[i];
+                    measurementsForRemove.Add(parentMeasurement);
+                    <td class="measuremnt-cell" style="@(parentMeasurement.Value < parentMeasurement.Parameter.LSL || parentMeasurement.Value > parentMeasurement.Parameter.USL ? "color:darkred; background-color:lightcoral;" : "")">
+                        @parentMeasurement.Value
+                        <span class="oi oi-trash disappearing-icon" style="font-size: 10px; color:red" @onclick="() => DeleteMeasurements(measurementsForRemove)"></span>
+                    </td>
+                }
+            </tr>
+        }
+    </table>
+
+    <table class="measurement-table">
+        <tr><th colspan="@_descriptiveParameters.Count">Parametry opisowe</th></tr>
+        <tr>
+            @foreach (var descriptiveParameter in _descriptiveParameters)
+            {
+                <td>@descriptiveParameter.Name</td>
+            }
+        </tr>
+
+        <tr>
+            @foreach (var descriptiveParameter in _descriptiveParameters)
+            {
+                <td>@descriptiveParameter.FillingMethod</td>
+            }
+        </tr>
+
+        <tr>
+
+            @foreach (var descriptiveParameter in _descriptiveParameters)
+            {
+                <th>@descriptiveParameter.TestingInstrument</th>
+            }
+        </tr>
+        <tr>
+            @foreach (var descriptiveParameter in _descriptiveParameters)
+            {
+                <td class="measuremnt-cell">
+                    <input id="@descriptiveParameter.Id" type="text" @onchange="async (e) =>await HandleTextInput(e, descriptiveParameter.Id)" style="color: white; background-color: black; border:none; width:50px" />
+                </td>
+            }
+        </tr>
+
+        @{
+            var rows = _descriptiveParameters.Max(sp => sp.Values?.Count);
+        }
+
+        @for (int i = 0; i < rows; i++)
+        {
+            <tr>
+                @foreach (var descriptiveParameter in _descriptiveParameters)
+                {
+                    if (descriptiveParameter.Values.Count > i)
+                    {
+                        var result = descriptiveParameter.Values.OrderByDescending(v => v.Date).ToArray()[i];
+                        <td class="measuremnt-cell">
+                            <InputText Value="@result.Value" style="border:none"
+                             ValueChanged="@(async (string e) => {result.Value = e;await UpdateDescriptiveParameterResult(descriptiveParameter, e); })"
+                             ValueExpression="() => result.Value"/>
+                            <span class="oi oi-trash disappearing-icon" style="font-size: 10px; color:red" @onclick="() => DeleteResults(result.Series)"></span>
+                        </td>
+                    }
+                    else
+                    {
+                        <td></td>
+                    }   
+                }
+            </tr>
+        }
+    </table>
+
+    @* // *@
+
+    @if (_parentParameter.ParameterType != ParameterType.Symetria_Jednostronna && _parentParameter.ParameterType != ParameterType.Symetria)
+    {
+        @foreach (var parameter in _childParameters)
+        {
+            if (parameter.DevicePort != null)
+            {
+                <div class="chart">
+                    <MeasurementsChart Parameter="@parameter" ChartId="@parameter.Name" @ref="_chartComponent" OrderId="_orderId" />
+                    <ImageUploader Image="@parameter.Image" ShowFileInput="false"></ImageUploader>
+                </div>
+            }
+        }
+    }
+
+    @if (_symetryParameters != null)
+    {
+        foreach (var symetryParametr in _symetryParameters)
+        {
+            <div class="chart">
+                <MeasurementsChart Parameter="@symetryParametr" ChartId="@symetryParametr.Name" @ref="_chartComponent" OrderId="_orderId" />
+                <ImageUploader Image="@symetryParametr.Image" ShowFileInput="false"></ImageUploader>
+            </div>
+        }
+    }
+
+    <div class="chart">
+        <MeasurementsChart Parameter="@_parentParameter" ChartId="@_parentParameter.Name" @ref="_chartComponent" OrderId="_orderId" />
+        <ImageUploader Image="@_parentParameter.Image" ShowFileInput="false"></ImageUploader>
+    </div>
+</div>
+
+<script>
+    window.focusElement = (parameterId) => {
+        const element = document.getElementById(parameterId);
+        if (element) {
+            element.focus();
+        }
+    };
+
+    window.clearTxtInput = (elementId) => {
+        const element = document.getElementById(elementId);
+        if (element) {
+            element.value = "";
+        }
+    };
+</script>
+
+@code {
+    private void  DeleteResults(int series)
+    {
+        var resultsForRemove = _descriptiveParameters.SelectMany(dp => dp.Values).Where(v => v.Series == series);
+        QAContext.Results.RemoveRange(resultsForRemove);
+        QAContext.SaveChangesAsync();
+    }
+
+    private async Task UpdateDescriptiveParameterResult(DescriptiveParameter parameter, string value)
+    {
+        QAContext.DescriptiveParameter.Update(parameter);
+        await QAContext.SaveChangesAsync();
+    }
+
+    private async Task DeleteResult(Result result)
+    {
+        QAContext.Results.Remove(result);
+        await QAContext.SaveChangesAsync();
+    }
+
+    private async Task HandleTextInput(string value, int parameterId)
+    {
+        // string inputValue = e.Value?.ToString();
+
+        if (value != null)
+        {
+            await CreateNewDescriptiveParameterResult(parameterId, value);
+        }
+    }
+
+    private async Task HandleTextInput(ChangeEventArgs e, int parameterId)
+    {
+        string value = e.Value?.ToString();
+        if (value != null)
+        {
+            await CreateNewDescriptiveParameterResult(parameterId, value);
+        }
+    }
+
+    private async Task CreateNewDescriptiveParameterResult(int parameterId, string value)
+    {
+        var parameter = _descriptiveParameters.FirstOrDefault(dp => dp.Id == parameterId);
+        int series = parameter.Values
+                    .Where(v => v.OrderId == _orderId)
+                    .Select(v => v.Series)
+                    .DefaultIfEmpty(0)
+                    .Max() + 1;
+
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        Result newresult = new()
+            {
+                Date = DateTime.Now,
+                Value = value,
+                Parameter = _descriptiveParameters.FirstOrDefault(p => p.Id == parameterId),
+                ParameterId = parameterId,
+                Operator = _user.Identity.Name,
+                OrderId = _orderId,
+                Series = series
+            };
+
+        _newResults.Add(newresult);
+
+        var nextParameterIndex = _descriptiveParameters.IndexOf(_descriptiveParameters.FirstOrDefault(dp => dp.Id == parameterId)) + 1;
+        var y = _descriptiveParameters.Count;
+
+        if (nextParameterIndex == _descriptiveParameters.Count)
+        {
+            await SaveResultsSeries();
+            nextParameterIndex = _descriptiveParameters.IndexOf(_descriptiveParameters.First());
+        }
+
+        await JSRuntime.InvokeVoidAsync("focusElement", _descriptiveParameters[nextParameterIndex].Id);
+    }
+
+    private async Task UpdateResult(Result result, string value)
+    {
+        result.Value = value;
+        QAContext.Results.Update(result);
+        await QAContext.SaveChangesAsync();
+    }
+
+    private async Task SaveResultsSeries()
+    {
+        await QAContext.Results.AddRangeAsync(_newResults);
+        await QAContext.SaveChangesAsync();
+        _newResults.Clear();
+        ClearAllTextInputs();
+    }
+
+    private void ClearAllTextInputs()
+    {
+        foreach (var descriptiveParameter in _descriptiveParameters)
+        {
+            JSRuntime.InvokeVoidAsync("clearTxtInput", descriptiveParameter.Id);
+        }
+    }
+
+    private List<Result> _newResults = new();
+    //
+
+    [Parameter]
+    public string ParameterId { get; set; }
+    [Parameter]
+    public string OrderId { get; set; }
+
+    private ElementReference[] _inputRefs;
+    private Parameter _parentParameter = new();
+    private List<Parameter> _childParameters = new();
+    private List<Parameter>? _symetryParameters = new();
+    private MeasurementsChart _chartComponent = new();
+    private Order _order;
+
+    private int _orderId;
+    private string _productNo = String.Empty;
+    private int _measurementsQty;
+
+    private List<Measurement> _newMeasurements = new();
+    private int _childParametersQty;
+    private decimal _outcomeMeasuremntResult;
+
+    //
+    private List<DescriptiveParameter> _descriptiveParameters = new();
+    private ClaimsPrincipal _user;
+    //
+
+    protected override async Task OnInitializedAsync()
+    {
+        _orderId = int.Parse(OrderId);
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        _user = authState.User;
+        _parentParameter = GetParameter();
+        _childParameters = _parentParameter.ChildParametersAssignements.OrderBy(cha => cha.ParameterOrder).Select(cha => cha.ChildParameter).ToList();
+        _childParametersQty = _parentParameter.ChildParametersAssignements.Max(cpa => cpa.ParameterOrder);
+        GetSymetryParameters();
+        _order = QAContext.Orders.FirstOrDefault(o => o.Id == Int32.Parse(OrderId));
+        _productNo = _parentParameter.Operation.Product.Symbol;
+        _inputRefs = new ElementReference[_childParameters.Count];
+        _measurementsQty = _childParameters.OrderByDescending(p => p.Measurements.Count()).First().Measurements.Where(m => m.OrderId == _orderId).Count();
+
+        //
+        _descriptiveParameters = await QAContext.DescriptiveParameter.Where(p => p.OperationId == _parentParameter.OperationId).OrderBy(dp => dp.Id).ToListAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JSRuntime.InvokeVoidAsync("setFocus", _inputRefs[0]);
+        }
+    }
+
+    public Parameter GetParameter()
+    {
+        return QAContext.Parameters
+                        .Include(p => p.Measurements)
+                        .Include(p => p.Operation)
+                            .ThenInclude(o => o.Product)
+                        .Include(p => p.DevicePort)
+                            .ThenInclude(dp => dp.MeasuringDevice)
+                        .Include(p => p.Image)
+                        .Include(p => p.ChildParametersAssignements)
+                            .ThenInclude(cpa => cpa.ChildParameter)
+                            .ThenInclude(ch => ch.Measurements)
+                        .Include(p => p.ChildParametersAssignements)
+                            .ThenInclude(cpa => cpa.ChildParameter)
+                            .ThenInclude(cp => cp.DevicePort)
+                            .ThenInclude(dp => dp.MeasuringDevice)
+                         .Include(p => p.ChildParametersAssignements)
+                            .ThenInclude(cpa => cpa.ChildParameter)
+                            .ThenInclude(cp => cp.Image)
+                        .FirstOrDefault(p => p.Id == int.Parse(ParameterId));
+    }
+
+    private async Task HandleInput(ChangeEventArgs e, int parameterId, int index)
+    {
+        string inputValue = e.Value?.ToString();
+
+        if (inputValue != null)
+        {
+            var culture = CultureInfo.InvariantCulture;
+
+            if (decimal.TryParse(inputValue, culture, out decimal parsedValue))
+            {
+                CreateNewMeasurement(parameterId, parsedValue);
+
+                @if (_newMeasurements.Count == _childParametersQty)
+                {
+                    await CalculateMeasurementSequence(_newMeasurements);
+                    ClearAllInputs();
+                }
+
+                if (index == _inputRefs.Length - 1)
+                {
+                    await JSRuntime.InvokeVoidAsync("setFocus", _inputRefs[0]);
+                }
+                else
+                {
+                    await JSRuntime.InvokeVoidAsync("setFocus", _inputRefs[index + 1]);
+                }
+            }
+        }
+    }
+
+    private void CreateNewMeasurement(int parameterId, decimal value)
+    {
+        Measurement newMeasurement = new();
+        newMeasurement.Value = value;
+        newMeasurement.Parameter = _childParameters.FirstOrDefault(p => p.Id == parameterId);
+        newMeasurement.ParameterId = parameterId;
+        _newMeasurements.Add(newMeasurement);
+    }
+
+    private void ClearAllInputs()
+    {
+        foreach (var inputRef in _inputRefs)
+        {
+            JSRuntime.InvokeVoidAsync("clearInput", inputRef);
+        }
+    }
+
+    private async Task DeleteMeasurements(List<Measurement> measurements)
+    {
+        foreach (var measurement in measurements)
+        {
+            QAContext.Measurements.Remove(measurement);
+            await _chartComponent.UpdateChart(measurement.Parameter.Name, measurement.Parameter);
+        }
+
+        await QAContext.SaveChangesAsync();
+        _measurementsQty = _childParameters.OrderByDescending(p => p.Measurements.Count()).First().Measurements.Where(m => m.OrderId == _orderId).Count();
+    }
+
+    private void SaveComment()
+    {
+        var a = _parentParameter.Operation.Comment;
+        QAContext.SaveChanges();
+    }
+
+    private async Task CalculateMeasurementSequence(List<Measurement> measurements)
+    {
+        var sorteMeasurements = SortMeasurementsByParameterOrder(measurements);
+        var outcomeParameterResults = CreateOutcomeParameterMeasurement(sorteMeasurements);
+        measurements.AddRange(outcomeParameterResults);
+        await SaveMeasurementSequence(measurements);
+        _newMeasurements.Clear();
+    }
+
+    private List<Measurement> CreateOutcomeParameterMeasurement(List<Measurement> measurements)
+    {
+        decimal result = 0;
+        List<Measurement> outcomeMeasurements = new();
+
+        if (_parentParameter.ParameterType == ParameterType.Różnica)
+        {
+            Measurement differenceResult = new();
+            differenceResult.Value = measurements[0].Value - measurements[1].Value;
+            differenceResult.Parameter = _parentParameter;
+            differenceResult.ParameterId = _parentParameter.Id;
+            _parentParameter.Measurements.Add(differenceResult);
+            outcomeMeasurements.Add(differenceResult);
+        }
+        else if (_parentParameter.ParameterType == ParameterType.Symetria)
+        {
+            foreach (var symetryParameter in _symetryParameters)
+            {
+                Measurement symetryResult = new();
+
+                if (outcomeMeasurements.Count == 0)
+                    symetryResult.Value = measurements.Take(4).Select(m => m.Value).Max() - measurements.Take(4).Select(m => m.Value).Min();
+                else
+                    symetryResult.Value = measurements.TakeLast(4).Select(m => m.Value).Max() - measurements.TakeLast(4).Select(m => m.Value).Min();
+
+                symetryResult.Parameter = symetryParameter;
+                symetryResult.ParameterId = symetryParameter.Id;
+                symetryParameter.Measurements.Add(symetryResult);
+                outcomeMeasurements.Add(symetryResult);
+            }
+
+            Measurement parentSymetryResult = new();
+            parentSymetryResult.Value = measurements.Take(4).Select(m => m.Value).Average() - measurements.TakeLast(4).Select(m => m.Value).Average();
+            parentSymetryResult.Parameter = _parentParameter;
+            parentSymetryResult.ParameterId = _parentParameter.Id;
+            _parentParameter.Measurements.Add(parentSymetryResult);
+            outcomeMeasurements.Add(parentSymetryResult);
+        }
+
+        return outcomeMeasurements;
+    }
+
+    private async Task SaveMeasurementSequence(List<Measurement> measurementSequence)
+    {
+        try
+        {
+            foreach (var newMeasurement in measurementSequence)
+            {
+                newMeasurement.OrderKey = _order.ShortenedKey;
+                newMeasurement.OrderId = _orderId;
+                newMeasurement.Date = DateTime.Now;
+
+                if (_user.IsInRole("Kontroler") || _user.IsInRole("Manager") || _user.IsInRole("Admin"))
+                {
+                    newMeasurement.IsControllerMeasuremnt = true;
+                }
+                newMeasurement.Operator = _user.Identity.Name;
+
+                QAContext.Measurements.Add(newMeasurement);
+            }
+
+            _measurementsQty = _childParameters.OrderByDescending(p => p.Measurements.Count()).First().Measurements.Where(m => m.OrderId == _orderId).Count();
+
+            await QAContext.SaveChangesAsync();
+
+            foreach (var newMeasurement in measurementSequence)
+            {
+                await _chartComponent.UpdateChart(newMeasurement.Parameter.Name, newMeasurement.Parameter);
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorLogger.LogError(ex, nameof(MeasurementPanel));
+            throw;
+        }
+
+        _newMeasurements.Clear();
+    }
+
+    private List<Measurement> SortMeasurementsByParameterOrder(List<Measurement> measurements)
+    {
+        var sorteMeasurements = new List<Measurement>();
+        var sortedChildParameters = _parentParameter.ChildParametersAssignements.OrderBy(cpa => cpa.ParameterOrder).Select(cpa => cpa.ChildParameter);
+
+        foreach (var childParameter in sortedChildParameters)
+        {
+            sorteMeasurements.Add(measurements.FirstOrDefault(m => m.ParameterId == childParameter.Id));
+        }
+
+        return sorteMeasurements;
+    }
+
+    private void GetSymetryParameters()
+    {
+        if (_parentParameter.ParameterType == ParameterType.Symetria_Jednostronna || _parentParameter.ParameterType == ParameterType.Symetria)
+        {
+            _symetryParameters = QAContext.Parameters.Where(p => p.OperationId == _parentParameter.OperationId && (p.ParameterType == Domain.Models.Enums.ParameterType.Symetria_Jednostronna || p.ParameterType == Domain.Models.Enums.ParameterType.Symetria)).ToList();
+            _symetryParameters.Remove(_parentParameter);
+        }
+    }
+}

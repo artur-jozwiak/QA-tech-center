@@ -1,0 +1,86 @@
+﻿@using QA.BLL.Interfaces
+@using QA.Domain.Models
+@using QA.Domain.Models.Enums
+@using System.Security.Claims
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IOrderService OrderService
+@inject IUnitOfWork UnitOfWork
+@inject IJSRuntime IJSRuntime
+@inject IEmailService EmailService
+@inject NavigationManager Navigation
+
+<InputSelect class="@_cssClass" ValueExpression="@(()=>Order.Status)" Value="@Order.Status" ValueChanged="@( async (OrderStatus status) => await UpdateStatus(status))">
+    @foreach (OrderStatus status in _statusses)
+    {
+        if (status == OrderStatus.Waiting)
+        {
+            <option value="@status" disabled>@EnumExtensions.GetDisplayName(status)</option>
+            @* <option value="@status" disabled>@status</option> *@
+        }
+        else if (_user.IsInRole("Manager") || _user.IsInRole("Admin"))
+        {
+            <option class="@status" value="@status">@EnumExtensions.GetDisplayName(status)</option>
+        }
+        else if (_user.IsInRole("Kontroler"))
+        {
+            if (status == OrderStatus.NotApproved || status == OrderStatus.Approved || Order.Status == OrderStatus.NotApproved || Order.Status == OrderStatus.Approved)
+            {
+                <option value="@status" disabled>@EnumExtensions.GetDisplayName(status)</option>
+            }
+            else
+            {
+                <option class="@status" value="@status">@EnumExtensions.GetDisplayName(status)</option>
+            }
+        }
+        else
+        {
+            <option value="@status" disabled>@EnumExtensions.GetDisplayName(status)</option>
+        }
+    }
+</InputSelect>
+
+@code {
+    [Parameter]
+    public Order Order { get; set; }
+    Array _statusses;
+    private ClaimsPrincipal _user;
+    private string _cssClass;
+
+    protected override async Task OnInitializedAsync()
+    {
+        UpdateCSSClass();
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        _user = authState.User;
+        _statusses = Enum.GetValues(typeof(OrderStatus));
+    }
+
+    private async Task UpdateStatus(OrderStatus status)
+    {
+        if (status == OrderStatus.VerificationRequired || status == OrderStatus.NotApproved || status == OrderStatus.Approved)
+        {
+            bool confirmed = await IJSRuntime.InvokeAsync<bool>("confirm", $"Zmiana statusu zlecenia spowoduje wysłanie powiadomienia. Czy chcesz kontynuowac?");
+
+            if (confirmed)
+            {
+                var lastStatus = Order.Status.GetDisplayName();
+                Order.Status = status;
+                await UnitOfWork.CompleteAsync();
+                UpdateCSSClass();
+                var currentUrl = Navigation.Uri;
+                string result = await EmailService.SendOrderStatusNotificationEmail(Order, lastStatus, currentUrl);
+                await IJSRuntime.InvokeVoidAsync("alert", result);
+            }
+        }
+        else
+        {
+            Order.Status = status;
+            await UnitOfWork.CompleteAsync();
+            UpdateCSSClass();
+        }
+    }
+
+    private void UpdateCSSClass()
+    {
+        _cssClass = "status " + Order.Status;
+    }
+}

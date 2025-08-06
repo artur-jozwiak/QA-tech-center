@@ -1,0 +1,244 @@
+﻿@using System.Text.Json;
+@using QA.Domain.Models;
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager;
+
+<canvas id="@ChartId" style="margin: 5px"></canvas>
+
+@code {
+    [Parameter]
+    public string ChartId { get; set; }
+    [Parameter]
+    public Parameter Parameter { get; set; }
+    [Parameter]
+    public List<Measurement> Measurements { get; set; }
+    private decimal _percentageChartExpansion = 0.05m;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await UpdateChart(ChartId, Measurements);
+        }
+    }
+
+    public async Task UpdateChart(string chartId, List<Measurement> measurements)
+    {
+        var chartExists = await JSRuntime.InvokeAsync<bool>("eval", $"document.getElementById('{chartId}') !== null");
+        if (chartExists)
+        {
+            Measurements = measurements;
+            await JSRuntime.InvokeVoidAsync("destroyChart", chartId);
+            // await OnInitializedAsync();
+
+            var yMin = Parameter.LSL - (Parameter.LSL * _percentageChartExpansion);
+            var yMax = Parameter.USL + (Parameter.USL * _percentageChartExpansion);
+
+            var data = new
+            {
+                datasets = new[]
+      {
+        new
+        {
+            label = "LSL",
+            data = Measurements.Select(m => new
+            {
+                x = m.Date.ToString("yyyy-MM-dd"),
+                y = Parameter.LSL,
+                master = m.OrderKey.Replace('M', ' ').Split("-")[0]
+            }).ToList(),
+            type = "line",
+            borderColor = "rgba(255, 0, 0, 1)",
+            backgroundcolor = "rgba(255, 0, 0, 1)",
+            pointStyle = "line",
+            pointBackgroundColor = "rgba(255, 0, 0, 0.2)",
+            pointBorderColor = "rgba(255, 0, 0, 1)",
+            borderWidth = 1,
+            pointRadius = 0,
+            borderDash = new int[] { 5, 5 }
+        },
+        new
+        {
+            label = "M1",
+            data = Measurements.Where(m => m.MeasurementsSeries.Index == 1).Select(m => new
+            {
+                x = m.Date.ToString("yyyy-MM-dd"),
+                y = m.Value,
+                master = m.OrderKey.Replace('M', ' ').Split("-")[0]
+            }).ToList(),
+            type = "line",
+            borderColor = "rgba(75, 192, 192, 1)",
+            backgroundcolor = "rgba(75, 192, 192, 1)",
+            pointStyle = "circle",
+            pointBackgroundColor = "rgba(75, 192, 192, 0.4)",
+            pointBorderColor = "rgba(75, 192, 192, 1",
+            borderWidth = 1,
+            pointRadius = 3,
+            borderDash = new int[] { 0, 0 }
+        },
+        new
+        {
+            label = "M2",
+            data = Measurements.Where(m => m.MeasurementsSeries.Index == 2).Select(m => new
+            {
+                x = m.Date.ToString("yyyy-MM-dd"),
+                y = m.Value,
+                master = m.OrderKey.Replace('M', ' ').Split("-")[0]
+            }).ToList(),
+            type = "line",
+            borderColor = "rgba(39, 174, 96, 1)",
+            backgroundcolor = "rgba(39, 174, 96, 1)",
+            pointStyle = "circle",
+            pointBackgroundColor = "rgba(39, 174, 96, 0.4)",
+            pointBorderColor = "rgba(39, 174, 96, 1)",
+            borderWidth = 1,
+            pointRadius = 3,
+            borderDash = new int[] { 0, 0 }
+        },
+        new
+        {
+            label = "M3",
+            data = Measurements.Where(m => m.MeasurementsSeries.Index == 3).Select(m => new
+            {
+                x = m.Date.ToString("yyyy-MM-dd"),
+                y = m.Value,
+                master = m.OrderKey.Replace('M', ' ').Split("-")[0]
+            }).ToList(),
+            type = "line",
+            borderColor = "rgba(142, 68, 173, 1)",
+            backgroundcolor = "rgba(142, 68, 173, 1)",
+            pointStyle = "circle",
+            pointBackgroundColor = "rgba(142, 68, 173, 0.4",
+            pointBorderColor = "rgba(142, 68, 173, 1)",
+            borderWidth = 1,
+            pointRadius = 3,
+            borderDash = new int[] { 0, 0 }
+        },
+        new
+        {
+            label = "USL",
+            data = Measurements.Select(m => new
+            {
+                x = m.Date.ToString("yyyy-MM-dd"),
+                y = Parameter.USL,
+                master = m.OrderKey.Replace('M', ' ').Split("-")[0]
+            }).ToList(),
+            type = "line",
+            borderColor = "rgba(255, 0, 0, 1)",
+            backgroundcolor ="rgba(255, 0, 0, 1)",
+            pointStyle = "line",
+            pointBackgroundColor = "rgba(255, 0, 0, 0.4)",
+            pointBorderColor = "rgba(255, 0, 0, 1)",
+            borderWidth = 1,
+            pointRadius = 0,
+            borderDash = new int[] { 5, 5 },
+        },
+    }
+            };
+
+            var chartJs = @"var canvasId = '" + chartId + @"';
+                 var ctx = document.getElementById(canvasId).getContext('2d');
+                 var data = " + JsonSerializer.Serialize(data) + @";
+                 var config = {
+    type: 'scatter',
+    data: data,
+    options: {
+        plugins: {
+            legend: {
+                position: 'top',
+                labels: {
+                    usePointStyle: true,
+                    //pointStyle: 'circle',
+                    boxWidth: 10,
+                    font: {
+                        weight: 'bold',
+                    }
+                }
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        var master = context.raw.master;
+                        var label = context.dataset.label || '';
+                        if (label) {
+                            label += ': ';
+                        }
+                        label += 'Date: ' + context.raw.x + ', Value: ' + context.raw.y + ',';
+                        label += ' Sintering:' + master;
+                        return label;
+                    }
+                }
+            },
+            zoom: {
+                zoom: {
+                    wheel: {
+                        enabled: true,
+                    },
+                    // drag: {// powoduje przyblizanie podczas wyklucznia danych
+                    //     enabled: true,
+                    // },
+                    mode: 'xy'
+                }
+            }
+        },
+        animation: {
+            duration: 0,
+        },
+        scales: {
+            x: {
+                type: 'time',
+                time: {
+                    unit: 'day',
+                    tooltipFormat: 'dd MMM yy',
+                    displayFormats: {
+                        month: 'MMM yy ',
+                        day: 'dd MMM yy ',
+                    }
+                },
+
+                ticks: {
+                    font: {
+                        weight: 'bold',
+                    }
+                },
+                grid: {
+                    display: true,
+                    color: '#e0e0e0',
+                    lineWidth: 1,
+                    borderDash: [5, 5]
+                }
+            },
+            y: {
+                beginAtZero: false,
+                min: " + yMin.ToString("F2", System.Globalization.CultureInfo.InvariantCulture) + @",
+                max: " + yMax.ToString("F2", System.Globalization.CultureInfo.InvariantCulture) + @",
+                title: {
+                    display: true,
+                    text: '" + Parameter.Name + @"',
+                    font: {
+                        size: 16,
+                        weight: 'bold',
+                    }
+                },
+                ticks: {
+                    font: {
+                        weight: 'bold',
+                    }
+                }
+            },
+        },
+    },
+};
+
+                 var canvas = document.getElementById(canvasId);
+                 canvas.height = 70;
+                 canvas.style.backgroundColor = '#f3f6f4';
+                 new Chart(ctx, config);";
+
+            await JSRuntime.InvokeVoidAsync("eval", chartJs);
+            StateHasChanged();
+        }
+    }
+}
+
+

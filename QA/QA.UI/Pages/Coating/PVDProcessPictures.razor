@@ -1,0 +1,96 @@
+﻿@using QA.BLL.Interfaces
+@inject IPVDStatsRepository PVDStatsRepository
+@inject IConfiguration Configuration;
+
+@* sprawdzić co sie stanie gdy folder nie istniee i co gdy bedzie pusty *@
+@* ustawić lokalizacje  *@
+@* im bardziej skoncentrowany obraz tym mniej przrsuwania *@
+
+
+@if (Files != null && Files.Any())
+{
+    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px;">
+        @foreach (var file in Files)
+        {
+            var y = $"/pvd-microscope/{RunNo}/{file}";
+            <div style="flex: 0 0 calc(50% - 10px);">
+                <h4 style="text-align: center;"><strong>@file.Split('.')[0]</strong></h4>
+                <iframe src="@($"/pvd-microscope/{RunNo}/{file}")"
+                        style="width: 100%; height: 600px; border: none;"></iframe>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <p style="text-align: center;">Brak plików lub folder nie istnieje.</p>
+}
+
+@code {
+    [Parameter]
+    public string RunNo { get; set; }
+    private List<string> Files;
+
+    protected override void OnInitialized()
+    {
+        Files = GetFilesForRun()
+            .OrderBy(f => Path.GetExtension(f).ToLower() != ".pdf") // PDF first
+            .ThenBy(f => f)
+            .ToList();
+    }
+
+    public IEnumerable<string> GetFilesForRun()
+    {
+        string path = Path.Combine(Configuration["AppSettings:PVDMicroscopePath"], RunNo);
+        if (Directory.Exists(path))
+        {
+            return Directory.GetFiles(path).Select(Path.GetFileName);
+        }
+        return Enumerable.Empty<string>();
+    }
+}
+@* 
+@if (Files != null && Files.Any())
+{
+    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px;">
+        @foreach (var file in Files)
+        {
+            var y = $"pvd-reports/Mikroskop/{RunNo}/{file}";
+            <div style="flex: 0 0 calc(50% - 10px);">
+                <h4 style="text-align: center;"><strong>@file.Split('.')[0]</strong></h4>
+                <iframe src="@($"pvd-reports/Mikroskop/{RunNo}/{file}")"
+                        style="width: 100%; height: 600px; border: none;"></iframe>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <p style="text-align: center;">Brak plików lub folder nie istnieje.</p>
+}
+
+@code {
+    [Parameter]
+    public string RunNo { get; set; }
+    private List<string> Files;
+
+    protected override void OnInitialized()
+    {
+        Files = GetFilesForRun()
+            .OrderBy(f => Path.GetExtension(f).ToLower() != ".pdf") // PDF first
+            .ThenBy(f => f)
+            .ToList();
+    }
+
+    public IEnumerable<string> GetFilesForRun()
+    {
+        string path = Path.Combine(Configuration["AppSettings:QAPath"], "PVD/Mikroskop", RunNo);
+        if (Directory.Exists(path))
+        {
+            return Directory.GetFiles(path).Select(Path.GetFileName);
+        }
+        return Enumerable.Empty<string>();
+    }
+} *@
+
+

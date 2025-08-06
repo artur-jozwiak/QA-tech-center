@@ -1,0 +1,201 @@
+﻿@using System.Text.Json
+@using QA.Domain.Models
+@using QA.Domain.Models.Enums
+@inherits ComponentBase
+
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+
+<style>
+    .chart {
+        margin: 2px;
+    }
+</style>
+
+<span style="font-weight:bold">
+    @Parameter.Name [@Parameter.LSL...@Parameter.USL]
+</span>
+
+<canvas class="chart" id="@ChartId"></canvas>
+<canvas class="chart" id="histogram_@ChartId"></canvas>
+
+@code {
+    private string chartJs;
+    [Parameter]
+    public string ChartId { get; set; }
+    [Parameter]
+    public Parameter Parameter { get; set; }
+    [Parameter]
+    public int OrderId { get; set; }
+    private List<ChartDataPoint> _chartData = new();
+
+
+    protected override void OnInitialized()
+    {
+        LoadChartData();
+    }
+
+
+    private void LoadChartData()
+    {
+        _chartData.Clear();
+
+        if (Parameter.Operation.MeasurementsSeries != null)
+        {
+            foreach (var series in Parameter.Operation.MeasurementsSeries.Where(m => m.OrderId == OrderId).OrderBy(ms => ms.Index))
+            {
+                if (series.Measurements != null)
+                {
+                    foreach (var measurement in series.Measurements.Where(m => m.ParameterId == Parameter.Id))
+                    {
+                        string color = series.Side == Side.TOP ? "blue" : "green";
+
+                        _chartData.Add(new ChartDataPoint
+                            {
+                                x = measurement.Value,
+                                y = series.Index,
+                                color = color
+                            });
+                    }
+                }
+            }
+        }
+    }
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await UpdateChart(ChartId, null);
+        }
+    }
+
+    public async Task UpdateChart(string chartId, Parameter? parameter)
+    {
+        var chartExists = await JSRuntime.InvokeAsync<bool>("eval", $"document.getElementById('{chartId}') !== null");
+        if (chartExists)
+        {
+            if (parameter != null)
+            {
+                Parameter = parameter;
+            }
+
+            await JSRuntime.InvokeVoidAsync("destroyChart", chartId);
+            LoadChartData();
+
+            var lslData = new List<object>
+            {
+                new { x = (double)Parameter.LSL, y = 0 },
+                new { x = (double)Parameter.LSL, y = 100 }
+            };
+
+            var uslData = new List<object>
+            {
+                new { x = (double)Parameter.USL, y = 0 },
+                new { x = (double)Parameter.USL, y = 100 }
+            };
+
+            var data = new
+            {
+                datasets = new object[]
+                {
+                    new
+                    {
+                    label = "LSL",
+                    data = lslData,
+                    borderColor = "red",
+                    borderWidth = 2,
+                    pointRadius = 0,
+                    borderDash = new int[] { 5, 5 },
+                    type = "line"
+                    },
+                    new
+                    {
+                        label = Parameter.Name,
+                        data = _chartData.Select(d => new { x = d.x, y = d.y }),
+                        borderColor = _chartData.Select(d => d.color).ToArray(),
+                        borderWidth = 1,
+                        pointRadius = 4
+                    },
+                    new
+                    {
+                        label = "USL",
+                        data = uslData,
+                        borderColor = "red",
+                        borderWidth = 2,
+                        pointRadius = 0,
+                        borderDash = new int[] { 5, 5 },
+                        type = "line"
+                    }
+                }
+            };
+
+            chartJs = @"
+            var canvasId = '" + chartId + @"';
+            var ctx = document.getElementById(canvasId).getContext('2d');
+            var data = " + JsonSerializer.Serialize(data) + @";
+            var config = {
+                type: 'scatter',
+                data: data,
+                options: {
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                usePointStyle: true,
+                                pointStyle: 'circle',
+                                boxWidth: 10
+                            }
+                        }
+                    },
+
+                    scales: {
+                        x: {
+                            position: 'top',
+                            title: {
+                                display: true,
+                            }
+                        },
+                        y: {
+                            reverse: true,
+                            min: 0,
+                            max: 100,
+                            ticks: {
+                                display: false,
+                                stepSize: 1
+                            },
+                            title: {
+                                display: false,
+                            }
+                        }
+                    },
+                    animation: {
+                        duration: 0
+                    }
+                }
+            };
+            document.getElementById(canvasId).style.backgroundColor = '#e5e5e5';
+            document.getElementById(canvasId).height = window.innerHeight + 1500;
+            new Chart(ctx, config);";
+
+            await JSRuntime.InvokeVoidAsync("eval", chartJs);
+            StateHasChanged();
+        }
+    }
+
+    public async Task ReloadComponent(Parameter newParameter)
+    {
+        Parameter = newParameter;
+        await UpdateChart(ChartId, Parameter);
+    }
+
+    private class ChartDataPoint
+    {
+        public decimal x { get; set; }
+        public int y { get; set; }
+        public string color { get; set; }
+    }
+}
+
+

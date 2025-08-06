@@ -1,0 +1,111 @@
+﻿@page "/div-manager"
+
+@inject IJSRuntime JS
+
+@code {
+    private List<string> SourceDivs = new() { "Element 1", "Element 2", "Element 3", "Element 4" };
+    private List<string> TargetDivs = new();
+    private HashSet<string> SelectedDivs = new();
+    private bool isSelecting = false;
+    private string startSelection = "";
+    private string endSelection = "";
+
+    private void StartSelection(string item)
+    {
+        isSelecting = true;
+        startSelection = item;
+        endSelection = item;
+    }
+
+    private void UpdateSelection(string item)
+    {
+        if (isSelecting)
+        {
+            endSelection = item;
+            SelectRange();
+        }
+    }
+
+    private void EndSelection()
+    {
+        isSelecting = false;
+    }
+
+    private void SelectRange()
+    {
+        var startIndex = SourceDivs.IndexOf(startSelection);
+        var endIndex = SourceDivs.IndexOf(endSelection);
+        if (startIndex > endIndex)
+        {
+            (startIndex, endIndex) = (endIndex, startIndex);
+        }
+        SelectedDivs.Clear();
+        for (int i = startIndex; i <= endIndex; i++)
+        {
+            SelectedDivs.Add(SourceDivs[i]);
+        }
+    }
+
+    private void CopyToClipboard()
+    {
+        var text = string.Join("\n", SelectedDivs);
+        JS.InvokeVoidAsync("navigator.clipboard.writeText", text);
+    }
+
+    private async Task PasteFromClipboard()
+    {
+        var text = await JS.InvokeAsync<string>("navigator.clipboard.readText");
+        var items = text.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+        foreach (var item in items)
+        {
+            if (!TargetDivs.Contains(item))
+                TargetDivs.Add(item);
+        }
+    }
+}
+
+<h3>Grupa 1 (Źródłowe elementy)</h3>
+<div class="group" @onmouseup="EndSelection">
+    @foreach (var item in SourceDivs)
+    {
+        <div class="item @(SelectedDivs.Contains(item) ? "selected" : "")"
+             @onmousedown="() => StartSelection(item)"
+             @onmousemove="() => UpdateSelection(item)">
+            @item
+        </div>
+    }
+</div>
+
+<button @onclick="CopyToClipboard">Kopiuj (Ctrl+C)</button>
+<button @onclick="PasteFromClipboard">Wklej (Ctrl+V)</button>
+
+<h3>Grupa 2 (Skopiowane elementy)</h3>
+<div class="group">
+    @foreach (var item in TargetDivs)
+    {
+        <div class="item">@item</div>
+    }
+</div>
+
+<style>
+    .group {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        border: 1px solid #ccc;
+        padding: 10px;
+        margin-bottom: 20px;
+        user-select: none;
+    }
+
+    .item {
+        padding: 10px;
+        border: 1px solid #666;
+        cursor: pointer;
+        transition: background 0.3s;
+    }
+
+        .item.selected {
+            background: lightblue;
+        }
+</style>

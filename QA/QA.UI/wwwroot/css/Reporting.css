@@ -1,0 +1,28 @@
+﻿.spc-table {
+    width: auto;
+    border-collapse: collapse;
+    border: 2px solid #ccc;
+    margin: 20px 0;
+    font-size: 12px;
+}
+
+.spc-table th, .spc-table td {
+        border: 1px solid #ccc;
+        padding: 4px;
+        text-align: center;
+        white-space: nowrap;
+        width:65px;
+}
+
+.spc-table th {
+        background-color: #f2f2f2;
+}
+
+.spc-table tr:nth-child(even) {
+        background-color: #f9f9f9;
+ }
+
+.highlight {
+    background-color: #ffcccc;
+    color: #ff0000;
+}

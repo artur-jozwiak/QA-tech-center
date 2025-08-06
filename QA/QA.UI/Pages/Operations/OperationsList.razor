@@ -1,0 +1,151 @@
+﻿@using Microsoft.EntityFrameworkCore
+@using QA.BLL.Interfaces
+@using QA.DataAccess
+@using QA.Domain.Models;
+@using QA.UI.Pages.Common
+@using QA.UI.Pages.Parameters;
+@using QA.UI.Pages.QCPlan;
+@using QA.UI.Pages.VisualInspectionForm
+@using System.Diagnostics
+
+@inject NavigationManager NavigationManager
+@inject IOperationService OperationService
+@inject IErpOrderRepository ErpOrderRepository
+@inject IUnitOfWork UnitOfWork
+@inject QAContext QAContext
+
+<LoadingSpiner @ref="_loadingSpiner" Message="Pobieranie parametrów..."></LoadingSpiner>
+<CascadingAuthenticationState>
+
+    @foreach (var operation in Operations)
+    {
+        string eligibleRoles = string.Join(",", "Admin", "Manager", "Kontroler", "Viewer", operation.Name);
+
+        <div class="toggable-container">
+            @if (OperationService.IsPressingOperation(operation))
+            {
+                <AuthorizeView Roles="@eligibleRoles">
+                    <p style="margin-right: 10px; color:black"><strong>@operation.Name</strong></p>
+                    <span class="oi oi-play-circle" style="margin-left: auto; padding-right:12px; color:#0d6efd " @onclick="() => GoToPressingPanel()"></span>
+                </AuthorizeView>
+            }
+            else
+            {
+                <AuthorizeView Roles="@eligibleRoles">
+                    <div class="inner-toggable-container" @onclick="() => ToggleParametersTable(operation.Id)">
+                        <p style="margin-right: 10px; color:black"><strong>@operation.Name</strong></p>
+                        <NavLink class="nav-link" style="margin-left: 10px;">
+                            <span class="oi oi-chevron-bottom"></span>
+                        </NavLink>
+                    </div>
+                </AuthorizeView>
+
+                <AuthorizeView Roles="Admin, Manager">
+                    @if (!DispalyForCopying)
+                    {
+                        <NavLink class="nav-link" style="margin-left: auto;">
+                            <span class="oi oi-plus" @onclick="() => ShowParameterTypeModal(operation)"></span>
+                        </NavLink>
+                    }
+                </AuthorizeView>
+            }
+        </div>
+
+        <AuthorizeView Roles="@eligibleRoles">
+            @if (_expandParametersTable.Any(e => e == operation.Id))
+            {
+                <ParametersTable Parameters="operation.Parameters.ToList()" DisplayOnly="@DispalyForCopying" HideMeasurementLink="HideMeasurementLink" OrderId="OrderId"></ParametersTable>
+                <DescriptiveParametersList Parameters="operation.DescriptiveParameters.ToList()" OrderId="OrderId"></DescriptiveParametersList>//to trzeba zlikwidować
+                //05.05.25
+                @if (operation.Name == "Pokrycie")
+                {
+                    var order = UnitOfWork.Order.GetBy(OrderId);
+                    var _coatingProcesses = ErpOrderRepository.GetOrderdCoatingProcesses(order.HermesId);
+
+                    foreach (string process in _coatingProcesses)
+                    {
+                        <NavLink href="@($"/PVD/{process}")">Raport procesu:@process</NavLink>
+                        <br />
+                    }
+                }
+            }
+        </AuthorizeView>
+    }
+
+</CascadingAuthenticationState>
+<ParameterCreator @ref="_parameterCreator "></ParameterCreator>
+
+<DescriptionParameterCreator @ref="_descriptiveParameterCreator "></DescriptionParameterCreator>
+<ParameterTypeModal @ref="_parameterTypeModal" ParentComponent="this"></ParameterTypeModal>
+
+
+
+@code {
+
+    private void GoToPressingPanel()
+    {
+        NavigationManager.NavigateTo($"/pressing/{OrderId}");
+    }
+
+    //
+
+    [Parameter]
+    public List<Operation> Operations { get; set; }
+
+    [Parameter]
+    public bool DispalyForCopying { get; set; }
+
+    [Parameter]
+    public bool HideMeasurementLink { get; set; }
+
+    [Parameter]
+    public int OrderId { get; set; }
+
+    private List<int> _expandParametersTable = new();
+    private ParameterCreator _parameterCreator = new();
+    private LoadingSpiner _loadingSpiner = new();
+
+    private DescriptionParameterCreator _descriptiveParameterCreator = new();
+    private ParameterTypeModal _parameterTypeModal = new();
+
+    private async Task ToggleParametersTable(int operationId)
+    {
+        _loadingSpiner.Show();
+        var operation = Operations.FirstOrDefault(o => o.Id == operationId);
+        operation.Parameters = await QAContext.Parameters
+                   .Include(p => p.Measurements)
+                   .Include(p => p.Image)
+                   .Include(p => p.DevicePort)
+                      .ThenInclude(dp => dp.MeasuringDevice)
+                   .Include(p => p.ChildParametersAssignements)
+                   .Where(p => p.OperationId == operationId)
+                   .ToListAsync();
+        operation.DescriptiveParameters = await QAContext.DescriptiveParameter.Include(dp => dp.Values).Where(dp => dp.OperationId == operationId).ToListAsync();
+
+        if (_expandParametersTable.Contains(operationId))
+        {
+            _expandParametersTable.Remove(operationId);
+        }
+        else
+        {
+            _expandParametersTable.Add(operationId);
+        }
+
+        _loadingSpiner.Hide();
+    }
+
+    public void ShowParameterCreator(Operation operation)
+    {
+        _parameterCreator.ShowModal(operation);
+    }
+
+    public void ShowDescriptiveParameterCreator(Operation operation)
+    {
+        _descriptiveParameterCreator.ShowModal(operation);
+    }
+
+    private void ShowParameterTypeModal(Operation operation)
+    {
+        _parameterTypeModal.ShowModal(operation);
+    }
+}

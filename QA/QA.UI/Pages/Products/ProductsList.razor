@@ -1,0 +1,126 @@
+﻿@using QA.DataAccess;
+@using QA.Domain.Models;
+@using QA.UI.Models;
+@using QA.UI.Pages.Operations
+@using QA.UI.Pages.ProductPatterns
+
+@inject QAContext QAContext
+@inject IErrorLogger ErrorLogger
+@inject IJSRuntime IJSRuntime
+@inject NavigationManager NavigationManager
+
+<div>
+    @foreach (var product in Products)
+    {
+        <div class="toggable-container d-flex justify-content-between">
+            <div style="white-space: nowrap;">
+                <p style="display: inline-block; margin-right: 10px;"><strong>@product.Symbol</strong></p>
+                <p style="display: inline-block; margin-right: 10px;"><strong>@product.PdmNo</strong></p>
+                <p style="display: inline-block; margin-right: 10px;"><strong>@product.Description</strong></p>
+            </div>
+
+            <div class="d-flex">
+                <CascadingAuthenticationState>
+                    <AuthorizeView Roles="Admin,Manager,Kontroler">
+
+                        @if (!DispalyForCopying)
+                        {
+                            <span class="oi oi-pencil" style="padding:10px ;color:blue;padding:10px" @onclick="() => ShowEditModal(product)"></span>
+                            <span class="oi oi-trash" style="padding:10px ;color:blue;padding:10px" @onclick="() => ConfirmDeletion(product)"></span>
+                        }
+                        else if (DispalyForCopying)
+                        {
+                            <input type="radio" name="copy_as_pattern" @onchange="() => SetSelectedProductId(product.Id)">
+                        }
+                    </AuthorizeView>
+                </CascadingAuthenticationState>
+                <span class="oi oi-chevron-bottom" style=" color:blue;padding:10px" @onclick="() => ToggleOperationsList(product.Id)"></span>
+            </div>
+
+
+        </div>
+
+        @if (_expandOperationsList.Any(e => e == product.Id))
+        {
+            <OperationsList Operations="@product.Operations.ToList()" DispalyForCopying="DispalyForCopying" HideMeasurementLink="HideMeasurementLink"></OperationsList>
+        }
+    }
+</div>
+
+@code {
+    [CascadingParameter]
+    public ProductPatterns ProductPatterns { get; set; }
+    [Parameter]
+    public int SelectedProductId { get; set; }
+    [Parameter]
+    public List<Product> Products { get; set; }
+    [Parameter]
+    public bool DispalyForCopying { get; set; }
+    [Parameter]
+    public bool HideMeasurementLink { get; set; }
+
+    [Parameter]
+    public PatternCreator PatternCreator { get; set; }
+
+    private List<int> _expandOperationsList = new();
+
+    public void ToggleOperationsList(int productId)
+    {
+        if (_expandOperationsList.Contains(productId))
+        {
+            _expandOperationsList.Remove(productId);
+        }
+        else
+        {
+            _expandOperationsList.Add(productId);
+        }
+    }
+
+    private void SetSelectedProductId(int selectedProductId)
+    {
+        SelectedProductId = selectedProductId;
+    }
+
+    private async Task DeleteProduct(Product product)
+    {
+        QAContext.Products.Remove(product);
+        QAContext.SaveChanges();
+        RefreshAncestorComponent();
+    }
+
+    public async Task ConfirmDeletion(Product product)
+    {
+        if (product != null)
+        {
+            bool confirmed = await IJSRuntime.InvokeAsync<bool>("confirm", $"Czy na pewno chcesz usunąć  produkt: {product.Symbol}?");
+
+            if (confirmed)
+            {
+                try
+                {
+                    await DeleteProduct(product);
+                }
+                catch (Exception ex)
+                {
+                    await ErrorLogger.LogError(ex, nameof(ProductsList));
+                }
+            }
+        }
+    }
+
+    private void ShowEditModal(Product product)
+    {
+        PatternCreator.ShowModalInEditMode(product);
+    }
+
+    public void Refresh()
+    {
+        StateHasChanged();
+    }
+
+    public void RefreshAncestorComponent()
+    {
+        if (ProductPatterns != null)
+            ProductPatterns.Refresh();
+    }
+}

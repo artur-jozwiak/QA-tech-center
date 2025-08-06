@@ -1,0 +1,199 @@
+is_global = true
+build_property.EnableAotAnalyzer = 
+build_property.EnableSingleFileAnalyzer = true
+build_property.EnableTrimAnalyzer = 
+build_property.IncludeAllContentForSelfExtract = 
+build_property.TargetFramework = net7.0
+build_property.TargetPlatformMinVersion = 
+build_property.UsingMicrosoftNETSdkWeb = true
+build_property.ProjectTypeGuids = 
+build_property.InvariantGlobalization = 
+build_property.PlatformNeutralAssembly = 
+build_property.EnforceExtendedAnalyzerRules = 
+build_property._SupportedPlatformList = Linux,macOS,Windows
+build_property.RootNamespace = QA.UI
+build_property.RootNamespace = QA.UI
+build_property.ProjectDir = C:\Users\ajozwiak\Desktop\QA\QA\QA.UI\
+build_property.EnableComHosting = 
+build_property.EnableGeneratedComInterfaceComImportInterop = 
+build_property.RazorLangVersion = 7.0
+build_property.SupportLocalizedComponentNames = 
+build_property.GenerateRazorMetadataSourceChecksumAttributes = 
+build_property.MSBuildProjectDirectory = C:\Users\ajozwiak\Desktop\QA\QA\QA.UI
+build_property._RazorSourceGeneratorDebug = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/App.razor]
+build_metadata.AdditionalFiles.TargetPath = QXBwLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/AministrationPanel/RoleAssignModal.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQW1pbmlzdHJhdGlvblBhbmVsXFJvbGVBc3NpZ25Nb2RhbC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/AministrationPanel/RoleCreator.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQW1pbmlzdHJhdGlvblBhbmVsXFJvbGVDcmVhdG9yLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/AministrationPanel/UserCreator.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQW1pbmlzdHJhdGlvblBhbmVsXFVzZXJDcmVhdG9yLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/AministrationPanel/UsersManager.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQW1pbmlzdHJhdGlvblBhbmVsXFVzZXJzTWFuYWdlci5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Develop/ChartIcon.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRGV2ZWxvcFxDaGFydEljb24ucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Develop/ParameterIcon.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRGV2ZWxvcFxQYXJhbWV0ZXJJY29uLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Devices/DeviceCreator.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRGV2aWNlc1xEZXZpY2VDcmVhdG9yLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Devices/MeasuringDevices.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRGV2aWNlc1xNZWFzdXJpbmdEZXZpY2VzLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Images/FullScreenViewer.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSW1hZ2VzXEZ1bGxTY3JlZW5WaWV3ZXIucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Images/ImageUploader.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSW1hZ2VzXEltYWdlVXBsb2FkZXIucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Index.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSW5kZXgucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/LoadingSpiner.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTG9hZGluZ1NwaW5lci5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/MetricDashboard/DerivedParameterMetricDashboard.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTWV0cmljRGFzaGJvYXJkXERlcml2ZWRQYXJhbWV0ZXJNZXRyaWNEYXNoYm9hcmQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/MetricDashboard/MetricChart.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTWV0cmljRGFzaGJvYXJkXE1ldHJpY0NoYXJ0LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/MetricDashboard/MetricDashboard.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTWV0cmljRGFzaGJvYXJkXE1ldHJpY0Rhc2hib2FyZC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Operations/OperationsList.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcT3BlcmF0aW9uc1xPcGVyYXRpb25zTGlzdC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Orders/Orders.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcT3JkZXJzXE9yZGVycy5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Parameters/AssignChildParametersModal.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUGFyYW1ldGVyc1xBc3NpZ25DaGlsZFBhcmFtZXRlcnNNb2RhbC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Parameters/ParameterCreator.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUGFyYW1ldGVyc1xQYXJhbWV0ZXJDcmVhdG9yLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Parameters/ParametersTable.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUGFyYW1ldGVyc1xQYXJhbWV0ZXJzVGFibGUucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/PDF/PDFUploader.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUERGXFBERlVwbG9hZGVyLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/ProductPatterns/PatternCreator.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUHJvZHVjdFBhdHRlcm5zXFBhdHRlcm5DcmVhdG9yLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/ProductPatterns/ProductPatterns.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUHJvZHVjdFBhdHRlcm5zXFByb2R1Y3RQYXR0ZXJucy5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Products/ProductsList.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUHJvZHVjdHNcUHJvZHVjdHNMaXN0LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/QCPlan/CopyingQCPlanModal.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUUNQbGFuXENvcHlpbmdRQ1BsYW5Nb2RhbC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/QCPlan/QCPlan.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUUNQbGFuXFFDUGxhbi5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Start/SelectOrderModal.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcU3RhcnRcU2VsZWN0T3JkZXJNb2RhbC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Start/Start.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcU3RhcnRcU3RhcnQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/VisualInspectionForm/VisualControl.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVmlzdWFsSW5zcGVjdGlvbkZvcm1cVmlzdWFsQ29udHJvbC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Shared/LoginDisplay.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXExvZ2luRGlzcGxheS5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Shared/SurveyPrompt.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXFN1cnZleVByb21wdC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/_Imports.razor]
+build_metadata.AdditionalFiles.TargetPath = X0ltcG9ydHMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Shared/MainLayout.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXE1haW5MYXlvdXQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = b-dcgi8it27w
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Shared/NavMenu.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXE5hdk1lbnUucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = b-ih2cla92sx
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Areas/Identity/Pages/Account/Login.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcQWNjb3VudFxMb2dpbi5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Areas/Identity/Pages/Account/Logout.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcQWNjb3VudFxMb2dvdXQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Areas/Identity/Pages/Account/Manage/ChangePassword.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcQWNjb3VudFxNYW5hZ2VcQ2hhbmdlUGFzc3dvcmQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Areas/Identity/Pages/Account/_StatusMessage.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcQWNjb3VudFxfU3RhdHVzTWVzc2FnZS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Areas/Identity/Pages/_IdentityLayout.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcX0lkZW50aXR5TGF5b3V0LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Areas/Identity/Pages/_ViewImports.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcX1ZpZXdJbXBvcnRzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Areas/Identity/Pages/_ViewStart.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcX1ZpZXdTdGFydC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Error.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRXJyb3IuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/_Host.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcX0hvc3QuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 

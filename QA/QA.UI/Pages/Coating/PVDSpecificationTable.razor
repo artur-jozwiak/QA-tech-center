@@ -1,0 +1,168 @@
+﻿@using System.Collections.Generic
+@using QA.BLL.Interfaces
+@using QA.Domain.Models.CoatingModels
+@inject IUnitOfWork UnitOfWork
+@inject IJSRuntime JSRuntime
+
+@code {
+    [Parameter]
+    public List<Coating> _coatingSpecifications { get; set; } = new();
+    public Coating _newSpecification = new();
+    private int _rowNumber = 1;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _coatingSpecifications = UnitOfWork.Coating.GetAll();
+        // _coatingSpecifications.Add(_newSpecification);
+        _coatingSpecifications.Insert(0, new Coating());
+    }
+
+    private async Task SaveRecord(Coating coatingSpecification)
+    {
+        if (coatingSpecification.Id == 0)
+        {
+            UnitOfWork.Coating.Add(coatingSpecification);
+            // _coatingSpecifications.Add(new Coating());
+            _coatingSpecifications.Insert(0, new Coating());
+        }
+        UnitOfWork.Complete();
+    }
+
+    private async Task HandleKeyPress(KeyboardEventArgs e, int rowIndex, int columnIndex)
+    {
+        int newRow = rowIndex;
+        int newCol = columnIndex;
+
+        switch (e.Key)
+        {
+            case "ArrowRight":
+                newCol++;
+                await JSRuntime.InvokeVoidAsync("focusElement", newRow, newCol);
+                break;
+            case "ArrowLeft":
+                newCol--;
+                await JSRuntime.InvokeVoidAsync("focusElement", newRow, newCol);
+                break;
+            case "ArrowDown":
+                newRow++;
+                await JSRuntime.InvokeVoidAsync("focusElement", newRow, newCol);
+                break;
+            case "ArrowUp":
+                newRow--;
+                await JSRuntime.InvokeVoidAsync("focusElement", newRow, newCol);
+                break;
+        }
+    }
+
+    private void DeleteCoating(Coating coating)
+    {
+        _coatingSpecifications.Remove(coating);
+        UnitOfWork.Coating.RemoveCoating(coating);
+        UnitOfWork.Complete();
+    }
+}
+
+<div class="table-wrapper">
+    <table class="coating-table">
+        <thead>
+            <tr>
+                <th>Symbol procesu</th>
+                <th>ID procesu</th>
+                <th>Typ</th>
+                <th>Nazwa powłoki</th>
+                <th>Nazwa wewnętrzna</th>
+                <th>LSL</th>
+                <th>USL</th>
+                <th>Granica</th>
+            </tr>
+        </thead>
+        <tbody>
+
+            @{
+                _rowNumber = 1;
+            }
+
+            @foreach (var item in _coatingSpecifications)
+            {
+                int rowNumber = _rowNumber;
+                <tr>
+                    <td>
+                        <input type="text" row="@rowNumber" col="0"
+                               @bind-value="@item.CoatingSymbol"
+                               @bind-value:event="oninput"
+                               @onchange="() => SaveRecord(item)"
+                               @onkeydown="@(e => HandleKeyPress(e, rowNumber, 0))" /></td>
+
+                    <td><input type="text" row="@rowNumber" col="1"
+                               @bind-value="@item.ProcessId"
+                               @bind-value:event="oninput"
+                               @onchange="() => SaveRecord(item)"
+                               @onkeydown="@(e => HandleKeyPress(e, rowNumber, 1))" /></td>
+
+                    <td><input type="text" row="@rowNumber" col="2"
+                               @bind-value="@item.Type"
+                               @bind-value:event="oninput"
+                               @onchange="() => SaveRecord(item)"
+                               @onkeydown="@(e => HandleKeyPress(e, rowNumber, 2))" /></td>
+
+                    <td><input type="text" row="@rowNumber" col="3"
+                               @bind-value="@item.CoatingName"
+                               @bind-value:event="oninput"
+                               @onchange="() => SaveRecord(item)"
+                               @onkeydown="@(e => HandleKeyPress(e, rowNumber, 3))" /></td>
+
+                    <td><input type="text" row="@rowNumber" col="4"
+                               @bind-value="@item.InternalName"
+                               @bind-value:event="oninput"
+                               @onchange="() => SaveRecord(item)"
+                               @onkeydown="@(e => HandleKeyPress(e, rowNumber, 4))" /></td>
+
+                    <td><input type="number" row="@rowNumber" col="5"
+                               @bind-value="@item.LSL"
+                               @bind-value:event="oninput"
+                               @onchange="() => SaveRecord(item)"
+                               @onkeydown="@(e => HandleKeyPress(e, rowNumber, 5))" /></td>
+
+                    <td><input type="number" row="@rowNumber" col="6"
+                               @bind-value="@item.USL"
+                               @bind-value:event="oninput"
+                               @onchange="() => SaveRecord(item)"
+                               @onkeydown="@(e => HandleKeyPress(e, rowNumber, 6))" /></td>
+
+                    <td><input type="number" row="@rowNumber" col="7"
+                               @bind-value="@item.Limit"
+                               @bind-value:event="oninput"
+                               @onchange="() => SaveRecord(item)"
+                               @onkeydown="@(e => HandleKeyPress(e, rowNumber, 7))" /></td>
+                    <td>
+                        @if (item.Id != 0)
+                        {
+                            <span class="oi oi-trash" style="font-size: 10px; color:red; cursor: pointer;" @onclick="() => DeleteCoating(item)"></span>
+                        }
+                    </td>
+                    @{
+                        _rowNumber++;
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<script>
+    window.focusElement = (row, col) => {
+        const element = document.querySelector(`[row='${row}'][col='${col}']`);
+
+        if (element) {
+            element.focus();
+        }
+    };
+</script>
+
+<script>
+    window.addEventListener('keydown', function (event) {
+        if (['ArrowUp', 'ArrowDown'].includes(event.key)) {
+            event.preventDefault();
+        }
+    });
+</script>

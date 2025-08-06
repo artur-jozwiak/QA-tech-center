@@ -1,0 +1,22 @@
+C:\Users\ajozwiak\Desktop\QA\QA\QA.Domain\bin\Release\net7.0\QA.Domain.deps.json
+C:\Users\ajozwiak\Desktop\QA\QA\QA.Domain\bin\Release\net7.0\QA.Domain.dll
+C:\Users\ajozwiak\Desktop\QA\QA\QA.Domain\bin\Release\net7.0\QA.Domain.pdb
+C:\Users\ajozwiak\Desktop\QA\QA\QA.Domain\obj\Release\net7.0\QA.Domain.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\ajozwiak\Desktop\QA\QA\QA.Domain\obj\Release\net7.0\QA.Domain.AssemblyInfoInputs.cache
+C:\Users\ajozwiak\Desktop\QA\QA\QA.Domain\obj\Release\net7.0\QA.Domain.AssemblyInfo.cs
+C:\Users\ajozwiak\Desktop\QA\QA\QA.Domain\obj\Release\net7.0\QA.Domain.csproj.CoreCompileInputs.cache
+C:\Users\ajozwiak\Desktop\QA\QA\QA.Domain\obj\Release\net7.0\QA.Domain.dll
+C:\Users\ajozwiak\Desktop\QA\QA\QA.Domain\obj\Release\net7.0\refint\QA.Domain.dll
+C:\Users\ajozwiak\Desktop\QA\QA\QA.Domain\obj\Release\net7.0\QA.Domain.pdb
+C:\Users\ajozwiak\Desktop\QA\QA\QA.Domain\obj\Release\net7.0\ref\QA.Domain.dll
+C:\Users\ajozwiak\Desktop\QA Deploy 09.07.24\QA\QA.Domain\bin\Release\net7.0\QA.Domain.deps.json
+C:\Users\ajozwiak\Desktop\QA Deploy 09.07.24\QA\QA.Domain\bin\Release\net7.0\QA.Domain.dll
+C:\Users\ajozwiak\Desktop\QA Deploy 09.07.24\QA\QA.Domain\bin\Release\net7.0\QA.Domain.pdb
+C:\Users\ajozwiak\Desktop\QA Deploy 09.07.24\QA\QA.Domain\obj\Release\net7.0\QA.Domain.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\ajozwiak\Desktop\QA Deploy 09.07.24\QA\QA.Domain\obj\Release\net7.0\QA.Domain.AssemblyInfoInputs.cache
+C:\Users\ajozwiak\Desktop\QA Deploy 09.07.24\QA\QA.Domain\obj\Release\net7.0\QA.Domain.AssemblyInfo.cs
+C:\Users\ajozwiak\Desktop\QA Deploy 09.07.24\QA\QA.Domain\obj\Release\net7.0\QA.Domain.csproj.CoreCompileInputs.cache
+C:\Users\ajozwiak\Desktop\QA Deploy 09.07.24\QA\QA.Domain\obj\Release\net7.0\QA.Domain.dll
+C:\Users\ajozwiak\Desktop\QA Deploy 09.07.24\QA\QA.Domain\obj\Release\net7.0\refint\QA.Domain.dll
+C:\Users\ajozwiak\Desktop\QA Deploy 09.07.24\QA\QA.Domain\obj\Release\net7.0\QA.Domain.pdb
+C:\Users\ajozwiak\Desktop\QA Deploy 09.07.24\QA\QA.Domain\obj\Release\net7.0\ref\QA.Domain.dll

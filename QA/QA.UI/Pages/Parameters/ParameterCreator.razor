@@ -1,0 +1,492 @@
+﻿@using Microsoft.EntityFrameworkCore;
+@using QA.BLL.Interfaces
+@using QA.DataAccess;
+@using QA.Domain.Models;
+@using QA.Domain.Models.Enums
+@using QA.UI.Models;
+@using QA.UI.Pages.Operations
+@using QA.UI.Pages.QCPlan;
+@using QA.UI.Pages.ProductPatterns;
+@using QA.UI.Services;
+
+@inject QAContext QAContext;
+@inject IErrorLogger ErrorLogger;
+@inject IConfiguration Configuration
+@inject IOperationService IOperationService
+
+@if (_showModal)
+{
+    <div class="modal" style="display: block; width: 20%; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+        <div class="modal-content col-md-2">
+
+            <div class="modal-header">
+                <h5 class="modal-title" style="font-weight:bold">@Product.Symbol | @Operation.Name</h5>
+                <button class="btn btn-close" @onclick="HideModal"></button>
+            </div>
+
+            <EditForm Model="@_parameter" OnValidSubmit="@SaveParameter">
+                <ValidationSummary />
+                <DataAnnotationsValidator />
+
+                <div class="modal-body">
+                    <div class="form-row">
+
+                        <div class="form-group col-md-12">
+                            <label for="Name">Nazwa</label>
+                            <InputText class="form-control" id="Name" @bind-Value="@_parameter.Name" />
+                            <ValidationMessage For="@(() => _parameter.Name)" />
+                        </div>
+
+                        <div class="form-group col-md-12">
+                            <label for="Unit">Jednostka</label>
+                            <InputText class="form-control" id="Unit" @bind-Value="@_parameter.Unit" />
+                            <ValidationMessage For="@(() => _parameter.Unit)" />
+                        </div>
+
+                        @if (!IOperationService.IsSandblastingOperation(Operation))
+                        {
+                            <div class="form-group col-md-12">
+                                <label for="ParameterType">Typ</label>
+                                <InputSelect class="form-control" id="ParameterType" @bind-Value="@_parameter.ParameterType">
+                                    <option value=""></option>
+                                    @foreach (ParameterType type in Enum.GetValues(typeof(ParameterType)))
+                                    {
+                                        <option value="@type">@type</option>
+                                    }
+                                </InputSelect>
+                                <ValidationMessage For="@(() => _parameter.ParameterType)" />
+                            </div>
+
+                            <div class="form-group col-md-12">
+                                <label for="LowerTolerance">Tol -</label>
+                                <InputNumber class="form-control" id="LowerTolerance" @bind-Value="@_parameter.LowerTolerance" CultureInfo="pl-PL" max="0" />
+                                <ValidationMessage For="@(() => _parameter.LowerTolerance)" />
+                            </div>
+
+                            <div class="form-group col-md-12">
+                                <label for="NominalValue">Nominał</label>
+                                <InputNumber class="form-control" id="NominalValue" @bind-Value="@_parameter.NominalValue" />
+                                <ValidationMessage For="@(() => _parameter.NominalValue)" />
+                            </div>
+
+                            <div class="form-group col-md-12">
+                                <label for="UpperTolerance">Tol +</label>
+                                <InputNumber class="form-control" id="UpperTolerance" @bind-Value="@_parameter.UpperTolerance" />
+                                <ValidationMessage For="@(() => _parameter.UpperTolerance)" />
+                            </div>
+
+                            <div class="form-group col-md-12">
+                                <label for="SampleClass">Klasa próbki</label>
+                                <InputText class="form-control" id="SampleClass" @bind-Value="@_parameter.SampleClass" />
+                                <ValidationMessage For="@(() => _parameter.SampleClass)" />
+                            </div>
+                        }
+                        else if (IOperationService.IsSandblastingOperation(Operation))
+                        {
+                            <div class="form-group col-md-12">
+                                <label for="LSL">LSL</label>
+                                <InputNumber class="form-control" id="LSL" @bind-Value="@_parameter.LSL" CultureInfo="pl-PL" />
+                                <ValidationMessage For="@(() => _parameter.LSL)" />
+                            </div>
+
+                            <div class="form-group col-md-12">
+                                <label for="USL">USL</label>
+                                <InputNumber class="form-control" id="USL" @bind-Value="@_parameter.USL" />
+                                <ValidationMessage For="@(() => _parameter.USL)" />
+                            </div>
+
+                            <div class="form-group col-md-12">
+                                <label for="DuplicateBy">Ilosc krawędzi</label>
+                                <InputNumber class="form-control" id="DuplicateBy" @bind-Value="@_parameter.EdgesQty" required />
+                                <ValidationMessage For="@(() => _parameter.EdgesQty)" />
+                            </div>
+                        }
+
+                        @if (_parameter.ParameterType == ParameterType.Standard)
+                        {
+                            <div class="form-group col-md-12">
+                                <label for="DevicePortId">Przyrząd pomiarowy</label>
+                                <InputSelect class="form-control" id="DevicePortId" @bind-Value="@_parameter.DevicePortId" required>
+                                    <option value=""></option>
+                                    @foreach (var devicePort in _devicePorts)
+                                    {
+                                        <option value="@devicePort.Id">@devicePort.MeasuringDevice.Name - wejście: @devicePort.Name</option>
+                                    }
+                                </InputSelect>
+                                <ValidationMessage For="@(() => _parameter.DevicePortId)" />
+                            </div>
+                        }
+
+                        <div class="form-group col-md-12">
+                            <label for="Comment">Komentarz</label>
+                            <InputTextArea class="form-control" id="Comment" @bind-Value="@_parameter.Comment" />
+                            <ValidationMessage For="@(() => _parameter.Comment)" />
+                        </div>
+
+                        <div class="form-group col-md-12">
+                            <label for="AutomaticMeasurement">Automatyczny odczyt pomiaru</label>
+                            <InputCheckbox class="form-check-input" id="AutomaticMeasurement" @bind-Value="@_parameter.AutomaticMeasurement" />
+                        </div>
+
+                        <div class="form-group col-md-12">
+                            <label for="IsTrialParameter">Parametr próby</label>
+                            <InputCheckbox class="form-check-input" id="IsTrialParameter" @bind-Value="@_parameter.IsTrialParameter" />
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    @if (!IOperationService.IsSandblastingOperation(Operation) && _parameter.ParameterType == ParameterType.Standard && !_isEditMode)
+                    {
+                        <label for="_duplicateBy">Powiel parametr *</label>
+                        <InputNumber class="form-control" id="_duplicateBy" @bind-Value="@_duplicateBy" style="width:40px" />
+                    }
+                    <button class="btn btn-success">Zapisz</button>
+                    <button type="submit" class="btn btn-secondary" @onclick=HideModal>Anuluj</button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+}
+
+@code {
+    [CascadingParameter]
+    public QCPlan QCPlan { get; set; }
+
+    [CascadingParameter]
+    public ProductPatterns ProductPatterns { get; set; }
+
+    [Parameter]
+    public Product Product { get; set; }
+
+    [Parameter]
+    public Operation Operation { get; set; }
+
+    private Parameter _parameter = new();
+    private List<DevicePort> _devicePorts = new();
+
+    private bool _showModal = false;
+    private bool _isEditMode = false;
+    private int _duplicateBy;
+
+    private void SortUnasignedPorts()
+    {
+        _devicePorts = QAContext.DevicePorts
+        .Include(dp => dp.MeasuringDevice)
+        .ToList();
+    }
+
+    public void ShowModal(Operation operation)
+    {
+        Operation = operation;
+        Product = operation.Product;
+        SortUnasignedPorts();
+
+        _showModal = true;
+        StateHasChanged();
+    }
+
+    public void ShowModalInEditMode(Parameter parameter)
+    {
+        _parameter = parameter;
+        Product = parameter.Operation.Product;
+        Operation = parameter.Operation;
+        SortUnasignedPorts();
+
+        _isEditMode = true;
+        _showModal = true;
+        StateHasChanged();
+    }
+
+    public void HideModal()
+    {
+        _showModal = false;
+        StateHasChanged();
+    }
+
+    private async Task SaveParameter()
+    {
+        try
+        {
+            _parameter.Name.Trim();
+
+            if (_isEditMode)
+            {
+                UpdateParameter(_parameter);
+            }
+            else
+            {
+                //
+                if (_parameter.ParameterType != ParameterType.Standard)
+                {
+                    CreateResultParameter(_parameter.ParameterType);
+                }
+                else
+                {
+                    _parameter.Operation = Operation;
+                    await DuplicateParameter(_parameter);
+                    await AddParameterAsync(_parameter);
+                }
+
+                // _parameter.Operation = Operation;
+                // await DuplicateParameter(_parameter);
+                // await AddParameterAsync(_parameter);
+            }
+            await Complete();
+            RefreshAncestorComponent();
+        }
+        catch (Exception ex)
+        {
+            await ErrorLogger.LogError(ex, nameof(ParameterCreator));
+            throw;
+        }
+
+        HideModal();
+        _parameter = new();
+    }
+
+    public async Task AddParameterAsync(Parameter parameter)
+    {
+        parameter.CreationDate = DateTime.Now;
+        await QAContext.Parameters.AddAsync(parameter);
+    }
+
+    private void UpdateParameter(Parameter parameter)
+    {
+        // parameter.CreationDate = DateTime.Now;
+        if (parameter.Image != null)
+        {
+            UpdateParameterImage(parameter);
+        }
+
+        QAContext.Parameters.Update(_parameter);
+    }
+
+    private async Task Complete()
+    {
+        await QAContext.SaveChangesAsync();
+    }
+
+    public void RefreshAncestorComponent()
+    {
+        if (QCPlan != null)
+            QCPlan.Refresh();
+        else if (ProductPatterns != null)
+            ProductPatterns.Refresh();
+    }
+
+    private void UpdateParameterImage(Parameter parameter)
+    {
+        string oldFileName = parameter.Image.ImageUrl;
+
+        string savePath = Configuration["AppSettings:ImagesPath"];
+        string fileName = $"{parameter.Operation.Product.Symbol}_{parameter.Name}_param.png";
+        string destinationPath = Path.Combine(savePath, fileName);
+        parameter.Image.ImageUrl = destinationPath;
+
+        try
+        {
+            File.Move(oldFileName, destinationPath, true);
+        }
+        catch (Exception)
+        {
+            throw;
+        }
+    }
+
+    private async Task DuplicateParameter(Parameter parameter)
+    {
+        if (_duplicateBy != 0)
+        {
+            for (int i = 1; i <= _duplicateBy - 1; i++)
+            {
+                Parameter newParameter = new()
+                    {
+                        Name = parameter.Name,
+                        Unit = parameter.Unit,
+                        LSL = parameter.LSL,
+                        LowerTolerance = parameter.LowerTolerance,
+                        NominalValue = parameter.NominalValue,
+                        UpperTolerance = parameter.UpperTolerance,
+                        USL = parameter.USL,
+                        SampleClass = parameter.SampleClass,
+                        Comment = parameter.Comment,
+                        AutomaticMeasurement = parameter.AutomaticMeasurement,
+                        IsChildParameter = parameter.IsChildParameter,
+                        Operation = parameter.Operation,
+                        OperationId = parameter.OperationId,
+                        DevicePort = parameter.DevicePort,
+                        DevicePortId = parameter.DevicePortId,
+                        ParameterType = parameter.ParameterType,
+                    };
+
+                await AddParameterAsync(newParameter);
+                await Complete();
+            }
+        }
+    }
+
+    private void CreateResultParameter(ParameterType parameterType)
+    {
+        if (parameterType == ParameterType.Symetria)
+        {
+            CreateSymetryParameters();
+        }
+        else if (parameterType == ParameterType.Różnica)
+        {
+            CrateDiffChildParameters();
+        }
+    }
+
+    private void CreateSymetryParameters()
+    {
+        List<Parameter> parametersToAdd = new();
+        List<ChildParametersAssignement> parametersAssignementsToAdd = new();
+        int counter = 1;
+        int parameterOrder = 0;
+
+        Parameter symetry = new()
+        {
+                Name = "SYMETRIA",
+                Unit = "mm",
+                Operation = Operation,
+                SampleClass = "A",
+                ParameterType = ParameterType.Symetria,
+                IsChildParameter = false,
+                CreationDate = DateTime.Now
+        };
+
+        parametersToAdd.Add(symetry);
+
+        for (int i = 1; i <= 2; i++)
+        {
+            Parameter symetryOneSide = new()
+            {
+                    Name = "SYMETRIA" + i,
+                    Unit = "mm",
+                    Operation = Operation,
+                    SampleClass = "A",
+                    ParameterType = ParameterType.Symetria_Jednostronna,
+                    IsChildParameter = false,
+                    CreationDate = DateTime.Now
+            };
+
+            //
+
+            Parameter endToEndSymetry = new()
+            {
+                    Name = "S" + counter + ".0",
+                    Unit = "mm",
+                    Operation = Operation,
+                    SampleClass = "A",
+                    ParameterType = ParameterType.Standard,
+                    IsChildParameter = true,
+                    CreationDate = DateTime.Now
+            };
+
+            ChildParametersAssignement endtoEndRelation = new()
+            {
+                    ParentParameter = symetry,
+                    ChildParameter = endToEndSymetry,
+                    ParameterOrder = parameterOrder
+            };
+
+            counter++;
+            parameterOrder++;
+            parametersToAdd.Add(endToEndSymetry);
+
+            //
+            parametersToAdd.Add(symetryOneSide);
+
+            for (int j = 1; j <= 4; j++)
+            {
+                Parameter newParameter = new()
+                {
+                        Name = "S" + counter,
+                        Unit = "mm",
+                        Operation = Operation,
+                        SampleClass = "A",
+                        ParameterType = ParameterType.Standard,
+                        IsChildParameter = true,
+                        CreationDate = DateTime.Now
+                };
+
+                ChildParametersAssignement symetryParametersAssignement = new()
+                {
+                        ChildParameter = newParameter,
+                        ParentParameter = symetry,
+                        ParameterOrder = parameterOrder,
+                };
+                parameterOrder++;
+
+                ChildParametersAssignement symetryOneSideParametersAssignement = new()
+                {
+                        ChildParameter = newParameter,
+                        ParentParameter = symetryOneSide,
+                        ParameterOrder = parameterOrder,
+                };
+
+                parameterOrder++;
+                counter++;
+                parametersToAdd.Add(newParameter);
+
+                //
+                parametersAssignementsToAdd.Add(endtoEndRelation);
+
+                //
+                parametersAssignementsToAdd.Add(symetryParametersAssignement);
+                parametersAssignementsToAdd.Add(symetryOneSideParametersAssignement);
+            };
+        }
+
+        QAContext.Parameters.AddRangeAsync(parametersToAdd);
+        QAContext.ChildParametersAssignement.AddRangeAsync(parametersAssignementsToAdd);
+    }
+
+    private void CrateDiffChildParameters()
+    {
+        List<Parameter> parametersToAdd = new();
+        List<ChildParametersAssignement> relations = new();
+
+        Parameter diff = new()
+        {
+                Name = "DIFF",
+                Unit = "mm",
+                Operation = Operation,
+                SampleClass = "A",
+                ParameterType = ParameterType.Różnica,
+                IsChildParameter = false,
+                CreationDate = DateTime.Now
+
+        };
+        parametersToAdd.Add(diff);
+
+        for (int i = 1; i <= 2; i++)
+        {
+            Parameter childParameter = new()
+            {
+                    Name = "S" + i,
+                    Unit = "mm",
+                    Operation = Operation,
+                    SampleClass = "A",
+                    ParameterType = ParameterType.Standard,
+                    IsChildParameter = true,
+                    CreationDate = DateTime.Now
+           };
+
+            ChildParametersAssignement relation = new()
+            {
+                    ParentParameter = diff,
+                    ChildParameter = childParameter,
+                    ParameterOrder = i
+            };
+
+            parametersToAdd.Add(childParameter);
+            relations.Add(relation);
+        }
+
+        QAContext.Parameters.AddRangeAsync(parametersToAdd);
+        QAContext.ChildParametersAssignement.AddRangeAsync(relations);
+    }
+}

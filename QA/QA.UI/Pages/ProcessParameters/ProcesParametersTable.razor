@@ -1,0 +1,187 @@
+﻿@using QA.BLL.Interfaces
+@using QA.Domain.Models
+@inject IUnitOfWork UnitOfWork
+@inject IOperationService IOperationService
+
+@if (_isGridingOperation)
+{
+    <table class="operation-parameters-table">
+
+        <tr>
+            <td colspan="14">
+                <h5 style="font-weight:bold">
+                    @Order.OrderKey
+                    @Operation.Product.Symbol
+                    @Operation.Product.Description
+                </h5>
+            </td>
+        </tr>
+
+        <tr>
+            <th rowspan="2">Zlecenie</th>
+            <th rowspan="2">Kaseta</th>
+            <th rowspan="2">Ilość sztuk na kasecie</th>
+            <th colspan="2"> Górna ściernica</th>
+            <th colspan="2">Dolna ściernica</th>
+            <th colspan="2">Środkowy stół</th>
+        </tr>
+
+        <tr>
+            <th>RPM</th>
+            <th>Kierunek obrotów</th>
+            <th>RPM</th>
+            <th>Kierunek obrotów</th>
+            <th>RPM</th>
+            <th>Kierunek obrotów</th>
+        </tr>
+
+        <tr>
+            <td class="bold">@_operationDetails.OrderKey @_operationDetails.ModificationDate?.ToString("dd-MM-yy")</td>
+
+            <td>
+                <InputText class="border-0" Value="@_operationDetails.Cassette"
+                           ValueChanged="@(async e => { _operationDetails.Cassette = e;await Savechanges(); })"
+                           ValueExpression="() => _operationDetails.Cassette" />
+            </td>
+
+            <td>
+                <InputNumber class="border-0" Value="@_operationDetails.CassetteInsertsQty"
+                             ValueChanged="@(async (int? e )=> { _operationDetails.CassetteInsertsQty = e;await Savechanges(); })"
+                             ValueExpression="() => _operationDetails.CassetteInsertsQty" />
+            </td>
+
+            <td>
+                <InputNumber class="border-0" Value="@_operationDetails.UpperRPM"
+                             ValueChanged="@(async (decimal? e )=> { _operationDetails.UpperRPM = e;await Savechanges(); })"
+                             ValueExpression="() => _operationDetails.UpperRPM" />
+            </td>
+
+            <td>
+                <InputSelect class="border-0 rotation-ico" TValue="string"
+                             Value="@_operationDetails.UpperDirection"
+                             ValueChanged="@(async e => { _operationDetails.UpperDirection = e; await Savechanges(); })"
+                             ValueExpression="() => _operationDetails.UpperDirection"
+                             title="Kierunek obrotu patrząc od strony powierzchni roboczej ściernicy">
+                    <option value=""></option>
+                    <option value="CW">↻</option>
+                    <option value="CCW">↺</option>
+                </InputSelect>
+            </td>
+
+            <td>
+                <InputNumber class="border-0" Value="@_operationDetails.LowerRPM"
+                             ValueChanged="@(async (decimal? e )=> { _operationDetails.LowerRPM = e;await Savechanges(); })"
+                             ValueExpression="() => _operationDetails.LowerRPM" />
+            </td>
+
+            <td>
+                <InputSelect class="border-0 rotation-ico" TValue="string"
+                             Value="@_operationDetails.LowerDirection"
+                             ValueChanged="@(async e => { _operationDetails.LowerDirection = e; await Savechanges(); })"
+                             ValueExpression="() => _operationDetails.LowerDirection"
+                             title="Kierunek obrotu patrząc od strony powierzchni roboczej ściernicy">
+                    <option value=""></option>
+                    <option value="CW">↻</option>
+                    <option value="CCW">↺</option>
+                </InputSelect>
+            </td>
+
+            <td>
+                <InputNumber class="border-0" Value="@_operationDetails.CentralTableRPM"
+                             ValueChanged="@(async (decimal? e )=> { _operationDetails.CentralTableRPM = e;await Savechanges(); })"
+                             ValueExpression="() => _operationDetails.CentralTableRPM" />
+            </td>
+
+            <td>
+                <InputSelect class="border-0 rotation-ico" TValue="string"
+                             Value="@_operationDetails.CentralTableDirection"
+                             ValueChanged="@(async e => { _operationDetails.CentralTableDirection = e; await Savechanges(); })"
+                             ValueExpression="() => _operationDetails.CentralTableDirection"
+                             title="Kierunek obrotu z perspektywy górnej ściernicy.">
+                    <option value=""></option>
+                    <option value="CW">↻</option>
+                    <option value="CCW">↺</option>
+                </InputSelect>
+            </td>
+        </tr>
+
+            @foreach (var operationDetails in Operation.OperationDetails.Where(od => od.OrderKey != Order.OrderKey).OrderByDescending(od => od.ModificationDate))
+            {
+                <tr>
+                    <td class="bold">@operationDetails.OrderKey @operationDetails.ModificationDate?.ToString("dd-MM-yy")</td>
+                    <td>@operationDetails.Cassette</td>
+                    <td> @operationDetails.CassetteInsertsQty</td>
+                    <td>@operationDetails.UpperRPM</td>
+                    <td class="rotation-ico" title="Kierunek obrotu patrząc od strony powierzchni roboczej ściernicy.">@(operationDetails.UpperDirection == "CW" ? "↻" : operationDetails.UpperDirection == "CCW" ? "↺" : "")</td>
+
+                    <td>@operationDetails.LowerRPM</td>
+                    <td class="rotation-ico" title="Kierunek obrotu patrząc od strony powierzchni roboczej ściernicy.">@(operationDetails.LowerDirection == "CW" ? "↻" : operationDetails.LowerDirection == "CCW" ? "↺" : "")</td>
+
+                    <td>@operationDetails.CentralTableRPM</td>
+                    <td class="rotation-ico" title="Kierunek obrotu z perspektywy górnej ściernicy.">@(operationDetails.CentralTableDirection == "CW" ? "↻" : operationDetails.CentralTableDirection == "CCW" ? "↺" : "")</td>
+                </tr>
+            }
+
+        <tr style="text-align:center">
+            <td colspan="100%">
+                <button class="btn btn-primary" style="display: block; margin: 0 auto;" @onclick="DisplayOperationDetailsHistory">Wyświetl historię</button>
+            </td>
+        </tr>
+
+    @*
+    <tr style="text-align:center; font-weight:bold">
+    <td class="bold" colspan="100%">
+    Komentarz
+    </td>
+    </tr>
+    <tr style="text-align:center">
+    <td colspan="100%">
+    <InputTextArea class="border-0 bold" Value="@Operation.Comment"
+    ValueChanged="@(async e => {Operation.Comment = e;await Savechanges(); })"
+    ValueExpression="() => Operation.Comment" style="width:100%" />
+    </td>
+    </tr> 
+    *@
+
+    </table>
+}
+
+@code {
+    [Parameter]
+    public Order Order { get; set; }
+    [Parameter]
+    public Operation Operation { get; set; }
+    private OperationDetails _operationDetails;
+    private bool _isGridingOperation = false;
+    private bool _showOperationDetailsHistory = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (IOperationService.IsGindingTopAndBottomOperation(Operation))
+        {
+            CreateOperationDetailsIfNotExist();
+            _isGridingOperation = true;
+            _operationDetails = Operation.OperationDetails.FirstOrDefault(op => op.OrderKey == Order.OrderKey);
+        }
+    }
+
+    private void CreateOperationDetailsIfNotExist()
+    {
+        if (Operation.OperationDetails == null || Operation.OperationDetails.All(od => od.OrderKey != Order.OrderKey))
+        {
+            var newOperationDetails = new OperationDetails() { OperationId = Operation.Id, Operation = Operation, OperationType = Domain.Models.Enums.OperationType.GrindinTopAndBottom, OrderKey = Order.OrderKey };
+            Operation.OperationDetails.Add(newOperationDetails);
+        }
+    }
+
+    private async Task Savechanges()
+    {
+        _operationDetails.ModificationDate = DateTime.UtcNow;
+        await UnitOfWork.CompleteAsync();
+    }
+
+    private async Task DisplayOperationDetailsHistory()
+    {
+        _showOperationDetailsHistory = !_showOperationDetailsHistory;
+    }
+}

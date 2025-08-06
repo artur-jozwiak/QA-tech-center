@@ -1,0 +1,242 @@
+﻿@page "/LaboratoryPanel/{ParametersIds}"
+@page "/LaboratoryPanel/{ParametersIds}/{OrderId}"
+@page "/LaboratoryPanel/{ParametersIds}/{OrderId}/{TrialNo}"
+
+@using Microsoft.JSInterop
+@using QA.BLL.Interfaces
+@using QA.Domain.Models;
+@using Microsoft.EntityFrameworkCore
+@using QA.DataAccess;
+@using QA.Domain.Models.Enums
+@using QA.UI.Models;
+@using System.Globalization;
+@using QA.UI.Pages.Common
+@using QA.UI.Pages.Develop
+@using QA.UI.Pages.Images
+@using QA.UI.Pages.Laboratory
+@using QA.UI.Pages.MeasurmentPanel
+@using System.Security.Claims
+
+@inject IOperationService IOperationService
+@* @inject IParameterService ParameterService *@
+
+@inject IErrorLogger ErrorLogger
+@inject IJSRuntime JSRuntime
+@inject QAContext QAContext
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ILaboratoryRepository LaboratoryRepository
+@inject IOrderRepository IOrderRepository
+@inject IParameterRepository IParameterRepository
+@inject IPowderRepository IPowdersSpecificationRepository
+@inject IParameterService IParameterService
+@inject IUnitOfWork IUnitOfWork
+
+@*
+jesli 0 nie wyswietlać histogramu
+*@
+
+<label style=" padding-right: 10px;">Próba:</label>
+<InputSelect @bind-Value="TrialNo">
+    <option value="">Wybierz próbe</option>
+
+    @for (int i = 1; i <= 10; i++)
+    {
+        <option value="@i">@i</option>
+    }
+</InputSelect>
+
+
+@if (!String.IsNullOrEmpty(TrialNo))
+{
+    <button style=" margin-left: 10px; " class="btn-primary" @onclick="() => HandleTrialChange()">Przejdź próby: @TrialNo</button>
+}
+
+@if (!string.IsNullOrEmpty(_errorMessage))
+{
+    <div class="alert alert-primary" style="font-weight:bold">
+        @_errorMessage
+    </div>
+}
+
+@if (_isLoading)
+{
+    <LoadingSpiner IsLoading="true" Message="Pobieranie planu kontroli..."></LoadingSpiner>
+}
+else
+{
+    <div>
+        <label style="font-weight:bold">Komentarz</label>
+        <div class="row">
+
+            <div class="col">
+                <InputTextArea @bind-Value="@_parameters.FirstOrDefault().Operation.Comment" style="width:100%" />
+            </div>
+
+            <div class="col-auto">
+                <button class="btn btn-primary" onclick="@(() => SaveComment())" style="height:25px">Zapisz</button>
+            </div>
+        </div>
+
+        <LaboratoryTable Operation="@_operation" Order="_order" Parameters="@_parameters" TrialNo="@TrialNo" ShowStats="@true"></LaboratoryTable>
+    </div>
+}
+
+<script>
+    window.confirmClose = {
+        initialize: function () {
+            window.addEventListener('beforeunload', function (e) {
+                var confirmationMessage = 'Czy na pewno chcesz opuścić tę stronę?';
+                e.returnValue = confirmationMessage;
+                return confirmationMessage;
+            });
+        }
+    };
+</script>
+
+@code {
+    [Parameter]
+    public string ParametersIds { get; set; }
+    [Parameter]
+    public string OrderId { get; set; }
+
+    private List<Parameter> _parameters = new();
+    private Order _order;
+
+    private int _orderId;
+    private decimal?[] _newValues;
+
+    private Operation _operation;
+
+    private MeasurementsSeries _editingSeries;
+    private ClaimsPrincipal _user;
+    private bool _isLoading = true;
+    private string _errorMessage = string.Empty;
+
+    [Parameter]
+    public string TrialNo { get; set; }
+    private string _orderKey;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _orderId = int.Parse(OrderId);
+            string[] parametersIds = ParametersIds.Split(',');
+            int[] parametersIdsInt = parametersIds.Select(int.Parse).ToArray();
+            _order = await IUnitOfWork.Order.GetByAsync(_orderId);
+
+            if (TrialNo == null)
+            {
+                _orderKey = _order.ShortenedKey;
+            }
+            else
+            {
+                _orderKey = string.Concat(_order.ShortenedKey, "-", TrialNo);
+            }
+
+            _parameters = await IUnitOfWork.Parameter.GetParametersWithMeasurementsBy(_orderId, parametersIdsInt);
+            // _parameters = await IUnitOfWork.Parameter.GetParametersWithMeasurementsBy(_orderId, parametersIdsInt, _orderKey);
+
+            _newValues = new decimal?[_parameters.Count];
+            _operation = _parameters.FirstOrDefault()?.Operation;
+
+            // _errorMessage = await AssignTolerances();
+            //_errorMessage = await ParameterService.AssignSpecificationLimits(_operation);
+
+        }
+        catch (Exception ex)
+        {
+            throw ex;
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JSRuntime.InvokeVoidAsync("confirmClose.initialize");
+        }
+    }
+
+    private void SaveComment()
+    {
+        var a = _parameters.FirstOrDefault().Operation.Comment;
+        QAContext.SaveChanges();
+    }
+
+    // private async Task<string?> AssignTolerances()
+    // {
+    //     //refaktoring
+    //     List<Parameter> prametersforUpdate = new();
+    //     string powderName = _operation.Product.Description.Trim().Split(" ").Last();
+    //     var powder = await IPowdersSpecificationRepository.GetBy(powderName);
+
+    //     if (powder == null)
+    //     {
+    //         return $"Proszek o nazwie: {powderName} nie istnieje.";
+    //     }
+
+    //     var hcjParameter = _parameters.First(p => p.Name.Contains("HC"));
+    //     var msParameter = _parameters.First(p => p.Name.Contains("MS"));
+    //     var densityParameter = _parameters.First(p => p.Name.Contains("Gęstość"));
+    //     var hardnesParameter = _parameters.First(p => p.Name.Contains("Twardość"));
+
+    //     if ((hcjParameter.LSL == 0 && powder.HCJMin != null) ||
+    //          (hcjParameter.NominalValue == 0 && powder.HCJNominal != null) ||
+    //          (hcjParameter.USL == 0 && powder.HCJMax != null))
+    //     {
+    //         hcjParameter.LSL = (decimal)(powder.HCJMin ?? 0);
+    //         hcjParameter.NominalValue = (decimal)(powder.HCJNominal ?? 0);
+    //         hcjParameter.USL = (decimal)(powder.HCJMax ?? 0);
+    //         prametersforUpdate.Add(hcjParameter);
+    //     }
+
+    //     if ((msParameter.LSL == 0 && powder.COMMin != null) ||
+    //         (msParameter.NominalValue == 0 && powder.COMNominal != null) ||
+    //         (msParameter.USL == 0 && powder.COMMax != null))
+    //     {
+    //         msParameter.LSL = (decimal)(powder.COMMin ?? 0);
+    //         msParameter.NominalValue = (decimal)(powder.COMNominal ?? 0);
+    //         msParameter.USL = (decimal)(powder.COMMax ?? 0);
+    //         prametersforUpdate.Add(msParameter);
+    //     }
+
+    //     if ((densityParameter.LSL == 0 && powder.DensityMin != null) ||
+    //         (densityParameter.NominalValue == 0 && powder.DensityNominal != null) ||
+    //         (densityParameter.USL == 0 && powder.DensityMax != null))
+    //     {
+    //         densityParameter.LSL = (decimal)(powder.DensityMin ?? 0);
+    //         densityParameter.NominalValue = (decimal)(powder.DensityNominal ?? 0);
+    //         densityParameter.USL = (decimal)(powder.DensityMax ?? 0);
+    //         prametersforUpdate.Add(densityParameter);
+    //     }
+
+    //     if ((hardnesParameter.LSL == 0 && powder.HV30Min != null) ||
+    //         (hardnesParameter.NominalValue == 0 && powder.HV30Nominal != null) ||
+    //         (hardnesParameter.USL == 0 && powder.HV30Max != null))
+    //     {
+    //         hardnesParameter.LSL = (decimal)(powder.HV30Min ?? 0);
+    //         hardnesParameter.NominalValue = (decimal)(powder.HV30Nominal ?? 0);
+    //         hardnesParameter.USL = (decimal)(powder.HV30Max ?? 0);
+    //         prametersforUpdate.Add(hardnesParameter);
+    //     }
+
+    //     if (prametersforUpdate.Count != 0)
+    //     {
+    //         IParameterRepository.UpdateRange(prametersforUpdate);
+    //         await IParameterRepository.Complete();
+    //     }
+
+    //     return null;
+    // }
+
+    private async Task HandleTrialChange()
+    {
+        var url = $"/LaboratoryPanel/{ParametersIds}/{OrderId}/{TrialNo}/";
+        await JSRuntime.InvokeVoidAsync("openInNewTab", url);
+    }
+}

@@ -1,0 +1,136 @@
+﻿@page "/orders"
+@using Microsoft.EntityFrameworkCore
+@using QA.BLL.Interfaces
+@using QA.DataAccess
+@using QA.Domain.Models
+@using QA.Domain.Models.Enums
+@using QA.UI.Pages.Common
+@using QA.UI.Pages.Develop
+@using System.Security.Claims
+
+@inject NavigationManager NavigationManager;
+@inject IOrderService OrderService
+@inject IUnitOfWork UnitOfWork
+@inject ERPContext ERPContext
+
+@* @if (_filteredOrders.Count == 0) *@
+
+@if (_isLoading)
+{
+    <LoadingSpiner IsLoading="true" Message="Pobieranie zleceń..."></LoadingSpiner>
+}
+else
+{
+    <table class="orders-table">
+        <thead>
+            <tr>
+                <th>
+                    <input id="filterOrderKey" @bind="_orderKeyFilter" placeholder="Numer zlecenia" @onkeyup="@( e => HandleKeyPress(e))" />
+                </th>
+
+                <th>
+                    <input id="filterSymbol" @bind="_symbolFilter" placeholder="Symbol produktu" @onkeyup="@( e => HandleKeyPress(e))" />
+                </th>
+
+                <th>
+                    <input id="filterDescription" @bind="_descriptionFilter" placeholder="Nazwa" @onkeyup="@( e => HandleKeyPress(e))" />
+                </th>
+
+                <th>
+                    <input id="filterDescription" @bind="_pdmFilter" placeholder="PDM No." @onkeyup="@( e => HandleKeyPress(e))" />
+                </th>
+
+                <th>
+                    Status
+                </th>
+
+                <th>
+                    Data
+                </th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @if (_filteredOrders != null)
+            {
+                @foreach (var order in _filteredOrders)
+                {
+                    <tr @ondblclick="@(() => GoToOrderQCPlan(order.OrderKey))">
+                        <td>@order.ShortenedKey</td>
+                        <td>@order.Product.Symbol</td>
+                        <td>@order.Product.Description</td>
+                        <td>@order.Product.PdmNo</td>
+                        <td class="@order.Status">
+                            @EnumExtensions.GetDisplayName(order.Status)
+                        </td>
+                        <td>
+                            @order.RowDatetime.ToString("dd.MM.yy HH:mm:ss")
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+}
+
+@inject IHelperService HelperService///
+@inject ISinteringRepository SinteringRepository///
+@inject IPVDStatsRepository PVDStatsRepository//
+@inject HelicheckContext HelicheckContext//
+
+@code {
+    private List<Order> _orders = new();
+    private List<Order> _filteredOrders = new();
+    private string _orderKeyFilter = "";
+    private string _symbolFilter = "";
+    private string _descriptionFilter = "";
+    private string _pdmFilter = "";
+
+    private bool _isLoading;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _isLoading = true;
+
+        _orders = await UnitOfWork.Order.GetAllWithoutArchivalAsync();
+        var waitingOrders = _orders.Where(o => o.Status == OrderStatus.Waiting).ToList();
+        await OrderService.ChangeStatusIfHasMeasurements(waitingOrders);
+        ApplyFilters();
+
+        _isLoading = false;
+
+        //odpalić przed importem do press02
+        //HelperService.AssignPressingPowder();
+
+        // do migracji statystyk pomiaru wysokosci
+        // await  HelperService.ImportHeightStatsToPPDS();
+
+        // do przypisywania wpisów z prasowania do zleceń
+        // HelperService.AssignProductWeight();
+    }
+
+    private void HandleKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            ApplyFilters();
+        }
+    }
+
+    private void ApplyFilters()
+    {
+        _filteredOrders = _orders.Where(order =>
+            order.ShortenedKey.Contains(_orderKeyFilter, StringComparison.OrdinalIgnoreCase) &&
+            order.Product.Symbol.Contains(_symbolFilter, StringComparison.OrdinalIgnoreCase) &&
+            order.Product.Description.Contains(_descriptionFilter, StringComparison.OrdinalIgnoreCase) &&
+            order.Product.PdmNo.Contains(_pdmFilter, StringComparison.OrdinalIgnoreCase))
+        .ToList();
+    }
+
+    private void GoToOrderQCPlan(string orderKey)
+    {
+        string encodedOrderKey = Uri.EscapeDataString(orderKey);
+        NavigationManager.NavigateTo($"/orderqcplan/{encodedOrderKey}");
+    }
+}
+

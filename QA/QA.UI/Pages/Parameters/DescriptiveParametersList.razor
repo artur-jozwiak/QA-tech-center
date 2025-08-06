@@ -1,0 +1,82 @@
+﻿@using QA.DataAccess
+@using QA.Domain
+@using QA.Domain.Models
+@using QA.UI.Pages.Images
+@using QA.UI.Pages.QCPlan;
+@inject QAContext QAContext
+@inject IJSRuntime IJSRuntime
+
+<DescriptionParameterCreator @ref="_parameterCreator"></DescriptionParameterCreator>
+
+@foreach (var parameter in Parameters)
+{
+    <tr>
+        <td>@parameter.Name
+            <span class="oi oi-trash functional-icon" style="color:red" @onclick="() => ConfirmDeletion(parameter)"></span>
+            <span class="oi oi-pencil functional-icon" @onclick="() => ShowEditModal(parameter)"></span>
+
+        </td>
+
+@*      <td>
+             <ImageUploader Image="@parameter.Image"></ImageUploader>
+        </td> 
+*@
+    </tr>
+}
+
+@code {
+    [CascadingParameter]
+    public QCPlan QCPlan { get; set; }
+
+    [Parameter]
+    public List<DescriptiveParameter> Parameters { get; set; }
+    [Parameter]
+    public int OrderId { get; set; }
+    private List<DescriptiveParameter> _parameters = new();
+
+    private DescriptionParameterCreator _parameterCreator = new();
+
+    private void ShowEditModal(DescriptiveParameter selectedParameter)
+    {
+       _parameterCreator.ShowModalInEditMode(selectedParameter);
+
+    }
+
+    public async Task ConfirmDeletion(DescriptiveParameter parameter)
+    {
+        if (parameter != null)
+        {
+            bool confirmed = await IJSRuntime.InvokeAsync<bool>("confirm", $"Czy na pewno chcesz usunąć  parametr : {parameter.Name}, produktu: {parameter.Operation.Product.Symbol}, operacji: {parameter.Operation.Name.Trim()}?");
+
+            if (confirmed)
+            {
+                try
+                {
+                    if (parameter.Values.Count > 0)
+                    {
+                        confirmed = await IJSRuntime.InvokeAsync<bool>("confirm", $"Parametr posiada pomiary które zostaną utracone pojego usunięciu. Czy na pewno chcesz go usunąc?");
+                    }
+
+                    if (confirmed)
+                    {
+                        _parameters.Remove(parameter);
+                        QAContext.DescriptiveParameter.Remove(parameter);
+                        await  QAContext.SaveChangesAsync();
+                        RefreshAncestorComponent();
+                         StateHasChanged();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    throw;
+                }
+            }
+        }
+    }
+
+    public void RefreshAncestorComponent()
+    {
+        if (QCPlan != null)
+            QCPlan.Refresh();
+    }
+}

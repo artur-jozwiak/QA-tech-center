@@ -1,0 +1,43 @@
+﻿@using QA.Domain.Models;
+@using QA.UI.Pages.Images
+@using QA.UI.Pages.MeasurmentPanel
+
+<style>
+    section {
+        border: 1px solid #333;
+        padding: 5px;
+        margin: 5px;
+        border-radius: 4px;
+        display: flex; 
+    }
+</style>
+
+<section>
+    <div>
+        <h4>@Parameter.Name</h4>
+        <h5 style="color:red; white-space: nowrap">USL: @Parameter.USL</h5>
+        <h5 style="color:darkgreen; white-space: nowrap">NM: @Parameter.NominalValue</h5>
+        <h5 style="color:red;white-space: nowrap">LSL: @Parameter.LSL</h5>
+    </div>
+
+    <div>
+     @* <ChartIcon Parameter="@Parameter" ChartId="@Parameter.Name"></ChartIcon> *@
+        <ImageUploader Parameter="@Parameter" Image="@Parameter.Image"></ImageUploader>
+        <p>@Parameter.Comment</p>
+    </div>
+</section>
+
+@* <section>
+            <h4>@Parameter.Name</h4>
+            <p>@Parameter.Comment</p>
+</section> *@
+
+@code {
+    [Parameter]
+    public Parameter Parameter { get; set; }
+
+    protected override void OnInitialized()
+    {
+        
+    }
+}

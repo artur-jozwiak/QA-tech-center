@@ -1,0 +1,115 @@
+﻿@using Microsoft.EntityFrameworkCore;
+@using QA.DataAccess;
+@using QA.Domain.Models;
+@using QA.UI.Pages.Products;
+@inject QAContext QAContext
+
+<div class="modal" style="display: block; width: 800px; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+    <div class="modal-content col-md-2">
+        <div class="modal-header">
+            <h5 class="modal-title" style="font-weight:bold; display: inline-block;">Wybór wzoru dla: @Product.Symbol</h5>
+            <button class="btn btn-close" @onclick="HideModal"></button>
+        </div>
+        <div class="modal-body">
+            <div style="display: block;">
+                <input type="text" @onchange="(e) => FilterByProductSymbol(e)" placeholder="Symbol">
+                <label>Tylko produkty wzorcowe </label>
+                <input type="checkbox" @onchange="() => FilterPatternOnly()">
+            </div>
+
+            @if (_filteredProducts != null)
+            @* @if (_products != null) *@
+            {
+                <ProductsList @ref="_productList" Products="@_filteredProducts" DispalyForCopying="@true">  </ProductsList>
+                @* <ProductsList @ref="_productList" Products="@_products" DispalyForCopying="@true">  </ProductsList> *@
+            }
+            else
+            {
+                <span>Pobieranie Danych...</span>
+            }
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-success" @onclick="AssignSelectedProduct">Wybierz</button>
+            <button type="button" class="btn btn-secondary" @onclick=HideModal>Anuluj</button>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public QCPlan QCPlan { get; set; }
+    [Parameter]
+    public Product Product { get; set; }
+
+    private ProductsList _productList = new();
+    private List<Product> _products = new();
+    private List<Product> _filteredProducts = new();
+    private bool _patternsOnly;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _products = await GetProductsWithMatchingOperations();
+        _filteredProducts = _products;
+        if (_patternsOnly)
+        {
+            _filteredProducts = _products.Where(p => p.IsPattern).ToList();
+        }
+    }
+
+    private void HideModal()
+    {
+        QCPlan.HideCopyingModal();
+    }
+
+    private async Task<List<Product>> GetProductsWithMatchingOperations()
+    {
+        try
+        {
+            List<Product> filteredProducts = QAContext.Products
+                .Include(p => p.Operations)
+                    .ThenInclude(o => o.Parameters)
+                        .ThenInclude(p => p.DevicePort)
+                            .ThenInclude(dp => dp.MeasuringDevice)
+                .Include(p => p.Operations)
+                    .ThenInclude(o => o.Parameters)
+                        .ThenInclude(p => p.Image)
+                .Where(product => product.Operations != null &&
+                      product.Operations.All(operation => operation.Name != null &&
+                                                          Product.Operations.Select(o => o.Name).Contains(operation.Name))).DefaultIfEmpty().ToList();
+            return filteredProducts;
+        }
+        catch (Exception)
+        {
+            throw;
+        }
+    }
+
+    private void AssignSelectedProduct()
+    {
+        Product selectedProduct = _products.FirstOrDefault(p => p.Id == _productList.SelectedProductId);
+        QCPlan.AssignSelectedProduct(selectedProduct);
+        HideModal();
+    }
+
+    private void FilterPatternOnly()
+    {
+        if (!_patternsOnly)
+        {
+            _patternsOnly = true;
+        }
+        else
+        {
+            _patternsOnly = false;
+        }
+        OnInitializedAsync();
+    }
+
+    private void FilterByProductSymbol(ChangeEventArgs e)
+    {
+        if(e.Value.ToString() != null)
+        {
+            string symbol = e.Value.ToString().ToUpper();
+            _filteredProducts = _products.Where(p => p.Symbol.ToUpper().Contains(symbol)).ToList();
+        }
+    }
+}

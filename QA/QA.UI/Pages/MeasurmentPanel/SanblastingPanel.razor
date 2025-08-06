@@ -1,0 +1,449 @@
+﻿@page "/sandblastingpanel/{ParametersIds}"
+@page "/sandblastingpanel/{ParametersIds}/{OrderId}"
+
+@using Microsoft.JSInterop
+@using QA.BLL.Interfaces
+@using QA.Domain.Models;
+@using Microsoft.EntityFrameworkCore
+@using QA.DataAccess;
+@using QA.Domain.Models.Enums
+@using QA.UI.Models;
+@using System.Globalization;
+@using QA.UI.Pages.Common
+@using QA.UI.Pages.Images
+@using QA.UI.Pages.MeasurmentPanel
+@using QA.UI.Pages.Reporting
+
+@inject IOperationService IOperationService
+@inject IErrorLogger ErrorLogger
+@inject IJSRuntime JSRuntime
+@inject QAContext QAContext
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+@if (!_isLoading)
+{
+    <table class="operation-parameters-table">
+        <tr>
+            <td colspan="14">
+                <h5 style="font-weight:bold">
+                    @_order.OrderKey
+                    @_operation.Product.Symbol
+                    @_operation.Product.Description
+                </h5>
+            </td>
+        </tr>
+
+        <tr>
+            <th>Program</th>
+            <th>Ocena gratu</th>
+            <th>Taca</th>
+            <th>Ilośc głowic</th>
+            <th>Pressure left</th>
+            <th>Pressure right</th>
+            <th>Axis X speed</th>
+            <th>Axis Z position</th>
+            <th>Scanning mode</th>
+            <th>No. of passes</th>
+            <th>Guns pitch</th>
+            <th>No blasting between rows</th>
+            <th>Notatka</th>
+        </tr>
+
+        @{
+            bool isfirstRow = true;
+        }
+
+        @foreach (var operationDetails in _operation.OperationDetails)
+        {
+            <tr>
+                <td><InputText @bind-Value="@operationDetails.Program" style="width:160px;" /></td>
+                <td><InputNumber @bind-Value="@operationDetails.BurrRate" style="width:60px; " /></td>
+                <td><InputText @bind-Value="@operationDetails.ProcessTray" style="width:60px;" /></td>
+                <td><InputNumber @bind-Value="@operationDetails.HeadsQty" style="width:60px; " /></td>
+                <td><InputNumber @bind-Value="@operationDetails.PressureLeft" style="width:60px;" /></td>
+                <td><InputNumber @bind-Value="@operationDetails.PressureRight" style="width:60px;" /></td>
+                <td><InputNumber @bind-Value="@operationDetails.Feed" style="width:60px; " /></td>
+                <td><InputNumber @bind-Value="@operationDetails.SandblastingHeight" style="width:60px;" /></td>
+                <td><InputText @bind-Value="@operationDetails.ScanningMode" style="width:80px;" /></td>
+                <td><InputNumber @bind-Value="@operationDetails.NoOfPasses" style="width:60px;" /></td>
+                <td><InputNumber @bind-Value="@operationDetails.GunsPitch" style="width:60px;" /></td>
+                <td><InputText @bind-Value="@operationDetails.NoBlastingBetweenRows" style="width:60px; " /></td>
+
+                @if (isfirstRow)
+                {
+                    <td rowspan="3"><InputTextArea @bind-Value="@_operation.Comment" style="width:210px;" /></td>
+                    <td rowspan="3"><button class="btn btn-primary" onclick="@(() => SaveOperationParameters())" style="height:25px">Zapisz</button></td>
+                }
+            </tr>
+            isfirstRow = false;
+        }
+    </table>
+
+    <div class="measurement-panel-container">
+        <div style="display:flex; flex-direction:column;">
+            <table class="measurement-table">
+                <tr>
+                    <td colspan="100%">
+                        <input type="radio" id="top" name="position" value="0" @onchange="OnSideChanged" checked>
+                        <label for="top" style="font-weight:bold;  color:blue">TOP</label>
+                        <input type="radio" id="bottom" name="position" value="1" @onchange="OnSideChanged">
+                        <label for="bottom" style="font-weight:bold; color:green">BOTTOM</label>
+                    </td>
+                </tr>
+
+                <tr>
+                    <th rowspan="2">Lp</th>
+                    <th rowspan="2">Taca</th>
+                    <th rowspan="2">Pozycja</th>
+                    @for (int i = 1; i <= _edgesQty; i++)
+                    {
+                        @foreach (var parameter in _parameters)
+                        {
+                            if (_parameters.IndexOf(parameter) % 2 != 0)
+                            {
+                                <th colspan="2">Krawędź @i</th>
+                            }
+                        }
+                    }
+                    <th rowspan="2">Komentarz</th>
+                    <th rowspan="2">Strona</th>
+                </tr>
+
+                <tr>
+                    @for (int i = 1; i <= _edgesQty; i++)
+                    {
+                        @foreach (var parameter in _parameters)
+                        {
+                            <th>@parameter.Name</th>
+                        }
+                    }
+                </tr>
+                @foreach (var measurementSeries in _operation.MeasurementsSeries.Where(m => m.OrderId == _orderId).OrderBy(ms => ms.Index))
+                {
+                    if (measurementSeries.Measurements != null)
+                    {
+                        <tr class="measuremnt-series-row">
+                            @if (_editingSeries == measurementSeries)
+                            {
+                                <td>@measurementSeries.Index</td>
+                                <td><InputText @bind-Value="@measurementSeries.TrayNo" style="width:50px" /></td>
+                                <td><InputText @bind-Value="@measurementSeries.PositionOnTray" style="width:50px" /></td>
+                                @foreach (var measurement in measurementSeries.Measurements.OrderBy(m => m.EdgeNo))
+                                {
+                                    <td><InputNumber @bind-Value="@measurement.Value" style="width:60px" /></td>
+                                }
+                                <td><InputText @bind-Value="@measurementSeries.Comment" /></td>
+
+
+                                <td>
+                                    <InputSelect @bind-Value="measurementSeries.Side">
+                                        <option value="@Side.TOP">@Side.TOP</option>
+                                        <option value="@Side.BOTTOM">@Side.BOTTOM</option>
+                                    </InputSelect>
+                                </td>
+
+                                <span class="oi oi-check" style=" margin-left:5px;" @onclick="() => SaveEditedMeasurementSeries(measurementSeries)"></span>
+                                <span class="oi oi-x" style=" margin-left:5px;" @onclick="CancelEdit"></span>
+                            }
+                            else
+                            {
+                                <td>@measurementSeries.Index</td>
+                                <td>@measurementSeries.TrayNo</td>
+                                <td>@measurementSeries.PositionOnTray</td>
+
+                                @foreach (var measurement in measurementSeries.Measurements.OrderBy(m => m.EdgeNo))//
+                                {
+                                    if (measurement.Parameter.Name == "r")
+                                    {
+                                        <td style="@(measurement.Value < measurement.Parameter.LSL || measurement.Value > measurement.Parameter.USL ? "color:darkred; background-color:lightcoral;" : null)">
+                                            @measurement.Value.ToString("F0", CultureInfo.InvariantCulture)
+                                        </td>
+                                    }
+                                    else
+                                    {
+                                        <td style="@(measurement.Value < measurement.Parameter.LSL || measurement.Value > measurement.Parameter.USL ? "color:darkred; background-color:lightcoral;" : "")">@measurement.Value</td>
+                                    }
+                                }
+                                <td>@measurementSeries.Comment</td>
+                                <td>@measurementSeries.Side</td>
+                                <span class="oi oi-trash disappearing-icon" style=" color:red" @onclick="() => DeleteMeasurementsSeries(measurementSeries)"></span>
+                                <span class="oi oi-pencil disappearing-icon" @onclick="() => EditMeasurementSeries(measurementSeries)"></span>
+                            }
+                        </tr>
+                    }
+                }
+
+                <tr>
+                    <td></td>
+                    <td>
+                        <InputText id="trayNo" @bind-Value="_newMeasurementsSeries.TrayNo" style="width:50px" />
+                    </td>
+                    <td>
+                        <InputText id="PositionOnTray" @bind-Value="_newMeasurementsSeries.PositionOnTray" style="width:50px" />
+                    </td>
+                    @{
+                        int j = 0;
+                    }
+                    @for (int i = 1; i <= _edgesQty; i++)
+                    {
+                        @foreach (var parameter in _parameters)
+                        {
+                            var index = j;
+                            <td style="border-color:black">
+                                <input type="number" @bind="_newValues[index]" style="color:  white; background-color: black; border:none; width:50px" />
+                                @* <input type="number" @bind="_newValues[index]" style="color:  white; background-color: black; border:none; width:50px" @ref="_inputRefs[index]" /> *@
+                            </td>
+                            j++;
+                        }
+                    }
+                    <td>
+                        <InputText id="Comment" @bind-Value="_newMeasurementsSeries.Comment" />
+                    </td>
+                    <td>
+                        @_selectedSide
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="11">
+                        <button type="submit" @onclick="@SaveMeasurementSeries">Zapisz</button>
+                    </td>
+                </tr>
+            </table>
+            <div class="spc-container">
+                @* @if(!_isLoading) *@
+                @* { *@
+                @foreach (var parameter in _parameters)
+                {
+                    <div class="chart">
+                        <SPC Parameter="@parameter" OrderId="@_orderId" @ref="_spcComponents[parameter.Id]" @key="parameter.Id"></SPC>
+                    </div>
+                }
+                @* } *@
+            </div>
+        </div>
+
+        @{
+            var parameters = _parameters.Select(p => p.Name).Distinct().ToArray();
+        }
+
+        @foreach (var parameter in _parameters)
+        {
+            <div class="chart">
+                <SanblastingChart Parameter="@parameter" ChartId="@parameter.Id.ToString()" @ref="_chartComponent" OrderId="_orderId" />
+                @* <SPC Parameter="@parameter" OrderId="@_orderId" @ref="_spcComponents[parameter.Id]" @key="parameter.Id"></SPC> *@
+            </div>
+        }
+    </div>
+}
+else
+{
+    <LoadingSpiner IsLoading="@_isLoading" Message="Pobieranie danych..."></LoadingSpiner>
+}
+
+<script>
+    window.confirmClose = {
+        initialize: function () {
+            window.addEventListener('beforeunload', function (e) {
+                var confirmationMessage = 'Czy na pewno chcesz opuścić tę stronę?';
+                e.returnValue = confirmationMessage;
+                return confirmationMessage;
+            });
+        }
+    };
+</script>
+
+@code {
+    [Parameter]
+    public string ParametersIds { get; set; }
+    [Parameter]
+    public string OrderId { get; set; }
+
+    private List<Parameter> _parameters = new();
+    private SanblastingChart _chartComponent = new();
+    private Dictionary<int, SPC> _spcComponents = new();
+    private Order _order;
+
+    private int _orderId;
+    private decimal?[] _newValues;
+
+    private Operation _operation;
+    private MeasurementsSeries _newMeasurementsSeries = new();
+    private List<Measurement> _measuremnts = new();
+    private int? _edgesQty;
+    private Side _selectedSide = 0;
+
+    private MeasurementsSeries _editingSeries;
+    private bool _isLoading = false;
+
+    private void OnSideChanged(ChangeEventArgs e)
+    {
+        if (e.Value.ToString() == "0")
+            _selectedSide = Side.TOP;
+        else if (e.Value.ToString() == "1")
+            _selectedSide = Side.BOTTOM;
+    }
+
+    protected override async Task OnInitializedAsync()
+    // protected override void OnInitialized()
+    {
+        _isLoading = true;
+        _orderId = int.Parse(OrderId);
+        _parameters = await GetParameters();
+        _order = QAContext.Orders.FirstOrDefault(o => o.Id == Int32.Parse(OrderId));
+
+        _edgesQty = _parameters.FirstOrDefault().EdgesQty;
+        _newValues = new decimal?[_parameters.Count * (int)_edgesQty];
+        _operation = _parameters.FirstOrDefault().Operation;
+
+        IOperationService.CreateOperationDetailsIfNotExist(_operation);
+        _isLoading = false;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JSRuntime.InvokeVoidAsync("confirmClose.initialize");
+        }
+    }
+
+    public async Task<List<Parameter>> GetParameters()
+    {
+        string[] parametersIds = ParametersIds.Split(',');
+        int[] parametersIdsInt = parametersIds.Select(int.Parse).ToArray();
+
+        return await QAContext.Parameters
+                        .Include(p => p.Measurements)
+                        .Include(p => p.Operation)
+                            .ThenInclude(o => o.Product)
+                        .Include(p => p.Operation)
+                            .ThenInclude(o => o.OperationDetails)
+                         .Include(p => p.Operation)
+                            .ThenInclude(o => o.MeasurementsSeries.Where(ms => ms.OrderId == _orderId))
+                        .Include(p => p.DevicePort)
+                            .ThenInclude(dp => dp.MeasuringDevice)
+                        .Include(p => p.Image)
+                        .Where(p => parametersIdsInt.Contains(p.Id))
+                        .OrderBy(p => p.Id).ToListAsync();
+    }
+
+    private async Task SaveMeasurementSeries()
+    {
+        _newMeasurementsSeries.Operation = _operation;
+        _newMeasurementsSeries.OrderId = _orderId;
+        _newMeasurementsSeries.Side = _selectedSide;
+
+        if (_operation.MeasurementsSeries.Count != 0)
+        {
+            _newMeasurementsSeries.Index = _operation.MeasurementsSeries.Where(ms => ms.OrderId == _orderId).Max(ms => ms.Index) + 1;
+        }
+        else
+        {
+            _newMeasurementsSeries.Index = 1;
+        }
+
+        int j = 0;
+        @for (int i = 1; i <= _edgesQty; i++)
+        {
+            foreach (var parameter in _parameters)
+            {
+                await CreateMeasurement(parameter.Id, j, i);
+                j++;
+            }
+        }
+
+        _newMeasurementsSeries.Measurements = _measuremnts;
+        _newValues = new decimal?[_parameters.Count * (int)_edgesQty];
+
+        QAContext.MeasurementsSeries.Add(_newMeasurementsSeries);
+        QAContext.SaveChanges();
+
+        foreach (var parameter in _parameters)
+        {
+            await _chartComponent.UpdateChart(parameter.Id.ToString(), parameter);
+            await _spcComponents[parameter.Id].UpdateChildComponents(parameter.Id);
+
+        }
+
+        _newMeasurementsSeries = new();
+        _measuremnts = new();
+    }
+
+    private async Task CreateMeasurement(int parameterId, int index, int edgeNo)
+    {
+        Measurement newMeasurement = new();
+
+        if (_newValues[index] == null)
+        {
+            newMeasurement.Value = 0;
+        }
+        else
+        {
+            newMeasurement.Value = (decimal)_newValues[index];
+        }
+
+        newMeasurement.Parameter = _parameters.FirstOrDefault(p => p.Id == parameterId);
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        newMeasurement.OrderId = _orderId;
+        newMeasurement.OrderKey = _order.ShortenedKey;
+        newMeasurement.EdgeNo = edgeNo;
+        newMeasurement.Date = DateTime.Now;
+
+        if (user.IsInRole("Kontroler") || user.IsInRole("Manager") || user.IsInRole("Admin"))
+        {
+            newMeasurement.IsControllerMeasuremnt = true;
+        }
+        newMeasurement.Operator = user.Identity.Name;
+
+        _measuremnts.Add(newMeasurement);
+    }
+
+    private async Task DeleteMeasurementsSeries(MeasurementsSeries measurementSeries)
+    {
+        QAContext.Measurements.RemoveRange(measurementSeries.Measurements);
+        QAContext.MeasurementsSeries.Remove(measurementSeries);
+        QAContext.Measurements.RemoveRange(measurementSeries.Measurements);
+
+        foreach (var parameter in _parameters)
+        {
+            await _chartComponent.UpdateChart(parameter.Id.ToString(), parameter);
+            await _spcComponents[parameter.Id].UpdateChildComponents(parameter.Id);
+        }
+        await QAContext.SaveChangesAsync();
+
+    }
+
+    private void SaveOperationParameters()
+    {
+        QAContext.SaveChanges();
+    }
+
+    private void EditMeasurementSeries(MeasurementsSeries series)
+    {
+        _editingSeries = series;
+    }
+
+    private void CancelEdit()
+    {
+        _editingSeries = null;
+    }
+
+    private async Task SaveEditedMeasurementSeries(MeasurementsSeries series)
+    {
+        QAContext.MeasurementsSeries.Update(series);
+        foreach (var measurement in series.Measurements)
+        {
+            QAContext.Measurements.Update(measurement);
+        }
+        await QAContext.SaveChangesAsync();
+
+        foreach (var parameter in _parameters)
+        {
+            await _chartComponent.UpdateChart(parameter.Id.ToString(), parameter);
+            await _spcComponents[parameter.Id].UpdateChildComponents(parameter.Id);
+        }
+
+        _editingSeries = null;
+    }
+}

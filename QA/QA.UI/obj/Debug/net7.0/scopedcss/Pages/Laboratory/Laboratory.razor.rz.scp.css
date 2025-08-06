@@ -1,0 +1,23 @@
+.tabs[b-ezpyfq5vl9] {
+    display: flex;
+    margin-bottom: 10px;
+}
+
+.tab-button[b-ezpyfq5vl9] {
+    padding: 10px 20px;
+    cursor: pointer;
+    border: none;
+    background-color: #f1f1f1;
+    margin-right: 5px;
+}
+
+    .tab-button.active[b-ezpyfq5vl9] {
+        background-color: #007bff;
+        color: white;
+    }
+
+.tab-content[b-ezpyfq5vl9] {
+    border: 1px solid #ddd;
+    padding: 10px;
+    width:auto;
+}

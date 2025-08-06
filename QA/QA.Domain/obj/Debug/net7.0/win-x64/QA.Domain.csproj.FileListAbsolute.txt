@@ -1,0 +1,11 @@
+C:\Users\ajozwiak\Desktop\QA\QA\QA.Domain\bin\Debug\net7.0\win-x64\QA.Domain.deps.json
+C:\Users\ajozwiak\Desktop\QA\QA\QA.Domain\bin\Debug\net7.0\win-x64\QA.Domain.dll
+C:\Users\ajozwiak\Desktop\QA\QA\QA.Domain\bin\Debug\net7.0\win-x64\QA.Domain.pdb
+C:\Users\ajozwiak\Desktop\QA\QA\QA.Domain\obj\Debug\net7.0\win-x64\QA.Domain.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\ajozwiak\Desktop\QA\QA\QA.Domain\obj\Debug\net7.0\win-x64\QA.Domain.AssemblyInfoInputs.cache
+C:\Users\ajozwiak\Desktop\QA\QA\QA.Domain\obj\Debug\net7.0\win-x64\QA.Domain.AssemblyInfo.cs
+C:\Users\ajozwiak\Desktop\QA\QA\QA.Domain\obj\Debug\net7.0\win-x64\QA.Domain.csproj.CoreCompileInputs.cache
+C:\Users\ajozwiak\Desktop\QA\QA\QA.Domain\obj\Debug\net7.0\win-x64\QA.Domain.dll
+C:\Users\ajozwiak\Desktop\QA\QA\QA.Domain\obj\Debug\net7.0\win-x64\refint\QA.Domain.dll
+C:\Users\ajozwiak\Desktop\QA\QA\QA.Domain\obj\Debug\net7.0\win-x64\QA.Domain.pdb
+C:\Users\ajozwiak\Desktop\QA\QA\QA.Domain\obj\Debug\net7.0\win-x64\ref\QA.Domain.dll

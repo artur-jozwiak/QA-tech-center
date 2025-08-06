@@ -1,0 +1,70 @@
+﻿@using Microsoft.EntityFrameworkCore
+@using QA.BLL.Interfaces
+@using QA.DataAccess
+@using QA.Domain.Models
+@using QA.Domain.Models.Helicheck.Models
+@using QA.Domain.Models.Keyence
+@using QA.UI.Pages.Common
+@using QA.UI.Pages.Reporting
+@using System.Globalization
+@inject IHelicheckRepository HelicheckRepository
+@inject ISPCService SPCService
+
+@if (Parameter != null)
+{
+    if (Parameter.HelicheckResults.Count == 0)
+    {
+        <h3>@Parameter.Name</h3>
+        <h3>BRAK DANYCH</h3>
+    }
+    else
+    {
+        <div>
+            <div>
+                <HelichechPCHistogram Parameter="@Parameter" LSL="@_lsl" Nominal="@_nominal" USL="@_usl" Measurements="_results.Select(m => decimal.Parse(m.ValueF, CultureInfo.InvariantCulture)).ToList()" @ref="_histogram"></HelichechPCHistogram>
+            </div>
+            <div>
+                <HelicheckSPCTable Parameter="@Parameter" LSL="@_lsl" Nominal="@_nominal" USL="@_usl" Measurements="_results.Select(m => decimal.Parse(m.ValueF, CultureInfo.InvariantCulture)).ToList()" @ref="_spcTable"></HelicheckSPCTable>
+            </div>
+        </div>
+    }
+}
+else
+{
+    <LoadingSpiner Message="Pobieranie danych..."></LoadingSpiner>
+    <p>Loading...</p>
+}
+
+@code {
+    [Parameter]
+    public HelicheckParameter Parameter { get; set; }
+    [Parameter]
+    public string OrderNo { get; set; }
+    public List<HelicheckResult> _results = new();
+    private HelichechPCHistogram _histogram = new();
+    private HelicheckSPCTable _spcTable = new();
+
+    private decimal _usl;
+    private decimal _lsl;
+    private decimal _nominal;
+
+
+    protected override void OnInitialized()
+    {
+        _results = HelicheckRepository.GetResultsBy(Parameter.Ix, OrderNo);
+
+        _nominal = SPCService.ConvertStringToDecimal(Parameter.Nom);
+        decimal upperTol = SPCService.ConvertStringToDecimal(Parameter.Otol);
+        decimal lowerTol = SPCService.ConvertStringToDecimal(Parameter.Utol);
+
+         _usl = _nominal + upperTol;
+         _lsl = _nominal + lowerTol;
+    }
+
+    public async Task UpdateChildComponents(int parameterId)
+    {
+        await _histogram.UpdateHistogram(parameterId);
+        await _spcTable.UpdateTable();
+    }
+
+}

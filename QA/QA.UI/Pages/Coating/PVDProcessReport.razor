@@ -1,0 +1,161 @@
+﻿@using QA.BLL.Interfaces
+@using QA.Domain.Models.CoatingModels
+@inject IUnitOfWork UnitOfWork
+@inject IPVDStatsRepository PVDStatsRepository
+
+<div style="border: 1px solid #999; border-radius: 8px; padding: 20px; background-color: #fdfdfd; margin-top: 20px;">
+
+    @if (!_isLoading)
+    {
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <div><strong>Proces: @CoatingProcess.RunNo   @CoatingProcess.Coating</strong></div>
+            <div><strong>Operator: @_serieses?.FirstOrDefault()?.Operator</strong></div>
+            <div><strong>Grubość powłoki: @_specification?.LSL - @_specification?.USL</strong></div>
+        </div>
+    }
+
+    <div style="display: flex; gap: 20px;">
+        <div class="table-wrapper" style="flex: 1;">
+            <table class="coating-table" style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                <thead style="background-color: #555; color: white;">
+
+                    <tr>
+                        <th rowspan="2" style="padding: 8px; border: 1px solid #ccc;">Wieża</th>
+                        <th rowspan="2" style="padding: 8px; border: 1px solid #ccc;">Poziom</th>
+                        <th rowspan="2" style="padding: 8px; border: 1px solid #ccc;">Parametr</th>
+                        <th colspan="4" style="padding: 8px; border: 1px solid #ccc;">Strona</th>
+                        <th rowspan="2" style="padding: 8px; border: 1px solid #ccc;">AVG</th>
+                    </tr>
+
+                    <tr>
+                        <th style="padding: 8px; border: 1px solid #ccc;">1</th>
+                        <th style="padding: 8px; border: 1px solid #ccc;">2</th>
+                        <th style="padding: 8px; border: 1px solid #ccc;">3</th>
+                        <th style="padding: 8px; border: 1px solid #ccc;">4</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @for (int i = 1; i <= 6; i++)
+                    {
+                        @if (_serieses.Any(s => s.TowerNo == i))
+                        {
+                            decimal delta = 0;
+                            var towerMeasurements = _serieses?.Where(s => s.TowerNo == i);
+                            List<decimal> averages = new();
+
+                            @foreach (var towerSeries in towerMeasurements)
+                            {
+                                decimal avg = 0;
+                                List<decimal> thicknesses = new();
+
+                                if (towerSeries.Thickness1 != null) thicknesses.Add((decimal)towerSeries.Thickness1);
+                                if (towerSeries.Thickness2 != null) thicknesses.Add((decimal)towerSeries.Thickness2);
+                                if (towerSeries.Thickness3 != null) thicknesses.Add((decimal)towerSeries.Thickness3);
+                                if (towerSeries.Thickness4 != null) thicknesses.Add((decimal)towerSeries.Thickness4);
+
+
+                                if (thicknesses.Any())
+                                {
+                                    avg = thicknesses.Average();
+                                    averages.Add(avg);
+                                }
+
+                                <tr style="@(towerSeries.NonRotatingRod ? "background-color: red;" : "")">
+                                    <td rowspan="2" style="border: 1px solid #ccc; padding: 8px;">@towerSeries.TowerNo</td>
+                                    <td rowspan="2" style="border: 1px solid #ccc; padding: 8px;">@towerSeries.Level</td>
+                                    <td style="border: 1px solid #ccc; padding: 8px;">Grubość</td>
+                                    <td style="@(towerSeries.Thickness1 < _specification?.LSL || towerSeries.Thickness1 > _specification?.USL ? "color:darkred; background-color:lightcoral;" : "") border: 1px solid #ccc; padding: 8px;">@towerSeries.Thickness1</td>
+                                    <td style="@(towerSeries.Thickness2 < _specification?.LSL || towerSeries.Thickness2 > _specification?.USL ? "color:darkred; background-color:lightcoral;" : "") border: 1px solid #ccc; padding: 8px;">@towerSeries.Thickness2</td>
+                                    <td style="@(towerSeries.Thickness3 < _specification?.LSL || towerSeries.Thickness3 > _specification?.USL ? "color:darkred; background-color:lightcoral;" : "") border: 1px solid #ccc; padding: 8px;">@towerSeries.Thickness3</td>
+                                    <td style="@(towerSeries.Thickness4 < _specification?.LSL || towerSeries.Thickness4 > _specification?.USL ? "color:darkred; background-color:lightcoral;" : "") border: 1px solid #ccc; padding: 8px;">@towerSeries.Thickness4</td>
+                                    <td style="border: 1px solid #ccc; padding: 8px;">@avg.ToString("F3")  </td>
+                                </tr>
+
+                                <tr style="@(towerSeries.NonRotatingRod ? "background-color: red;" : "")">
+                                    <td style="border: 1px solid #ccc; padding: 8px;">Adhezja</td>
+                                    <td style="border: 1px solid #ccc; padding: 8px;">@towerSeries.Adhesion1</td>
+                                    <td style="border: 1px solid #ccc; padding: 8px;">@towerSeries.Adhesion2</td>
+                                    <td style="border: 1px solid #ccc; padding: 8px;">@towerSeries.Adhesion3</td>
+                                    <td style="border: 1px solid #ccc; padding: 8px;">@towerSeries.Adhesion4</td>
+                                    <td style="border: 1px solid #ccc;"></td>
+                                </tr>
+                            }
+                            @* delta = averages.Max() - averages.Min(); *@
+
+                            if(averages.Count != 0)
+                            {
+                                delta = averages.Max() - averages.Min();
+                            }
+
+                            <tr style="@(delta >= 1 ? "background-color: lightcoral; color:darkred;" : "background-color: #eee;")">
+                                <td colspan="7" style="text-align: right; font-weight: bold; border: 1px solid #ccc; padding: 8px;">Maksymalna różnica grubości powłoki T @i
+                                </td>
+
+                                <td style="border: 1px solid #ccc; padding: 8px; font-weight: bold;">@delta.ToString("F3")</td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+
+            <div style="margin-top: 16px; font-size: 10px;">
+                <div style="display: flex; gap: 24px; margin-top: 8px; flex-wrap: wrap;">
+                    <div style="display: flex; align-items: center;">
+                        <div style="width: 20px; height: 20px; background-color: red; margin-right: 8px; border: 1px solid #999;"></div>
+                        <span>Brak rotacji</span>
+                    </div>
+
+                    <div style="display: flex; align-items: center;">
+                        <div style="width: 20px; height: 20px; background-color: lightcoral; border: 1px solid darkred; margin-right: 8px;"></div>
+                        <span>Różnica grubości ≥ 1 / Grubość poza zakresem LSL-USL</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @if (!_isLoading && _serieses.Count > 0)
+        {
+            <div style="flex: 1;">
+                <PVDChart Measurements="@_serieses" Specifications="@_specification" ChartId="@CoatingProcess.RunNo" @ref="@_chartComponent"></PVDChart>
+            </div>
+        }
+    </div>
+</div>
+
+
+
+@code {
+    [Parameter]
+    public CoatingProcess CoatingProcess { get; set; }
+    private List<CoatingMeasurementSeries> _serieses = new();
+    private Coating _specification = new();
+    private PVDChart _chartComponent = new();
+    private decimal _maxthicknessDifference;
+
+    private bool _isLoading = true;
+
+    protected override void OnInitialized()
+    {
+        _isLoading = true;
+        _specification = UnitOfWork.Coating.GetBy(CoatingProcess.Coating);
+        _serieses = UnitOfWork.Coating.GetProcessMeasurementsBy(CoatingProcess.RunNo);
+        _isLoading = false;
+
+        var avgThicknesses = _serieses
+                            .Select(s => new[] { s.Thickness1, s.Thickness2, s.Thickness3, s.Thickness4 }
+                                .Where(t => t.HasValue)
+                                .Select(t => t.Value)
+                                .DefaultIfEmpty()
+                                .Average())
+                            .ToList();
+
+        if (avgThicknesses.Any())
+        {
+            decimal maxAvg = avgThicknesses.Max();
+            decimal minAvg = avgThicknesses.Min();
+            _maxthicknessDifference = maxAvg - minAvg;
+        }
+    }
+}
+

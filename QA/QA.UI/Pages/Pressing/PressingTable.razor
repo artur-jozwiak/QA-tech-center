@@ -1,0 +1,759 @@
+﻿@page "/pressing/{OrderId:int}"
+@using QA.BLL.Interfaces
+@using QA.DataAccess
+@using QA.Domain.Models
+@using QA.Domain.Models.Erp
+@using QA.UI.Pages.Common
+@inject IUnitOfWork UnitOfWork
+@inject ISinteringOrdersRepository SinteringRepository
+@inject ERPContext ERPContext
+@inject IJSRuntime JSRuntime
+@inject ISinteringOrdersRepository SinteringOrdersRepository
+@inject ISPCService SPCService
+
+@if (_order != null)
+{
+    <table class="report-order-table">
+        <thead>
+            <tr style="background-color: #f2f2f2;">
+                <th>Zlecenie</th>
+                <th>Opis produktu</th>
+                <th>PDM No.</th>
+                <th>Symbol</th>
+                <th>Spiek</th>
+                <th>Proszek/Partia</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            <tr>
+                <td>@_order.OrderKey</td>
+                <td>@_order.Product.Description</td>
+                <td>@_order.Product.PdmNo</td>
+                <td>@_order.Product.Symbol</td>
+                <td>@_sinteringNo</td>
+                <td>@_powderGrade/@_powderBatch</td>
+            </tr>
+        </tbody>
+    </table>
+
+    if (_showVisualInspectionForm)
+    {
+        <PressingVisual Order="@_order" Lock="false"></PressingVisual>
+    }
+    <button class="btn btn-primary" style="display: block; margin: 0 auto;" @onclick="DisplayVisualInspectionForm">Wyświetl Formularz kontroli wizualnej</button>
+}
+
+<label style="font-weight:bold; color:@(string.IsNullOrEmpty(_heightPointsQty?.ToString()) ? "red" : "inherit")">
+    Ilość pomiarów wysokości:
+</label>
+<input type="number" @bind-value="_heightPointsQty" @bind-value:event="oninput"
+       style="width:50px; background-color:inherit; color:@(string.IsNullOrEmpty(_heightPointsQty?.ToString()) ? "red" : "inherit"); border:@(string.IsNullOrEmpty(_heightPointsQty?.ToString()) ? "1px solid red" : "inherit")" required />
+
+<table class="pressing-table">
+    <tr>
+        <th></th>
+        <th>Data</th>
+        <th>Próba </th>
+        <th class="highlited">H1 </th>
+        <th class="highlited">H2</th>
+        <th class="highlited">H3</th>
+        <th class="highlited">H4</th>
+        <th class="highlited">Waga</th>
+        <th class="highlited">Siła</th>
+        <th>Upper compaction stroke B</th>
+        <th>Underpressing stroke</th>
+        <th>Precompacting A</th>
+        <th>Precompacting B</th>
+        <th>Press stroke relation</th>
+        <th class="highlited">Dekompresja 1 A</th>
+        <th class="highlited">Dekompresja 1 B</th>
+        <th class="highlited">V dekompresji 1</th>
+        <th class="highlited">Dekompresja 2 A</th>
+        <th class="highlited">Dekompresja 2 B</th>
+        <th class="highlited">V dekompresji 2</th>
+        <th>Underfill stroke B</th>
+        <th>Suction fill</th>
+        <th>Contour filling</th>
+        <th>Ilośc na tacy</th>
+        <th>Balon</th>
+        <th>Program robota</th>
+        <th>Ciśnienie gratowania - zawór zamknięty</th>
+        <th>Ciśnienie gratowania - zawór otwarty</th>
+        <th>Komentarz</th>
+    </tr>
+    @{
+        _rowNumber = 1;
+    }
+    @foreach (var pressing in _orderPressings)
+    {
+        int rowNumber = _rowNumber;
+        <tr>
+            <td>
+                <span class="oi oi-trash disappearing-icon" style=" color:red" @onclick="async () => await DeleteRecord(pressing)"></span>
+            </td>
+
+            <td>@pressing.RowDateTime?.ToString("dd.MM.yy HH:mm:ss") </td>
+
+            <td>
+                <InputText class="border-0" row="@rowNumber" col="0"
+                           Value="@pressing.TrialNo"
+                           ValueChanged="@(async (string? e) => { pressing.TrialNo = e;await SaveRecord(pressing, null, null); })"
+                           ValueExpression="() => pressing.TrialNo"
+                           style="width:50px"
+                           @onkeydown="@(e => HandleKeyPress(e, rowNumber, 0))" />
+            </td>
+
+            <td class="highlited">
+                <input class="border-0" row="@rowNumber" col="1" type="number" @bind-value="pressing.Height1" @bind-value:event="oninput" @onchange="() => SaveRecord(pressing, rowNumber, 1)" @onkeydown="@(e => HandleKeyPress(e, rowNumber, 1))" style="border:none; width:50px; background-color:inherit" />
+            </td>
+
+            <td class="highlited">
+                <input class="border-0" row="@rowNumber" col="2" type="number" @bind-value="pressing.Height2" @bind-value:event="oninput" @onchange="() => SaveRecord(pressing, rowNumber, 2)" @onkeydown="@(e => HandleKeyPress(e, rowNumber, 2))" style="border:none; width:50px; background-color:inherit" />
+            </td>
+
+            <td class="highlited">
+                <input class="border-0" row="@rowNumber" col="3" type="number" @bind-value="pressing.Height3" @bind-value:event="oninput" @onchange="() => SaveRecord(pressing, rowNumber, 3)" @onkeydown="@(e => HandleKeyPress(e, rowNumber, 3))" style="border:none; width:50px; background-color:inherit" />
+            </td>
+
+            <td class="highlited">
+                <input class="border-0" row="@rowNumber" col="4" type="number" @bind-value="pressing.Height4" @bind-value:event="oninput" @onchange="() => SaveRecord(pressing, rowNumber, 4)" @onkeydown="@(e => HandleKeyPress(e, rowNumber, 4))" style="border:none; width:50px; background-color:inherit" />
+            </td>
+
+            <td class="highlited">
+                <InputNumber class="border-0" row="@rowNumber" col="5"
+                             Value="@pressing.Weight"
+                             ValueChanged="@(async (decimal? e) => { pressing.Weight = e;await SaveRecord(pressing, null, null); })"
+                             ValueExpression="() => pressing.Weight"
+                             style="width:50px;  background-color:inherit"
+                             @onkeydown="@(e => HandleKeyPress(e, rowNumber, 5))" />
+            </td>
+
+            <td class="highlited">
+                <InputNumber class="border-0" row="@rowNumber" col="6"
+                             Value="@pressing.Force"
+                             ValueChanged="@(async (decimal? e) => { pressing.Force = e;await SaveRecord(pressing, null, null); })"
+                             ValueExpression="() => pressing.Force"
+                             style="width:50px; background-color:inherit"
+                             @onkeydown="@(e => HandleKeyPress(e, rowNumber, 6))" />
+            </td>
+
+            <td>
+                <InputNumber class="border-0" row="@rowNumber" col="7"
+                             Value="@pressing.UCSB"
+                             ValueChanged="@(async (decimal? e) => { pressing.UCSB = e;await SaveRecord(pressing, null, null); })"
+                             ValueExpression="() => pressing.UCSB"
+                             style="width:50px"
+                             @onkeydown="@(e => HandleKeyPress(e, rowNumber, 7))" />
+            </td>
+
+            <td>
+                <InputNumber class="border-0" row="@rowNumber" col="8"
+                             Value="@pressing.UPS"
+                             ValueChanged="@(async (decimal? e) => { pressing.UPS = e;await SaveRecord(pressing, null, null); })"
+                             ValueExpression="() => pressing.UPS"
+                             style="width:50px"
+                             @onkeydown="@(e => HandleKeyPress(e, rowNumber, 8))" />
+            </td>
+
+            <td>
+                <InputNumber class="border-0" row="@rowNumber" col="9"
+                             Value="@pressing.PrecompactingA"
+                             ValueChanged="@(async (decimal? e) => { pressing.PrecompactingA = e;await SaveRecord(pressing, null, null); })"
+                             ValueExpression="() => pressing.PrecompactingA"
+                             style="width:50px"
+                             @onkeydown="@(e => HandleKeyPress(e, rowNumber, 9))" />
+            </td>
+
+            <td>
+                <InputNumber class="border-0" row="@rowNumber" col="10"
+                             Value="@pressing.PrecompactingB"
+                             ValueChanged="@(async (decimal? e) => { pressing.PrecompactingB = e;await SaveRecord(pressing, null, null); })"
+                             ValueExpression="() => pressing.PrecompactingB"
+                             style="width:50px"
+                             @onkeydown="@(e => HandleKeyPress(e, rowNumber, 10))" />
+            </td>
+
+            <td>
+                <InputText class="border-0" row="@rowNumber" col="11"
+                           Value="@pressing.PressStrokeRelation"
+                           ValueChanged="@(async (string? e) => { pressing.PressStrokeRelation = e;await SaveRecord(pressing, null, null); })"
+                           ValueExpression="() => pressing.PressStrokeRelation"
+                           style="width:50px"
+                           @onkeydown="@(e => HandleKeyPress(e, rowNumber, 11))" />
+            </td>
+
+            <td class="highlited">
+                <InputNumber class="border-0 highlited" row="@rowNumber" col="12"
+                             Value="@pressing.Decopression1A"
+                             ValueChanged="@(async (decimal? e) => { pressing.Decopression1A = e;await SaveRecord(pressing, null, null); })"
+                             ValueExpression="() => pressing.Decopression1A"
+                             style="width:50px; background-color:inherit"
+                             @onkeydown="@(e => HandleKeyPress(e, rowNumber, 12))" />
+            </td>
+
+            <td class="highlited">
+                <InputNumber class="border-0 highlited" row="@rowNumber" col="13"
+                             Value="@pressing.Decopression1B"
+                             ValueChanged="@(async (decimal? e) => { pressing.Decopression1B = e;await SaveRecord(pressing, null, null); })"
+                             ValueExpression="() => pressing.Decopression1B"
+                             style="width:50px; background-color:inherit"
+                             @onkeydown="@(e => HandleKeyPress(e, rowNumber, 13))" />
+            </td>
+
+            <td class="highlited">
+                <InputNumber class="border-0 highlited" row="@rowNumber" col="14"
+                             Value="@pressing.DecopressionV1"
+                             ValueChanged="@(async (decimal? e) => { pressing.DecopressionV1 = e;await SaveRecord(pressing, null, null); })"
+                             ValueExpression="() => pressing.DecopressionV1"
+                             style="width:50px; background-color:inherit"
+                             @onkeydown="@(e => HandleKeyPress(e, rowNumber, 14))" />
+            </td>
+
+            <td class="highlited">
+                <InputNumber class="border-0 highlited" row="@rowNumber" col="15"
+                             Value="@pressing.Decopression2A"
+                             ValueChanged="@(async (decimal? e) => { pressing.Decopression2A = e;await SaveRecord(pressing, null, null); })"
+                             ValueExpression="() => pressing.Decopression2A"
+                             style="width:50px; background-color:inherit"
+                             @onkeydown="@(e => HandleKeyPress(e, rowNumber, 15))" />
+            </td>
+
+            <td class="highlited">
+                <InputNumber class="border-0 highlited" row="@rowNumber" col="16"
+                             Value="@pressing.Decopression2B"
+                             ValueChanged="@(async (decimal? e) => { pressing.Decopression2B = e;await SaveRecord(pressing, null, null); })"
+                             ValueExpression="() => pressing.Decopression2B"
+                             style="width:50px; background-color:inherit"
+                             @onkeydown="@(e => HandleKeyPress(e, rowNumber, 16))" />
+            </td>
+
+            <td class="highlited">
+                <InputNumber class="border-0 highlited" row="@rowNumber" col="17"
+                             Value="@pressing.DecopressionV2"
+                             ValueChanged="@(async (decimal? e) => { pressing.DecopressionV2 = e;await SaveRecord(pressing, null, null); })"
+                             ValueExpression="() => pressing.DecopressionV2"
+                             style="width:50px; background-color:inherit"
+                             @onkeydown="@(e => HandleKeyPress(e, rowNumber, 17))" />
+            </td>
+
+            <td>
+                <InputNumber class="border-0" row="@rowNumber" col="18"
+                             Value="@pressing.UnderfillStrokeB"
+                             ValueChanged="@(async (decimal? e) => { pressing.UnderfillStrokeB = e;await SaveRecord(pressing, null, null); })"
+                             ValueExpression="() => pressing.UnderfillStrokeB"
+                             style="width:50px"
+                             @onkeydown="@(e => HandleKeyPress(e, rowNumber, 18))" />
+            </td>
+
+            <td>
+                <InputCheckbox class="border-0" row="@rowNumber" col="19"
+                               Value="@pressing.SuctionFill"
+                               ValueChanged="@(async (bool e) => { pressing.SuctionFill = e;await SaveRecord(pressing, null, null); })"
+                               ValueExpression="() => pressing.SuctionFill"
+                               style="width:50px"
+                               @onkeydown="@(e => HandleKeyPress(e, rowNumber, 19))" />
+            </td>
+
+            <td>
+                <InputCheckbox class="border-0" row="@rowNumber" col="20"
+                               Value="@pressing.CounturFilling"
+                               ValueChanged="@(async (bool e) => { pressing.CounturFilling = e;await SaveRecord(pressing, null, null); })"
+                               ValueExpression="() => pressing.CounturFilling"
+                               style="width:50px"
+                               @onkeydown="@(e => HandleKeyPress(e, rowNumber, 20))" />
+            </td>
+
+            <td>
+                <InputText class="border-0" row="@rowNumber" col="21"
+                           Value="@pressing.TrayQty"
+                           ValueChanged="@(async (string? e) => { pressing.TrayQty = e;await SaveRecord(pressing, null, null); })"
+                           ValueExpression="() => pressing.TrayQty"
+                           style="width:50px"
+                           @onkeydown="@(e => HandleKeyPress(e, rowNumber, 21))" />
+            </td>
+
+            <td>
+                <InputText class="border-0" row="@rowNumber" col="22"
+                           Value="@pressing.BaloonNo"
+                           ValueChanged="@(async (string? e) => { pressing.BaloonNo = e;await SaveRecord(pressing, null, null); })"
+                           ValueExpression="() => pressing.BaloonNo"
+                           style="width:150px"
+                           @onkeydown="@(e => HandleKeyPress(e, rowNumber, 22))" />
+            </td>
+
+            <td>
+                <InputText class="border-0" row="@rowNumber" col="23"
+                           Value="@pressing.RobotProgam"
+                           ValueChanged="@(async (string? e) => { pressing.RobotProgam = e;await SaveRecord(pressing, null, null); })"
+                           ValueExpression="() => pressing.RobotProgam"
+                           style="width:150px"
+                           @onkeydown="@(e => HandleKeyPress(e, rowNumber, 23))" />
+            </td>
+
+            <td>
+                <InputText class="border-0" row="@rowNumber" col="24"
+                           Value="@pressing.BurringPrassuereCloseValve"
+                           ValueChanged="@(async (string? e) => { pressing.BurringPrassuereCloseValve = e;await SaveRecord(pressing, null, null); })"
+                           ValueExpression="() => pressing.BurringPrassuereCloseValve"
+                           style="width:50px"
+                           @onkeydown="@(e => HandleKeyPress(e, rowNumber, 24))" />
+            </td>
+
+            <td>
+                <InputText class="border-0" row="@rowNumber" col="25"
+                           Value="@pressing.BurringPrassuereOpenValve"
+                           ValueChanged="@(async (string? e) => { pressing.BurringPrassuereOpenValve = e;await SaveRecord(pressing, null, null); })"
+                           ValueExpression="() => pressing.BurringPrassuereOpenValve"
+                           style="width:50px"
+                           @onkeydown="@(e => HandleKeyPress(e, rowNumber, 25))" />
+            </td>
+
+            <td>
+                <InputText class="border-0" row="@rowNumber" col="26"
+                           Value="@pressing.Comment"
+                           ValueChanged="@(async (string? e) => { pressing.Comment = e;await SaveRecord(pressing, null, null); })"
+                           ValueExpression="() => pressing.Comment"
+                           style="width:fit-content; min-width: 500px;"
+                           @onkeydown="@(e => HandleKeyPress(e, rowNumber, 26))" />
+            </td>
+
+            @{
+                _rowNumber++;
+            }
+
+        </tr>
+    }
+
+@*//nowe 23.05.25 *@
+    <tr style="font-weight:bold;">
+        <td colspan="9"> AVG</td>
+        <td colspan="20"></td>
+
+    </tr>
+    @foreach (var trial in _orderPressings.Where(op => op.Id != 0).Select(op => op.TrialNo).Distinct())
+    {
+        var trialPressings = _orderPressings.Where(op => op.TrialNo == trial);
+        <tr style="font-weight:bold;">
+            @* <td colspan="3"> @_order.ShortenedKey-@trial AVG</td> *@
+            <td colspan="3"> @_order.ShortenedKey@(trial != null ? "-" + trial : "") </td>
+            <td>@SPCService.CalculateAvg(trialPressings.Select(ps => ps.Height1).ToList())</td>
+            <td>@SPCService.CalculateAvg(trialPressings.Select(ps => ps.Height2).ToList())</td>
+            <td>@SPCService.CalculateAvg(trialPressings.Select(ps => ps.Height3).ToList())</td>
+            <td>@SPCService.CalculateAvg(trialPressings.Select(ps => ps.Height4).ToList())</td>
+            <td>@SPCService.CalculateAvg(trialPressings.Select(ps => ps.Weight).ToList())</td>
+            <td>@SPCService.CalculateAvg(trialPressings.Select(ps => ps.Force).ToList())</td>
+            <td colspan="20"></td>
+        </tr>
+    }
+
+    <tr style="text-align:center">
+        <td colspan="100%">
+            <button class="btn btn-primary" style="display: block; margin: 0 auto;" @onclick="DisplayOperationDetailsHistory">Wyświetl historię</button>
+        </td>
+    </tr>
+</table>
+
+<LoadingSpiner IsLoading="@_isLoading" Message="Pobieranie danych..."></LoadingSpiner>
+
+@if (_showOperationDetailsHistory)
+{
+    @if (!_isLoading)
+    {
+        <table class="pressing-table">
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th class="highlited">H1 </th>
+                    <th class="highlited">H2</th>
+                    <th class="highlited">H3</th>
+                    <th class="highlited">H4</th>
+                    <th class="highlited">Waga</th>
+                    <th class="highlited">Siła</th>
+                    <th>Upper compaction stroke B</th>
+                    <th>Underpressing stroke</th>
+                    <th>Precompacting A</th>
+                    <th>Press stroke relation</th>
+                    <th>Precompacting B</th>
+                    <th class="highlited">Dekompresja 1 A</th>
+                    <th class="highlited">Dekompresja 1 B</th>
+                    <th class="highlited">V dekompresji 1</th>
+                    <th class="highlited">Dekompresja 2 A</th>
+                    <th class="highlited">Dekompresja 2 B</th>
+                    <th class="highlited">V dekompresji 2</th>
+                    <th>Underfill stroke B</th>
+                    <th>Suction fill</th>
+                    <th>Contour filling</th>
+                    <th>Ilośc na tacy</th>
+                    <th>Balon</th>
+                    <th>Program robota</th>
+                    <th>Ciśnienie gratowania - zawór zamknięty</th>
+                    <th>Ciśnienie gratowania - zawór otwarty</th>
+                    <th>Komentarz</th>
+                </tr>
+
+                <tr style="background-color: lightgray">
+                    <td colspan="28">
+                        @foreach (var powder in _powders)
+                        {
+                            if (String.IsNullOrEmpty(powder))
+                            {
+                                <label style="margin-right:5px">NULL</label>
+                            }
+                            else
+                            {
+                                <label style="margin-right:5px">@powder</label>
+                            }
+
+                            <input type="checkbox"
+                                   style="margin-right:20px; padding-bottom:0px"
+                                   checked="@_selectedPowders.Contains(powder)"
+                                   @onchange="@(e => TogglePowderSelection(powder, e))" />
+                        }
+                    </td>
+                </tr>
+            </thead>
+
+            @foreach (var pressingGroup in _groupedProductPressings)
+            {
+                var press = pressingGroup.First();
+                int? orderId = press.OrderId;
+
+                decimal? sintering = _sinteringOrders.FirstOrDefault(so => so.KluczZpSkr == pressingGroup.Key.Split("-")[0])?.MeNrprpo;
+
+                if (_selectedPowders.Any(p =>
+                (string.IsNullOrEmpty(p) && press.Powder == p) ||
+                (!string.IsNullOrEmpty(p) && press.Powder?.Contains(p) == true)))
+                {
+                    <tr style="background-color: lightgray">
+
+                        <td>
+                            <span style="font-weight:bold; color:darkgreen">Spiek: @sintering</span>
+
+                            <span style="font-weight:bold; color:darkgreen">Proszek: @press.Powder</span>
+                        </td>
+                        <td colspan="26">
+
+                            @if (orderId != null)
+                            {
+                                <a style="font-weight:bold" href="/report/@orderId" target="_blank">
+                                    @pressingGroup.Key
+                                </a>
+                            }
+                            else
+                            {
+                                <span style="font-weight:bold"> @pressingGroup.Key </span>
+                            }
+
+                        </td>
+                    </tr>
+
+                    @foreach (var pressing in pressingGroup)
+                    {
+                        <tr>
+                            <td> <p class="oi oi-arrow-top disappearing-icon" style=" color:green;" @onclick="async () => await CopyRecord(pressing)"></p> @pressing.RowDateTime </td>
+                            <td style="background-color:#E0E0E0 ">@pressing.Height1 </td>
+                            <td style="background-color:#E0E0E0 ">@pressing.Height2</td>
+                            <td style="background-color:#E0E0E0 ">@pressing.Height3</td>
+                            <td style="background-color:#E0E0E0 ">@pressing.Height4</td>
+                            <td style="background-color:#E0E0E0 ">@pressing.Weight</td>
+                            <td style="background-color:#E0E0E0 ">@pressing.Force</td>
+                            <td>@pressing.UCSB</td>
+                            <td>@pressing.UPS </td>
+                            <td>@pressing.PrecompactingA</td>
+                            <td>@pressing.PrecompactingB</td>
+                            <td>@pressing.PressStrokeRelation</td>
+                            <td class="highlited">@pressing.Decopression1A</td>
+                            <td class="highlited">@pressing.Decopression1B</td>
+                            <td class="highlited">@pressing.DecopressionV1</td>
+                            <td class="highlited">@pressing.Decopression2A</td>
+                            <td class="highlited">@pressing.Decopression2B</td>
+                            <td>@pressing.DecopressionV2</td>
+                            <td>@pressing.UnderfillStrokeB</td>
+
+                            <td>
+                                <input type="checkbox" @bind="pressing.SuctionFill" disabled>
+                            </td>
+
+                            <td>
+                                <input type="checkbox" @bind="pressing.CounturFilling" disabled>
+                            </td>
+
+                            <td>@pressing.TrayQty</td>
+                            <td>@pressing.BaloonNo</td>
+                            <td>@pressing.RobotProgam </td>
+                            <td>@pressing.BurringPrassuereCloseValve </td>
+                            <td>@pressing.BurringPrassuereOpenValve </td>
+                            <td>@pressing.Comment </td>
+                        </tr>
+                    }
+                    <tr style="font-weight:bold;">
+                        <td></td>
+                        <td >@SPCService.CalculateAvg(pressingGroup.Select(ps => ps.Height1).ToList())</td>
+                        <td>@SPCService.CalculateAvg(pressingGroup.Select(ps => ps.Height2).ToList())</td>
+                        <td>@SPCService.CalculateAvg(pressingGroup.Select(ps => ps.Height3).ToList())</td>
+                        <td>@SPCService.CalculateAvg(pressingGroup.Select(ps => ps.Height4).ToList())</td>
+                        <td>@SPCService.CalculateAvg(pressingGroup.Select(ps => ps.Weight).ToList())</td>
+                        <td>@SPCService.CalculateAvg(pressingGroup.Select(ps => ps.Force).ToList())</td>
+                        <td colspan="22"></td>
+                    </tr>
+                }
+            }
+        </table>
+    }
+}
+
+<script>
+    window.addEventListener('keydown', function (event) {
+        if (['ArrowUp', 'ArrowDown'].includes(event.key)) {
+            event.preventDefault();
+        }
+    });
+</script>
+
+<script>
+    window.focusElement = (row, col) => {
+        const element = document.querySelector(`[row='${row}'][col='${col}']`);
+
+        if (element) {
+            element.focus();
+        }
+    };
+</script>
+
+@code {
+    //
+    private int? _heightPointsQty = null;
+    private List<string?> _selectedPowders = new();
+    private List<string?> _powders = new();
+    private bool _isLoading = false;
+    private List<SinteringOrder> _sinteringOrders = new();
+    //
+
+    private int? _trialNo = null;
+    private int _rowNumber = 1;
+
+    [Parameter]
+    public int OrderId { get; set; }
+    private Order _order;
+    private decimal? _sinteringNo;
+    private string? _powderGrade;
+    private string? _powderBatch;
+
+    private List<Pressing> _orderPressings = new();
+    private List<IGrouping<string, Pressing>> _groupedProductPressings = new();
+
+    private bool _showOperationDetailsHistory = false;
+    private bool _showVisualInspectionForm = false;
+
+
+    private void TogglePowderSelection(string powder, ChangeEventArgs e)
+    {
+        if ((bool)e.Value)
+        {
+            if (!_selectedPowders.Contains(powder))
+                _selectedPowders.Add(powder);
+        }
+        else
+        {
+            _selectedPowders.Remove(powder);
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _order = await UnitOfWork.Order.GetWithProductAndVisAsync(OrderId);
+
+        _sinteringNo = await SinteringRepository.GetSineringNoByAsync(_order.OrderKey);
+        _powderGrade = ERPContext.ErpOrders?.FirstOrDefault(o => o.KluczZp == _order.OrderKey)?.SymbolProszku;
+        _powderBatch = ERPContext.ErpOrders?.FirstOrDefault(o => o.KluczZp == _order.OrderKey)?.NrPartiiProszku;
+
+        _orderPressings = await UnitOfWork.Pressing.GetBy(OrderId);
+        CreateNewRecordIfNotExist();
+        var _productPressings = await UnitOfWork.Pressing.GetByWithoutOrder(_order.Product.PdmNo, OrderId);
+        _groupedProductPressings = _productPressings.GroupBy(p => p.OrderKey).OrderByDescending(g => g.FirstOrDefault()?.RowDateTime).ToList();
+
+        _powders = _groupedProductPressings.SelectMany(e => e.Select(x => x.Powder?.Split("/")[0])).Distinct().ToList();
+        _selectedPowders = _powders.ToList();
+    }
+
+    private async Task GetSinteringOrders(List<string> orders)
+    {
+        foreach (var order in orders)
+        {
+            var sinteringOrder = await SinteringOrdersRepository.GetSineringOrderBy(order.Split("-")[0]);
+            if (sinteringOrder != null)
+            {
+                _sinteringOrders.Add(sinteringOrder);
+            }
+        }
+    }
+
+    private void CreateNewRecordIfNotExist()
+    {
+        if (_orderPressings.All(op => op.Id != 0))
+        {
+            CreateNewRecord(null);
+        }
+    }
+
+    private async Task CopyRecord(Pressing source)
+    {
+        bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", $"Czy na pewno chcesz skopiować ten rekord?");
+
+        if (confirmed)
+        {
+            _orderPressings.Remove(_orderPressings.First(op => op.Id == 0));
+            var newPressing = CreateNewRecord(source);
+        }
+    }
+
+    private Pressing CreateNewRecord(Pressing source)
+    {
+        if (source == null)
+        {
+            source = _orderPressings.OrderBy(p => p.RowDateTime).FirstOrDefault();
+        }
+
+        Pressing newPressing = new();
+
+        if (source != null)
+        {
+            newPressing.UCSB = source.UCSB;
+            newPressing.UPS = source.UPS;
+            newPressing.PrecompactingA = source.PrecompactingA;
+            newPressing.PrecompactingB = source.PrecompactingB;
+            newPressing.PressStrokeRelation = source.PressStrokeRelation;
+            newPressing.Decopression1A = source.Decopression1A;
+            newPressing.Decopression1B = source.Decopression1B;
+            newPressing.DecopressionV1 = source.DecopressionV1;
+            newPressing.Decopression2A = source.Decopression2A;
+            newPressing.Decopression2B = source.Decopression2B;
+            newPressing.DecopressionV2 = source.DecopressionV2;
+            newPressing.UnderfillStrokeB = source.UnderfillStrokeB;
+            newPressing.SuctionFill = source.SuctionFill;
+            newPressing.CounturFilling = source.CounturFilling;
+            newPressing.TrayQty = source.TrayQty;
+            newPressing.BaloonNo = source.BaloonNo;
+            newPressing.RobotProgam = source.RobotProgam;
+            newPressing.BurringPrassuereCloseValve = source.BurringPrassuereCloseValve;
+            newPressing.BurringPrassuereOpenValve = source.BurringPrassuereOpenValve;
+            newPressing.Comment = source.Comment;
+        }
+        _orderPressings.Add(newPressing);
+        return newPressing;
+    }
+
+    private async Task SaveRecord(Pressing pressing, int? rowNo, int? columnNo)
+    {
+        if (pressing.Id == 0)
+        {
+            pressing.Order = _order;
+            pressing.OrderId = _order.Id;
+            pressing.PDMNo = _order.Product.PdmNo;
+
+            if (_order.PowderSymbol != null && _order.PowderBatch != null)
+            {
+                pressing.Powder = String.Concat(_order.PowderSymbol.Replace("M-H", "").Trim(), "/", _order.PowderBatch.Trim());
+            }
+            await UnitOfWork.Pressing.Add(pressing);
+        }
+
+        pressing.RowDateTime = DateTime.Now;
+
+        pressing.OrderKey = !String.IsNullOrEmpty(pressing.TrialNo)
+    ? String.Concat(_order.ShortenedKey, "-", pressing.TrialNo)
+    : _order.ShortenedKey;
+
+        if (rowNo != null && columnNo != null)
+        {
+            int? newRow = rowNo;
+            int? newCol = columnNo;
+
+            if (columnNo == _heightPointsQty)
+            {
+                newRow++;
+                if (columnNo == 1)
+                {
+                    CreateNewRecord(null);
+                }
+                await Task.Delay(30);
+                await JSRuntime.InvokeVoidAsync("focusElement", newRow, 1);
+            }
+            else
+            {
+                newCol++;
+                await JSRuntime.InvokeVoidAsync("focusElement", rowNo, newCol);
+            }
+        }
+
+        await UnitOfWork.CompleteAsync();
+        CreateNewRecordIfNotExist();
+    }
+
+    private async Task HandleKeyPress(KeyboardEventArgs e, int rowIndex, int columnIndex)
+    {
+        int newRow = rowIndex;
+        int newCol = columnIndex;
+
+        switch (e.Key)
+        {
+            case "ArrowRight":
+                newCol++;
+                await JSRuntime.InvokeVoidAsync("focusElement", newRow, newCol);
+                break;
+            case "ArrowLeft":
+                newCol--;
+                await JSRuntime.InvokeVoidAsync("focusElement", newRow, newCol);
+                break;
+            case "ArrowDown":
+                newRow++;
+                await JSRuntime.InvokeVoidAsync("focusElement", newRow, newCol);
+                break;
+            case "ArrowUp":
+                newRow--;
+                await JSRuntime.InvokeVoidAsync("focusElement", newRow, newCol);
+                break;
+        }
+    }
+
+    private async Task DisplayOperationDetailsHistory()
+    {
+        _isLoading = true;
+        await GetSinteringOrders(_groupedProductPressings.Select(gpp => gpp.Key.Split("-")[0]).Distinct().ToList());
+        _showOperationDetailsHistory = !_showOperationDetailsHistory;
+        _isLoading = false;
+    }
+
+    private void DisplayVisualInspectionForm()
+    {
+        _showVisualInspectionForm = !_showVisualInspectionForm;
+    }
+
+    private async Task DeleteRecord(Pressing pressing)
+    {
+        bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", $"Czy na pewno chcesz usunąć rekord");
+
+        if (confirmed)
+        {
+            if (pressing.Id == 0)
+            {
+                _orderPressings.Remove(pressing);
+                CreateNewRecordIfNotExist();
+            }
+            else
+            {
+                try
+                {
+                    UnitOfWork.Pressing.Remove(pressing);
+                    _orderPressings.Remove(pressing);
+                    await UnitOfWork.CompleteAsync();
+                }
+                catch (Exception e)
+                {
+                    throw;
+                }
+            }
+        }
+    }
+}

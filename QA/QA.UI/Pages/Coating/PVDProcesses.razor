@@ -1,0 +1,134 @@
+﻿@page "/PVD/{RunNo:int}"
+@using QA.BLL.Interfaces
+@using QA.Domain.Models.CoatingModels
+@inject IUnitOfWork UnitOfWork
+@inject IPVDStatsRepository PVDStatsRepository
+@inject IConfiguration Configuration;
+@inject IEmailService EmailService;
+@inject NavigationManager Navigation
+@inject IJSRuntime IJSRuntime
+
+@if (_coatingProcess != null)
+{
+    <button class="notification-button" @onclick="SendNotification">
+        Wyślij powiadomienie
+    </button>
+}
+
+<input list="coatingProcesses" @onchange="OpenCoatingPanel" placeholder="Numer procesu">
+<datalist id="coatingProcesses" @onchange="OpenCoatingPanel">
+
+    <option value="">-- Wybierz numer procesu --</option>
+
+    @if (_allProcesses.Any())
+    {
+        int newProcess = _allProcesses.Max(cp => cp.RunNo) + 1;
+        <option value="@newProcess">@newProcess (Nowy proces)</option>
+    }
+
+    @foreach (var process in _allProcesses)
+    {
+        <option value="@process.RunNo">@process.RunNo</option>
+    }
+</datalist>
+
+@if (_showPanel && _coatingProcess != null)
+{
+    <button class="btn-primary" @onclick="LoadCoatinUnitData">Pobierz dane procesu</button>
+
+    @if (!String.IsNullOrEmpty(_reportLoadingMessage))
+    {
+        <div class="alert alert-danger">
+            <strong>@_reportLoadingMessage</strong>
+        </div>
+    }
+
+    <PVDMeasurementTable CoatingProcess="_coatingProcess" @key="@RunNo"></PVDMeasurementTable>
+    <PVDProcessReport CoatingProcess="_coatingProcess" @key="@String.Concat(_coatingProcess.Id, "PR")"></PVDProcessReport>
+    <CoatingUnitReport RunNo="@_coatingProcess.RunNo.ToString()" @key="@String.Concat(_coatingProcess.Id, "CR")" @ref="@_coatinUnitReport"></CoatingUnitReport>
+    @* Rysunki *@
+    <PVDProcessPictures RunNo="@_coatingProcess.RunNo.ToString()" @key="@String.Concat(_coatingProcess.Id, "MICRO")"></PVDProcessPictures>
+    @* Rysunki *@
+}
+
+@code {
+    [Parameter]
+    public int RunNo { get; set; }
+
+    private List<CoatingProcess> _allProcesses = new();
+    private CoatingProcess? _coatingProcess;
+    private bool _showPanel = false;
+    private string _reportLoadingMessage;
+    private CoatingUnitReport _coatinUnitReport = new();
+
+    protected override void OnInitialized()
+    {
+        _allProcesses = UnitOfWork.Coating.GetAllProcesses();
+
+        if (RunNo != 0)
+        {
+            OpenCoatingPanel(null);
+        }
+
+        
+    }
+
+    private void OpenCoatingPanel(ChangeEventArgs e)
+    {
+        _showPanel = false;
+        _coatingProcess = new();
+
+        if (e != null)
+        {
+            if (int.TryParse(e.Value.ToString(), out int number))
+            {
+                RunNo = number;
+            }
+        }
+
+        _coatingProcess = UnitOfWork.Coating.GetBy(RunNo);
+
+        if (_coatingProcess == null)
+        {
+            CreateProcess();
+        }
+
+        var currentUri = Navigation.ToBaseRelativePath(Navigation.Uri);
+        var expectedUri = $"PVD/{RunNo}";
+        if (currentUri != expectedUri)
+        {
+            Navigation.NavigateTo($"/PVD/{RunNo}", forceLoad: false);
+        }
+
+        _showPanel = true;
+    }
+
+    private void CreateProcess()
+    {
+        _coatingProcess = new()
+        {
+                RunNo = RunNo,
+                Measurements = new List<CoatingMeasurementSeries>()
+        };
+
+         // _allProcesses.Add(_coatingProcess);
+    }
+
+    private void LoadCoatinUnitData()
+    {
+        _reportLoadingMessage = PVDStatsRepository.CopyCoatingUnitFiles(RunNo.ToString());
+        PVDStatsRepository.LoadXmlData(RunNo.ToString());
+    }
+
+    private async Task SendNotification()
+    {
+
+        bool confirmed = await IJSRuntime.InvokeAsync<bool>("confirm", $"Czy na pewno chcesz wysłac powiadomienie?");
+
+        if (confirmed)
+        {
+            string result = await EmailService.SendCoatingProcessnotification(Navigation.Uri, _coatingProcess.RunNo);
+            await IJSRuntime.InvokeVoidAsync("alert", result);
+        }
+    }
+}

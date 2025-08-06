@@ -1,0 +1,183 @@
+﻿@page "/usersmanager"
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore;
+@using QA.Areas.Identity.Pages.Account;
+@using QA.DataAccess;
+@using QA.UI.Models;
+@inject IJSRuntime JsRuntime
+@inject QAContext Context
+@inject IErrorLogger ErrorLogger
+
+<UserCreator @ref="_userCreator"></UserCreator>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                <div style="display: flex; align-items: center;">
+                    <p style="font-size: 14px">Użytkownicy</p>
+                    <NavLink class="nav-link">
+                        <span class="oi oi-plus" @onclick="() => ShowUserCreationForm()"></span>
+                    </NavLink>
+                </div>
+            </th>
+            <th>Email</th>
+            <th>Uprawnienia</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var user in _users)
+        {
+            var userRolesIds = _usersRoles.Where(ur => ur.UserId == user.Id).Select(ur => ur.RoleId);
+            var thisUserRoles = _roles.Where(r => userRolesIds.Contains(r.Id)).Select(r => r.Name);
+            <tr>
+                <td>@user.UserName</td>
+                <td>@user.Email</td>
+
+                <td>
+                    @foreach (var role in thisUserRoles)
+                    {
+                        <span>@role</span>
+                        <br />
+                    }
+                </td>
+                <td>
+                    <div class="d-flex">
+                        <NavLink class="nav-link">
+                            <span class="oi oi-trash" @onclick="() => DeleteUser(user.Id)"></span>
+                        </NavLink>
+                        <NavLink class="nav-link">
+                            <span class="oi oi-pencil" @onclick="() => ShowRolesAssignementModal(user.Id)"></span>
+                        </NavLink>
+                    </div>
+
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<RoleCreator @ref="_roleCreator"></RoleCreator>
+
+<table class="table ">
+    <thead>
+        <tr>
+            <th>
+                <div style="display: flex; align-items: center;">
+                    <p style="font-size: 14px">Uprawnienia</p>
+                    <NavLink class="nav-link">
+                        <span class="oi oi-plus" @onclick="() => ShowRoleCreationForm()"></span>
+                    </NavLink>
+                </div>
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var role in _roles)
+        {
+            <tr>
+                <td>@role.Name</td>
+                <td>
+                    <NavLink class="nav-link">
+                        <span class="oi oi-trash" aria-hidden="true" @onclick="() => DeleteRole(role.Id)"></span>
+                    </NavLink>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<RoleAssignModal Roles="_roles" Users="_users" @ref="_roleAssignModal"></RoleAssignModal>
+
+@code {
+    private UserCreator _userCreator = new UserCreator();
+    private RoleCreator _roleCreator = new RoleCreator();
+    private RoleAssignModal _roleAssignModal = new RoleAssignModal();
+
+    private List<IdentityRole> _roles = new List<IdentityRole>();
+    private List<IdentityUser> _users = new List<IdentityUser>();
+    private List<IdentityUserRole<string>> _usersRoles = new List<IdentityUserRole<string>>();
+
+    private bool _showConfirmation = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _users = Context.Users.ToList();
+        _roles = Context.Roles.ToList();
+        _usersRoles = Context.UserRoles.ToList();
+    }
+
+    private void ShowUserCreationForm()
+    {
+        _userCreator.ShowUserCreationForm();
+    }
+
+    private void ShowRoleCreationForm()
+    {
+        _roleCreator.ShowRoleCreationForm();
+    }
+
+    private async Task ShowRolesAssignementModal(string userId)
+    {
+        await _roleAssignModal.ShowRolesModal(userId);
+    }
+
+    public async Task DeleteUser(string userId)
+    {
+        var user = Context.Users.FirstOrDefault(u => u.Id == userId);
+        bool confirmed = await JsRuntime.InvokeAsync<bool>("confirm", $"Czy na pewno chcesz usunąć  użytkownika : {user.Email}?");
+
+        if (confirmed)
+        {
+            if (user != null)
+            {
+                try
+                {
+                    Context.Users.Remove(user);
+                    await Context.SaveChangesAsync();
+                    _users = Context.Users.ToList();
+                }
+                catch (Exception ex)
+                {
+                    await ErrorLogger.LogError(ex, nameof(UsersManager));
+                }
+            }
+        }
+    }
+
+    private async Task DeleteRole(string roleId)
+    {
+        var role = Context.Roles.FirstOrDefault(r => r.Id == roleId);
+
+        bool confirmed = await JsRuntime.InvokeAsync<bool>("confirm", $"Czy na pewno chcesz usunąć  uprawnienie : {role.Name}?");
+        if (confirmed)
+        {
+            if (role != null)
+            {
+                try
+                {
+                    Context.Roles.Remove(role);
+                    await Context.SaveChangesAsync();
+                    _roles = Context.Roles.ToList();
+                }
+                catch (Exception ex)
+                {
+                    await ErrorLogger.LogError(ex, nameof(UsersManager));
+                }
+            }
+        }
+    }
+
+    public void ShowDeleteConfirmation()
+    {
+        _showConfirmation = true;
+    }
+
+    public void CancelDelete()
+    {
+        _showConfirmation = false;
+    }
+}
+

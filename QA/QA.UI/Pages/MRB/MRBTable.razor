@@ -1,0 +1,81 @@
+﻿@page "/mrb-table"
+@using QA.BLL.Interfaces
+@using QA.Domain.Models
+@inject IUnitOfWork UnitOfWork
+
+<h3>MRB List</h3>
+
+@if (_mrbs == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <table class="mrb-table">
+        <thead>
+            <tr>
+                <th>Symbol</th>
+                <th>Order</th>
+                <th>Description</th>
+                <th>Root Cause</th>
+                <th>Corrective Actions</th>
+                <th>Staff Responsible</th>
+                <th>Due Date</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var mrb in _mrbs)
+            {
+                bool firstRender = true;
+
+                if (mrb.CorrectiveActions.Count > 0)
+                {
+                    foreach (var correctiveAction in mrb.CorrectiveActions)
+                    {
+                        <tr>
+                            @if (firstRender)
+                            {
+                                <td rowspan="@mrb.CorrectiveActions.Count">
+                                    <NavLink class="nav-link" href="@String.Concat($"report/{mrb.Order.Id}")" style="text-align:center;">
+                                        @mrb.Symbol
+                                    </NavLink>
+                                </td>
+                                <td rowspan="@mrb.CorrectiveActions.Count">@mrb.Order.OrderKey</td>
+                                <td rowspan="@mrb.CorrectiveActions.Count">@mrb.NonConformanceDescription</td>
+                                <td rowspan="@mrb.CorrectiveActions.Count">@mrb.RootCause</td>
+                                firstRender = false;
+                            }
+                            <td>@correctiveAction.Action</td>
+                            <td>@correctiveAction.StaffResponsible</td>
+                            <td>@correctiveAction.DueDate?.ToString("dd.MM.yyyy")</td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td >
+                            <NavLink class="nav-link" href="@String.Concat($"report/{mrb.Order.Id}")" style="text-align:center;">
+                                @mrb.Symbol
+                            </NavLink>
+                        </td>
+                        <td>@mrb.Order.OrderKey</td>
+                        <td>@mrb.NonConformanceDescription</td>
+                        <td>@mrb.RootCause</td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<MRB> _mrbs = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _mrbs = await UnitOfWork.MRB.GetAll();
+    }
+}
+

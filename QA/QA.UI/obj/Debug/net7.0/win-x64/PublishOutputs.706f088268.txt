@@ -1,0 +1,8 @@
+C:\Users\ajozwiak\Desktop\InstallContainerZB\appsettings.Development.json
+C:\Users\ajozwiak\Desktop\InstallContainerZB\appsettings.json
+C:\Users\ajozwiak\Desktop\InstallContainerZB\appsettings.Production.json
+C:\Users\ajozwiak\Desktop\InstallContainerZB\QA.UI.pdb
+C:\Users\ajozwiak\Desktop\InstallContainerZB\QA.DataAccess.pdb
+C:\Users\ajozwiak\Desktop\InstallContainerZB\QA.Domain.pdb
+C:\Users\ajozwiak\Desktop\InstallContainerZB\QA.BLL.pdb
+C:\Users\ajozwiak\Desktop\InstallContainerZB\QA.UI.exe

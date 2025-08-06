@@ -1,0 +1,95 @@
+﻿@* @inherits LayoutComponentBase
+
+<PageTitle>QA</PageTitle>
+
+<div class="page">
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+
+    <main>
+        <div class="top-row px-4 no-print">
+            <LoginDisplay />
+        </div>
+
+        <article class="content px-4">
+            @Body
+        </article>
+    </main>
+</div>
+
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+@code {
+
+    [CascadingParameter] protected Task<AuthenticationState> AuthStat { get; set; }
+
+    protected async override Task OnInitializedAsync()
+    {
+        base.OnInitialized();
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        if (!user.Identity.IsAuthenticated)
+        {
+            var redirectUri = NavigationManager.Uri;
+            NavigationManager.NavigateTo($"/login?redirectUri={Uri.EscapeDataString(redirectUri)}");
+        }
+    }
+}
+ *@
+
+ @using MudBlazor
+    @inherits LayoutComponentBase
+
+<PageTitle>QA</PageTitle>
+
+
+
+    @* //28.05.25 mudblazor *@
+@* Required *@
+<MudThemeProvider />
+<MudPopoverProvider />
+
+@* Needed for dialogs *@
+<MudDialogProvider />
+
+@* Needed for snackbars *@
+<MudSnackbarProvider />
+
+<div class="page">
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+
+    <main>
+        <div class="top-row px-4 no-print">
+            <LoginDisplay />
+        </div>
+
+        <article class="content px-4">
+            @Body
+        </article>
+    </main>
+</div>
+
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+@code {
+
+    [CascadingParameter] protected Task<AuthenticationState> AuthStat { get; set; }
+
+    protected async override Task OnInitializedAsync()
+    {
+        base.OnInitialized();
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        if (!user.Identity.IsAuthenticated)
+        {
+            // Dodanie aktualnego adresu URL jako returnUrl do przekierowania na stronę logowania
+            var returnUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+            NavigationManager.NavigateTo($"/login?returnUrl={Uri.EscapeDataString(returnUrl)}");
+        }
+    }
+}

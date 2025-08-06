@@ -1,0 +1,126 @@
+﻿@page "/createuser"
+@using Microsoft.AspNetCore.Identity;
+@using QA.UI.Models;
+@inject IJSRuntime JsRuntime
+@inject NavigationManager NavigationManager;
+@inject UserManager<IdentityUser> UserManager
+@inject IErrorLogger ErrorLogger
+
+@if (_showUserCretor) 
+{
+    <EditForm Model="@_model" OnValidSubmit="@OnSubmit">
+        <ValidationSummary />
+        <DataAnnotationsValidator /> 
+
+        <div class="form-group row">
+            <label for="@_model.UserName">Nazwa Użytkownika</label>
+            <div class="col-md-3">
+                <InputText id="user-name" class="form-control" placeholder="Nazwa Użytkownika" @bind-Value="_model.UserName" @oninput="UpdateUserName" />
+                <ValidationMessage For="@(() => _model.UserName)" />
+            </div>
+        </div>
+
+        <div class="form-group row">
+            <div class="col-md-3">
+                <label for="@_model.Email">Email</label>
+                <InputText id="email" class="form-control" placeholder="Email" @bind-Value="_model.Email" autocomplete="null" @oninput="UpdateEmail" />
+                <ValidationMessage For="@(() => _model.Email)" />
+            </div>
+        </div>
+
+        <div class="form-group row">
+            <div class="col-md-3">
+                <label for="@_model.Password">Hasło</label>
+                <InputText type="password" id="password" class="form-control" placeholder="Hasło" @bind-Value="_model.Password" @oninput="UpdatePassword" />
+                <ValidationMessage For="@(() => _model.Password)" />
+            </div>
+        </div>
+
+        <div class="form-group row">
+            <div class="col-md-3">
+                <label for="@_model.ConfirmPassword">Powtórz Hasło</label>
+                <InputText type="password" id="confirm-password" class="form-control" placeholder="Powtórz Hasło" @bind-Value="_model.ConfirmPassword" @oninput="UpdateConfirmPassword" />
+                <ValidationMessage For="@(() => _model.ConfirmPassword)" />
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-success" disabled="@(string.IsNullOrEmpty(_model.UserName) || string.IsNullOrEmpty(_model.Email) || string.IsNullOrEmpty(_model.Password) || string.IsNullOrEmpty(_model.ConfirmPassword))">Zapisz</button>
+        <button type="reset" class="btn btn-secondary" @onclick="HideUserCreationForm">Anuluj</button> 
+    </EditForm>
+}
+
+@code {
+    internal bool _showUserCretor = false;
+    UserViewModel _model = new();
+
+    private void UpdateUserName(ChangeEventArgs e)
+    {
+        _model.UserName = e.Value!.ToString()!;
+    }
+
+    private void UpdateEmail(ChangeEventArgs e)
+    {
+        _model.Email = e.Value!.ToString()!;
+    }
+
+    private void UpdatePassword(ChangeEventArgs e)
+    {
+        _model.Password = e.Value!.ToString()!;
+    }
+
+    private void UpdateConfirmPassword(ChangeEventArgs e)
+    {
+        _model.ConfirmPassword = e.Value!.ToString()!;
+    }
+
+    private async Task<bool> RegisterUser()
+    {
+        bool userRegitered = false;
+        string errorMessage = "";
+        var identity = new IdentityUser { UserName = _model.Email, Email = _model.Email };
+        var result = await UserManager.CreateAsync(identity, _model.Password);
+
+        if (!result.Succeeded)
+        {
+            errorMessage = result.Errors.Select(e => e.Description).First();
+            await JsRuntime.InvokeVoidAsync("alert", errorMessage);
+        }
+        else
+        {
+            userRegitered = true;
+        }
+
+        return userRegitered;
+    }
+
+    private async Task OnSubmit()
+    {
+        string errorMessage = "";
+        string innerExceptionMessage = "";
+        try
+        {
+            bool userRegistered = await RegisterUser();
+
+            if (userRegistered)
+            {
+                NavigationManager.NavigateTo("usersmanager", true);
+            }
+        }
+        catch (Exception ex)
+        {
+            await ErrorLogger.LogError(ex, nameof(UserCreator));
+        }
+    }
+
+    internal void ShowUserCreationForm()
+    {
+        _showUserCretor = true;
+        StateHasChanged();
+    }
+
+    private void HideUserCreationForm()
+    {
+        _showUserCretor = false;
+        StateHasChanged();
+    }
+}

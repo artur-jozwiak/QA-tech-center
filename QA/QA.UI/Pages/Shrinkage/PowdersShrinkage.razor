@@ -1,0 +1,288 @@
+﻿@page "/rtp-shrinkage"
+@using QA.BLL.Interfaces
+@using QA.Domain.Models.OldDb
+@using MudBlazor
+@inject NavigationManager NavigationManager
+@inject IOldDbRepository OldDbRepository
+
+@*Tabela ogólna z wszystkimi wpisami
+    odniesienie z Powders do tabeli z uruchomionym filtrem gatunku RTP
+*@
+<MudPaper Class="pa-4">
+
+    @*
+    <MudButton Variant="Filled" Color="Primary" OnClick="@(() => NavigationManager.NavigateTo("/powders"))">
+    Back
+    </MudButton>
+
+    <MudButton Variant="Filled" Color="Secondary" OnClick="@(() => NavigationManager.NavigateTo("/powders/create"))" Class="ml-2">
+    Add
+    </MudButton> 
+    *@
+
+@* 
+    <MudTable Items="@FilteredPowders" Hover="true" Bordered="true" Dense="true" >
+        <HeaderContent>
+            <MudTh>
+                <MudTextField @bind-Value="_searchName" Placeholder="RTP Name" Adornment="Adornment.Start" Class="mr-2" />
+            </MudTh>
+            <MudTh>
+                <MudTextField @bind-Value="_searchGrade" Placeholder="RTP Grade" Adornment="Adornment.Start" Class="mr-2" />
+            </MudTh>
+            <MudTh>
+                <MudTextField @bind-Value="_searchBatch" Placeholder="RTP Batch" Adornment="Adornment.Start" Class="mr-2" />
+            </MudTh>
+*@
+
+    <style>
+        .dense-row .mud-table-cell {
+            padding-top: 4px !important;
+            padding-bottom: 4px !important;
+        }
+
+        .dense-row .mud-input-root {
+            max-height: 15px !important;
+        }
+    </style>
+
+    <MudTable Items="@FilteredPowders" Hover="true" Bordered="true" Dense="true" Class="dense-row">
+        <HeaderContent>
+            <MudTh Style="min-width: 140px;">
+                <MudTextField @bind-Value="_searchName" Placeholder="RTP Name" Adornment="Adornment.Start" Class="mr-2" />
+            </MudTh>
+            <MudTh Style="min-width: 140px;">
+                <MudTextField @bind-Value="_searchGrade" Placeholder="RTP Grade" Adornment="Adornment.Start" Class="mr-2" />
+            </MudTh>
+            <MudTh Style="min-width: 140px;">
+                <MudTextField @bind-Value="_searchBatch" Placeholder="RTP Batch" Adornment="Adornment.Start" Class="mr-2" />
+            </MudTh>
+            <MudTh Style="white-space: nowrap;">Green Density[g/cm^3]</MudTh>
+            <MudTh Style="white-space: nowrap;">Density[g/cm^3]</MudTh>
+            <MudTh Style="white-space: nowrap;">Vs 1,3[%]</MudTh>
+            <MudTh Style="white-space: nowrap;">Vs 1,6[%]</MudTh>
+            <MudTh Style="white-space: nowrap;">Vs 18,66[%]</MudTh>
+            <MudTh Style="white-space: nowrap;">Vs 2,1[%]</MudTh>
+            <MudTh Style="white-space: nowrap;">Hs 1,3[%]</MudTh>
+            <MudTh Style="white-space: nowrap;">Hs 1,6[%]</MudTh>
+            <MudTh Style="white-space: nowrap;">Hs 1,866[%]</MudTh>
+            <MudTh Style="white-space: nowrap;">Hs 2,1[%]</MudTh>
+            <MudTh Style="white-space: nowrap;">Modification Date</MudTh>
+            <MudTh Style="white-space: nowrap;">Actions</MudTh>
+        </HeaderContent>
+
+        <RowTemplate>
+            <MudTd><MudTextField Value="context.PowderName" ValueChanged="@((string e) => {context.PowderName = e; SaveRtpShrinkage(context);})" Style="height:15px" /></MudTd>
+
+            <MudTd>
+                <MudTextField Value="@context.PowderGrade"
+                              ValueChanged="@((string e) => { context.PowderGrade = e; SaveRtpShrinkage(context); })" />
+            </MudTd>
+
+            <MudTd>
+                <MudTextField Value="@context.PowderBatch"
+                              ValueChanged="@((string e) => { context.PowderBatch = e; SaveRtpShrinkage(context); })" />
+            </MudTd>
+
+            <MudTd>
+                <MudTextField T="double?" Value="@context.GreenDensity"
+                              ValueChanged="@((double? e) => { context.GreenDensity = e; SaveRtpShrinkage(context); })" />
+            </MudTd>
+
+            <MudTd>
+                <MudTextField T="double?" Value="@context.Density"
+                              ValueChanged="@((double? e) => { context.Density = e; SaveRtpShrinkage(context); })" />
+            </MudTd>
+
+            <MudTd>
+                <MudTextField T="double?" Value="@context.Vs13"
+                              ValueChanged="@((double? e) => { context.Vs13 = e / 100; SaveRtpShrinkage(context); })"
+                              Format="P2" FullWidth="true" />
+            </MudTd>
+
+            <MudTd>
+                <MudTextField T="double?" Value="@context.Vs16"
+                              ValueChanged="@((double? e) => { context.Vs16 = e / 100; SaveRtpShrinkage(context); })"
+                              Format="P2" FullWidth="true" />
+            </MudTd>
+
+            <MudTd>
+                <MudTextField T="double?" Value="@context.Vs1866"
+                              ValueChanged="@((double? e) => { context.Vs1866 = e / 100; SaveRtpShrinkage(context); })"
+                              Format="P2" FullWidth="true" />
+            </MudTd>
+
+            <MudTd>
+                <MudTextField T="double?" Value="@context.Vs21"
+                              ValueChanged="@((double? e) => { context.Vs21 = e / 100; SaveRtpShrinkage(context); })"
+                              Format="P2" FullWidth="true" />
+            </MudTd>
+
+            <MudTd>@context.Hs13?.ToString("P2")</MudTd>
+            <MudTd>@context.Hs16?.ToString("P2")</MudTd>
+            <MudTd>@context.Hs1866?.ToString("P2")</MudTd>
+            <MudTd>@context.Hs21?.ToString("P2")</MudTd>
+            <MudTd>@context.ModificationDate?.ToString("yyyy-MM-dd")</MudTd>
+
+            <MudTd>
+                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                               Color="Color.Error"
+                               OnClick="() => ConfirmDelete(context)"
+                               aria-label="Usuń" />
+            </MudTd>
+
+        </RowTemplate>
+
+    </MudTable>
+
+    <MudTable Items="@FilteredPowders" Hover="true" Bordered="true" Dense="true" Class="dense-row">
+        <HeaderContent>
+            <MudTh Style="min-width: 140px;">
+                <MudTextField @bind-Value="_searchName" Placeholder="RTP Name" Adornment="Adornment.Start" Class="mr-2" />
+            </MudTh>
+            <MudTh Style="min-width: 140px;">
+                <MudTextField @bind-Value="_searchGrade" Placeholder="RTP Grade" Adornment="Adornment.Start" Class="mr-2" />
+            </MudTh>
+            <MudTh Style="min-width: 140px;">
+                <MudTextField @bind-Value="_searchBatch" Placeholder="RTP Batch" Adornment="Adornment.Start" Class="mr-2" />
+            </MudTh>
+            <MudTh Style="white-space: nowrap;">Green Density[g/cm^3]</MudTh>
+            <MudTh Style="white-space: nowrap;">Density[g/cm^3]</MudTh>
+            <MudTh Style="white-space: nowrap;">Vs 1,3[%]</MudTh>
+            <MudTh Style="white-space: nowrap;">Vs 1,6[%]</MudTh>
+            <MudTh Style="white-space: nowrap;">Vs 18,66[%]</MudTh>
+            <MudTh Style="white-space: nowrap;">Vs 2,1[%]</MudTh>
+            <MudTh Style="white-space: nowrap;">Hs 1,3[%]</MudTh>
+            <MudTh Style="white-space: nowrap;">Hs 1,6[%]</MudTh>
+            <MudTh Style="white-space: nowrap;">Hs 1,866[%]</MudTh>
+            <MudTh Style="white-space: nowrap;">Hs 2,1[%]</MudTh>
+            <MudTh Style="white-space: nowrap;">Modification Date</MudTh>
+            <MudTh Style="white-space: nowrap;">Actions</MudTh>
+        </HeaderContent>
+
+        <RowTemplate>
+            <MudTd><MudTextField Value="context.PowderName" ValueChanged="@((string e) => {context.PowderName = e; SaveRtpShrinkage(context);})" Size="Size.Small"/></MudTd>
+
+            <MudTd>
+                <MudTextField Value="@context.PowderGrade"
+                              ValueChanged="@((string e) => { context.PowderGrade = e; SaveRtpShrinkage(context); })" />
+            </MudTd>
+
+            <MudTd>
+                <MudTextField Value="@context.PowderBatch"
+                              ValueChanged="@((string e) => { context.PowderBatch = e; SaveRtpShrinkage(context); })" />
+            </MudTd>
+
+            <MudTd>
+                <MudTextField T="double?" Value="@context.GreenDensity"
+                              ValueChanged="@((double? e) => { context.GreenDensity = e; SaveRtpShrinkage(context); })" />
+            </MudTd>
+
+            <MudTd>
+                <MudTextField T="double?" Value="@context.Density"
+                              ValueChanged="@((double? e) => { context.Density = e; SaveRtpShrinkage(context); })" />
+            </MudTd>
+
+            <MudTd>
+                <MudTextField T="double?" Value="@context.Vs13"
+                              ValueChanged="@((double? e) => { context.Vs13 = e / 100; SaveRtpShrinkage(context); })"
+                                Format="P2" FullWidth="true" />
+            </MudTd>
+
+            <MudTd>
+                <MudTextField T="double?" Value="@context.Vs16"
+                              ValueChanged="@((double? e) => { context.Vs16 = e / 100; SaveRtpShrinkage(context); })"
+                              Format="P2" FullWidth="true" />
+            </MudTd>
+
+            <MudTd>
+                <MudTextField T="double?" Value="@context.Vs1866"
+                              ValueChanged="@((double? e) => { context.Vs1866 = e / 100; SaveRtpShrinkage(context); })"
+                              Format="P2" FullWidth="true" />
+            </MudTd>
+
+            <MudTd>
+                <MudTextField T="double?" Value="@context.Vs21"
+                              ValueChanged="@((double? e) => { context.Vs21 = e / 100; SaveRtpShrinkage(context); })"
+                              Format="P2" FullWidth="true" />
+            </MudTd>
+
+            <MudTd>@context.Hs13?.ToString("P2")</MudTd>
+            <MudTd>@context.Hs16?.ToString("P2")</MudTd>
+            <MudTd>@context.Hs1866?.ToString("P2")</MudTd>
+            <MudTd>@context.Hs21?.ToString("P2")</MudTd>
+            <MudTd>@context.ModificationDate?.ToString("yyyy-MM-dd")</MudTd>
+
+            <MudTd>
+                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                               Color="Color.Error"
+                               OnClick="() => ConfirmDelete(context)"
+                               aria-label="Usuń" />
+            </MudTd>
+
+        </RowTemplate>
+
+    </MudTable>
+</MudPaper>
+
+<MudDialog @bind-IsVisible="@_showDeleteDialog">
+    <DialogContent>
+        Czy na pewno chcesz usunąć rekord: <b>@_selectedToDelete?.PowderName</b>?
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@DeleteConfirmed" Color="@Color.Error">Usuń</MudButton>
+        <MudButton OnClick="@(() => _showDeleteDialog = false)">Anuluj</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private void SaveRtpShrinkage(Powder item)
+    {
+        OldDbRepository.Complete();
+
+        // if (item.Id == 0)
+        // {
+        //     UnitOfWork.ToolTesting.AddTestComparison(item);
+        // }
+
+        // UnitOfWork.Complete();
+        // Snackbar.Add($"Auto-saved", Severity.Info);
+        // return Task.CompletedTask;
+    }
+
+    [Parameter] public IEnumerable<Powder> Powders { get; set; }
+
+    private string _searchName;
+    private string _searchGrade;
+    private string _searchBatch;
+
+    private Powder _selectedToDelete;
+    private bool _showDeleteDialog = false;
+
+    private IEnumerable<Powder> FilteredPowders =>
+    Powders.Where(p =>
+        (string.IsNullOrWhiteSpace(_searchName) ||
+         p.PowderName?.Contains(_searchName, StringComparison.OrdinalIgnoreCase) == true) &&
+        (string.IsNullOrWhiteSpace(_searchGrade) ||
+         p.PowderGrade?.Contains(_searchGrade, StringComparison.OrdinalIgnoreCase) == true) &&
+        (string.IsNullOrWhiteSpace(_searchBatch) ||
+         p.PowderBatch?.Contains(_searchBatch, StringComparison.OrdinalIgnoreCase) == true));
+
+
+
+    protected override void OnInitialized()
+    {
+        Powders = OldDbRepository.GetAllRtpShrinkages();
+    }
+
+    private void ConfirmDelete(Powder powder)
+    {
+        _selectedToDelete = powder;
+        _showDeleteDialog = true;
+    }
+
+    private void DeleteConfirmed()
+    {
+        _showDeleteDialog = false;
+        Console.WriteLine($"Deleted powder with ID: {_selectedToDelete.Id}");
+    }
+}

@@ -1,0 +1,120 @@
+﻿@using Microsoft.AspNetCore.Identity;
+@using QA.UI.Models;
+@inject NavigationManager NavigationManager;
+@inject UserManager<IdentityUser> UserManager
+@inject IJSRuntime JsRuntime
+@inject IErrorLogger ErrorLogger
+
+@if (_showRolesModal)
+{
+    <div class="modal" style="display: block; width: 20%; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+        <div class="modal-content col-md-2">
+            <div class="modal-header">
+                <h5 class="modal-title" style="font-weight:bold">@_userName</h5>
+                <button class="btn btn-close" @onclick="HideRoleAssignmentModal"></button>
+            </div>
+            <div class="modal-body">
+                @foreach (var rolemodel in _rolesModels)
+                {
+                    <div>
+                        <input type="checkbox" @bind="rolemodel.Selected" />
+                        @rolemodel.Name
+                    </div>
+                }
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-success" @onclick="AssignRoles">Zapisz</button>
+                <button type="button" class="btn btn-secondary" @onclick=HideRoleAssignmentModal>Anuluj</button>
+            </div>
+        </div>
+    </div>
+}
+@code {
+    [Parameter]
+    public List<IdentityRole> Roles { get; set; }
+    [Parameter]
+    public List<IdentityUser> Users { get; set; }
+
+    private List<RoleViewModel> _rolesModels = new();
+    private bool _showRolesModal = false;
+    private string _selectedUserId = String.Empty;
+    private string _userName = String.Empty;
+
+    private async Task AssignRoles()
+    {
+        List<string> selectedRolesNames = _rolesModels
+            .Where(rolemodel => rolemodel.Selected)
+            .Select(rolemodel => rolemodel.Name)
+            .ToList();
+        _showRolesModal = false;
+        await AssignRoles(selectedRolesNames);
+    }
+
+    private async Task AssignRoles(List<string> rolesNames)
+    {
+        string errorMessage = "";
+        var user = Users.FirstOrDefault(u => u.Id == _selectedUserId);
+
+        if (user != null)
+        {
+            try
+            {
+                var userRoles = await UserManager.GetRolesAsync(user);
+                var removeUserFromRoles = await UserManager.RemoveFromRolesAsync(user, userRoles);
+                var addUserRolesResult = await UserManager.AddToRolesAsync(user, rolesNames);
+
+                if (!addUserRolesResult.Succeeded)
+                {
+                    errorMessage = addUserRolesResult.Errors.First().Description;
+                }
+                else if (!removeUserFromRoles.Succeeded)
+                {
+                    errorMessage = removeUserFromRoles.Errors.First().Description;
+                }
+                else
+                {
+                    NavigationManager.NavigateTo("usersmanager", true);
+                }
+            }
+            catch (Exception ex)
+            {
+                await ErrorLogger.LogError(ex, nameof(RoleAssignModal));
+            }
+        }
+        if(!String.IsNullOrEmpty(errorMessage))
+        {
+            await JsRuntime.InvokeVoidAsync("alert", errorMessage);
+        }
+    }
+
+    internal async Task ShowRolesModal(string userid)
+    {
+        _rolesModels = new();
+        _showRolesModal = true;
+        _selectedUserId = userid;
+        var user = Users.FirstOrDefault(u => u.Id == userid);
+        if (user != null)
+        {
+            _userName = user.UserName!;
+            foreach (var role in Roles)
+            {
+                RoleViewModel roleModel = new();
+                roleModel.Name = role.Name!;
+                if (await UserManager.IsInRoleAsync(user, role.Name!))
+                {
+                    roleModel.Selected = true;
+                }
+                _rolesModels.Add(roleModel);
+            }
+        }
+        else
+        {
+            await JsRuntime.InvokeVoidAsync("alert", "Wystapił błąd podczas pobrania danych o użytkowniku");
+        }
+    }
+
+    private void HideRoleAssignmentModal()
+    {
+        _showRolesModal = false;
+    }
+}

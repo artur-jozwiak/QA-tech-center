@@ -1,0 +1,272 @@
+﻿@page "/Report/{orderId:int}"
+
+@using QA.BLL.Interfaces
+@using QA.Domain.Models
+@using QA.Domain.Models.Enums
+@using QA.Domain.Models.Keyence
+@using QA.UI.Pages.Common
+@using QA.UI.Pages.Helicheck
+@using QA.UI.Pages.Images
+@using QA.UI.Pages.MRB
+@using QA.UI.Pages.Orders
+@using QA.UI.Pages.Pressing
+@using QA.UI.Pages.VisualInspectionForm
+
+@inject IUnitOfWork UnitOfWork
+@inject IErpOrderRepository ErpOrderRepository
+@inject IHelicheckRepository HelicheckRepository
+@inject IParameterService ParameterService
+@inject NavigationManager Navigation
+@attribute [Authorize]
+
+@*Wszystkie sekcje domyslnie zwinięte, dane pobierane po rozwinięciu, podswietlenie zwinietej sekcji jesli jakiś parametr poza granicami *@
+
+<CascadingAuthenticationState>
+    @if (_order != null)
+    {
+        <div class="report">
+            <div style="display: flex; align-items: flex-start; gap: 10px;">
+                <table class="report-order-table">
+                    <thead>
+                        <tr style="background-color: #f2f2f2;">
+                            <th>Zlecenie</th>
+                            <th>Opis produktu</th>
+                            <th>PDM No.</th>
+                            <th>Symbol</th>
+                            <th>Status zlecenia</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        <tr>
+                            <td>@_order.OrderKey</td>
+                            <td>@_order.Product.Description</td>
+                            <td>@_order.Product.PdmNo</td>
+                            <td>@_order.Product.Symbol</td>
+                            <td><StatusHandler Order="@_order"></StatusHandler></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <AuthorizeView Roles="Admin, Manager">
+                    <button class="btn btn-primary no-print" @onclick="ToggleMRBForm">MRB+</button>
+                </AuthorizeView>
+            </div>
+
+            @if (_showMRBForm && !_isLoading)
+            {
+                <AuthorizeView Roles="Admin, Manager, Viewer, Kontroler">
+                    <MRBForm Order="_order"></MRBForm>
+                </AuthorizeView>
+            }
+
+            @foreach (var operation in _operations)
+            {
+                @if (operation.Parameters.Count != 0)
+                {
+                    <div class="operation-section">
+                        <h5>@operation.Name</h5>
+                        <div class="grid-container">
+                            @foreach (var parameter in operation.Parameters.OrderBy(p => p.Name))
+                            {
+                                if (ParameterService.IncludeParameterInReport(parameter.Name))
+                                {
+                                    if (!(!_isTrialOrder && parameter.IsTrialParameter))
+                                    {
+                                        <div class="grid-item">
+                                            <h5 style="font-weight:bold">@parameter.Name</h5>
+                                            @if (parameter.Image != null)
+                                            {
+                                                <ImageUploader Parameter="@parameter" Image="@parameter.Image" ShowFileInput="false"></ImageUploader>
+                                            }
+
+                                            @if (_isTrialOrder)
+                                            {
+                                                List<string> trials = new();
+                                                trials = parameter.Measurements.Where(m => m.OrderId == OrderId).Select(m => m.OrderKey).Distinct().ToList();
+
+                                                foreach (var trial in trials)
+                                                {
+                                                    <h5> @trial</h5>
+                                                    <SPC OrderId="@_order.Id" Parameter="@parameter" Trial="@trial"></SPC>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <SPC OrderId="@_order.Id" Parameter="@parameter"></SPC>
+                                            }
+                                        </div>
+                                    }
+                                }
+                            }
+                        </div>
+                        <h5>@operation.Comment</h5>
+                    </div>
+                }
+                else
+                {
+                    MoveToOperationsWithoutParameters(operation);
+                }
+            }
+
+            <div class="operation-section">
+                <h5>KEYENCE</h5>
+
+                <ImageUploader Product="@_order.Product" Image="_order.Product.Image"></ImageUploader>
+
+                @if (_keyenceParameters.Count != 0)
+                {
+                    <div class="grid-container">
+                        @foreach (var parameter in _keyenceParameters)
+                        {
+                            <div class="grid-item">
+                                @if (_isTrialOrder)
+                                {
+                                    List<string> trials = new();
+                                    trials = parameter.Measurements.Where(m => m.OrderNo.Trim().ToUpper().Contains(_order.ShortenedKey.ToUpper())).Select(m => m.OrderNo.ToUpper()).Distinct().ToList();
+
+                                    foreach (var trial in trials)
+                                    {
+                                        <h5> @trial</h5>
+                                        <h5 style="font-weight:bold">@parameter.Name</h5>
+
+                                        <KeyenceSPC Parameter="@parameter" OrderNo="@trial"></KeyenceSPC>
+                                    }
+                                }
+                                else
+                                {
+                                    <h5 style="font-weight:bold">@parameter.Name</h5>
+                                    <KeyenceSPC Parameter="@parameter" OrderNo="@_order.ShortenedKey"></KeyenceSPC>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <h5>Brak parametrów</h5>
+                }
+            </div>
+
+            @*/////// 14.05.25*@
+            @if (_helicheckInUse && !_order.OrderKey.StartsWith("ZPR/2I"))
+            {
+                <div class="operation-section">
+                    @*  <h5>HELICHECK</h5> *@
+                    <h5>
+                        HELICHECK 
+                    </h5>
+                        @* <HelicheckReport OrderNo="@_order.ShortenedKey" @key="@_order.ShortenedKey"></HelicheckReport> *@
+                        <HelicheckReport OrderNo="@_order.ShortenedKey" @key="@_order.ShortenedKey" Product="@_order.Product"></HelicheckReport>
+                </div>
+            }
+            @*///////*@
+
+
+            <div class="operation-section ">
+
+                <h5>Formularz kontroli wizualnej</h5>
+
+                @if (_order.VisualInspectionForm == null)
+                {
+                    <p>Brak danych</p>
+                }
+                else
+                {
+                    <div style="display: flex; justify-content: center; align-items: center;">
+                        <VisualControl VisualInspectionForm="@_order.VisualInspectionForm"></VisualControl>
+                    </div>
+
+                    <div style="display: flex; justify-content: center; align-items: center;">
+                        <PressingVisual Order="@_order" Lock="true"></PressingVisual>
+                    </div>
+                }
+            </div>
+
+            <div class="operation-section">
+                @foreach (var operation in _operationWithoutParameters)
+                {
+                    <div class="empty-operation">
+                        <h5>@operation.Name</h5>
+
+                        @if (operation.Name == "Pokrycie")
+                        {
+                            var _coatingProcesses = ErpOrderRepository.GetOrderdCoatingProcesses(_order.HermesId);
+
+                            foreach (string process in _coatingProcesses)
+                            {
+                                <NavLink href="@($"/PVD/{process}")">Raport procesu:@process</NavLink>
+                                <br />
+                            }
+                        }
+                        else
+                        {
+                            <h5>Brak parametrów</h5>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    }
+    else
+    {
+        <LoadingSpiner IsLoading="true" Message="Pobieranie danych..."></LoadingSpiner>
+    }
+</CascadingAuthenticationState>
+
+@code {
+    [Parameter]
+    public int OrderId { get; set; }
+    private Order _order;
+    private List<Operation> _operations = new();
+
+    private List<KeyenceParameter> _keyenceParameters = new();
+    private List<KeyenceMeasurement> _keyenceMeasurements = new();
+
+    @*/////// 14.05.25*@
+    private bool _helicheckInUse = false;
+    //
+
+    private List<Operation> _operationWithoutParameters = new();
+    private bool _showMRBForm = false;
+    private bool _isLoading = false;
+
+    private bool _isTrialOrder;
+
+    private void ToggleMRBForm()
+    {
+        _showMRBForm = !_showMRBForm;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _isLoading = true;
+        _order = await UnitOfWork.Order.GetWithAllNavPropertiesBy(OrderId);
+        _operations = _order.Product.Operations.OrderBy(o => o.Name).ToList();
+
+        _keyenceMeasurements = await UnitOfWork.KeyenceRepository.GetMeasurementsBy(_order.ShortenedKey, _order.Product.Symbol);
+        _keyenceParameters = _keyenceMeasurements.Select(km => km.Parameter).DistinctBy(kp => kp.Id).OrderBy(kp => kp.Name).ToList();
+        //
+        _helicheckInUse = HelicheckRepository.OrderHasHelicheckMeasurements(_order.ShortenedKey);
+        //
+        foreach (var operation in _order.Product.Operations)
+        {
+            await UnitOfWork.Parameter.GetParametersWithMeasurementsBy(_order.Id, operation.Id);
+        }
+
+        if (_order.MRBId != null)
+        {
+            _showMRBForm = true;
+        }
+
+        _isTrialOrder = UnitOfWork.Order.IsTrialOrder(OrderId);
+        _isLoading = false;
+
+        //05.05.25
+        // GetCoatingProcessIfExist();
+    }
+
+    private void MoveToOperationsWithoutParameters(Operation operation)
+    {
+        _operationWithoutParameters.Add(operation);
+    }
+}

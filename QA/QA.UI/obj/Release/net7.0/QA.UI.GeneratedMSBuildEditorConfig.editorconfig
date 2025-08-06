@@ -1,0 +1,434 @@
+is_global = true
+build_property.MudDebugAnalyzer = 
+build_property.MudAllowedAttributePattern = 
+build_property.MudIllegalParameters = 
+build_property.TargetFramework = net7.0
+build_property.TargetPlatformMinVersion = 
+build_property.UsingMicrosoftNETSdkWeb = true
+build_property.ProjectTypeGuids = 
+build_property.InvariantGlobalization = 
+build_property.PlatformNeutralAssembly = 
+build_property.EnforceExtendedAnalyzerRules = 
+build_property._SupportedPlatformList = Linux,macOS,Windows
+build_property.RootNamespace = QA.UI
+build_property.RootNamespace = QA.UI
+build_property.ProjectDir = C:\Users\ajozwiak\Desktop\QA\QA\QA.UI\
+build_property.EnableComHosting = 
+build_property.EnableGeneratedComInterfaceComImportInterop = 
+build_property.RazorLangVersion = 7.0
+build_property.SupportLocalizedComponentNames = 
+build_property.GenerateRazorMetadataSourceChecksumAttributes = 
+build_property.MSBuildProjectDirectory = C:\Users\ajozwiak\Desktop\QA\QA\QA.UI
+build_property._RazorSourceGeneratorDebug = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/App.razor]
+build_metadata.AdditionalFiles.TargetPath = QXBwLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/AministrationPanel/RoleAssignModal.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQW1pbmlzdHJhdGlvblBhbmVsXFJvbGVBc3NpZ25Nb2RhbC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/AministrationPanel/RoleCreator.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQW1pbmlzdHJhdGlvblBhbmVsXFJvbGVDcmVhdG9yLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/AministrationPanel/UserCreator.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQW1pbmlzdHJhdGlvblBhbmVsXFVzZXJDcmVhdG9yLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/AministrationPanel/UsersManager.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQW1pbmlzdHJhdGlvblBhbmVsXFVzZXJzTWFuYWdlci5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Analitics/ParameterChart.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQW5hbGl0aWNzXFBhcmFtZXRlckNoYXJ0LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Analitics/PVDTrendChart.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQW5hbGl0aWNzXFBWRFRyZW5kQ2hhcnQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Coating/CoatingUnitReport.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ29hdGluZ1xDb2F0aW5nVW5pdFJlcG9ydC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Coating/PVDChart.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ29hdGluZ1xQVkRDaGFydC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Coating/PVDProcessPictures.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ29hdGluZ1xQVkRQcm9jZXNzUGljdHVyZXMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Common/LoadingSpiner.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ29tbW9uXExvYWRpbmdTcGluZXIucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Develop/Copying.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRGV2ZWxvcFxDb3B5aW5nLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Develop/MagneticAnalysisOld.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRGV2ZWxvcFxNYWduZXRpY0FuYWx5c2lzT2xkLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Develop/ParameterIcon.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRGV2ZWxvcFxQYXJhbWV0ZXJJY29uLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Develop/ThreeJS.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRGV2ZWxvcFxUaHJlZUpTLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Devices/DeviceCreator.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRGV2aWNlc1xEZXZpY2VDcmVhdG9yLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Devices/MeasuringDevices.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRGV2aWNlc1xNZWFzdXJpbmdEZXZpY2VzLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Helicheck/HelichechPCHistogram.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSGVsaWNoZWNrXEhlbGljaGVjaFBDSGlzdG9ncmFtLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Helicheck/HelicheckSPC.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSGVsaWNoZWNrXEhlbGljaGVja1NQQy5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Helicheck/HelicheckSPCTable.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSGVsaWNoZWNrXEhlbGljaGVja1NQQ1RhYmxlLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Images/FullScreenViewer.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSW1hZ2VzXEZ1bGxTY3JlZW5WaWV3ZXIucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Images/ImageUploader.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSW1hZ2VzXEltYWdlVXBsb2FkZXIucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Index.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSW5kZXgucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Laboratory/LaboratoryTable.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTGFib3JhdG9yeVxMYWJvcmF0b3J5VGFibGUucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Laboratory/PowdersSpecificationTable.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTGFib3JhdG9yeVxQb3dkZXJzU3BlY2lmaWNhdGlvblRhYmxlLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Laboratory/SMHCAnalysis.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTGFib3JhdG9yeVxTTUhDQW5hbHlzaXMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Laboratory/SMHCBatchChart.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTGFib3JhdG9yeVxTTUhDQmF0Y2hDaGFydC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Laboratory/SMHCChart.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTGFib3JhdG9yeVxTTUhDQ2hhcnQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Laboratory/SMHCMasters.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTGFib3JhdG9yeVxTTUhDTWFzdGVycy5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/MeasurmentPanel/LaboratoryPanel.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTWVhc3VybWVudFBhbmVsXExhYm9yYXRvcnlQYW5lbC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/MeasurmentPanel/MeasurementPanel.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTWVhc3VybWVudFBhbmVsXE1lYXN1cmVtZW50UGFuZWwucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/MeasurmentPanel/MeasurementsChart.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTWVhc3VybWVudFBhbmVsXE1lYXN1cmVtZW50c0NoYXJ0LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/MeasurmentPanel/ResultParametersPanel - Copy.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTWVhc3VybWVudFBhbmVsXFJlc3VsdFBhcmFtZXRlcnNQYW5lbCAtIENvcHkucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/MeasurmentPanel/ResultParametersPanel.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTWVhc3VybWVudFBhbmVsXFJlc3VsdFBhcmFtZXRlcnNQYW5lbC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/MeasurmentPanel/SanblastingChart.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTWVhc3VybWVudFBhbmVsXFNhbmJsYXN0aW5nQ2hhcnQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/MeasurmentPanel/SanblastingPanel.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTWVhc3VybWVudFBhbmVsXFNhbmJsYXN0aW5nUGFuZWwucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/MeasurmentPanel/TrialMeasurementPanel.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTWVhc3VybWVudFBhbmVsXFRyaWFsTWVhc3VyZW1lbnRQYW5lbC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Operations/OperationsList.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcT3BlcmF0aW9uc1xPcGVyYXRpb25zTGlzdC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Orders/Orders.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcT3JkZXJzXE9yZGVycy5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Orders/StatusHandler.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcT3JkZXJzXFN0YXR1c0hhbmRsZXIucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Parameters/AssignChildParametersModal.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUGFyYW1ldGVyc1xBc3NpZ25DaGlsZFBhcmFtZXRlcnNNb2RhbC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Parameters/DescriptionParameterCreator.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUGFyYW1ldGVyc1xEZXNjcmlwdGlvblBhcmFtZXRlckNyZWF0b3IucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Parameters/DescriptiveParametersList.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUGFyYW1ldGVyc1xEZXNjcmlwdGl2ZVBhcmFtZXRlcnNMaXN0LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Parameters/ParameterCreator.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUGFyYW1ldGVyc1xQYXJhbWV0ZXJDcmVhdG9yLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Parameters/ParametersTable.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUGFyYW1ldGVyc1xQYXJhbWV0ZXJzVGFibGUucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Parameters/ParameterTypeModal.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUGFyYW1ldGVyc1xQYXJhbWV0ZXJUeXBlTW9kYWwucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/PDF/PDFUploader.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUERGXFBERlVwbG9hZGVyLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Pressing/PressingVisual.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUHJlc3NpbmdcUHJlc3NpbmdWaXN1YWwucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/ProcessParameters/ProcesParametersTable.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUHJvY2Vzc1BhcmFtZXRlcnNcUHJvY2VzUGFyYW1ldGVyc1RhYmxlLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/ProductPatterns/PatternCreator.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUHJvZHVjdFBhdHRlcm5zXFBhdHRlcm5DcmVhdG9yLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/ProductPatterns/ProductPatterns.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUHJvZHVjdFBhdHRlcm5zXFByb2R1Y3RQYXR0ZXJucy5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Products/ProductsList.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUHJvZHVjdHNcUHJvZHVjdHNMaXN0LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/QCPlan/CopyingQCPlanModal.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUUNQbGFuXENvcHlpbmdRQ1BsYW5Nb2RhbC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/QCPlan/QCPlan.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUUNQbGFuXFFDUGxhbi5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Reporting/KeyenceSPC.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUmVwb3J0aW5nXEtleWVuY2VTUEMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Reporting/KeyenceSPCHistogram.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUmVwb3J0aW5nXEtleWVuY2VTUENIaXN0b2dyYW0ucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Reporting/KeyenceSPCTable.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUmVwb3J0aW5nXEtleWVuY2VTUENUYWJsZS5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Reporting/SPC.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUmVwb3J0aW5nXFNQQy5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Reporting/SPCHistogram.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUmVwb3J0aW5nXFNQQ0hpc3RvZ3JhbS5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Reporting/SPCTable.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUmVwb3J0aW5nXFNQQ1RhYmxlLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Sintering/Info.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcU2ludGVyaW5nXEluZm8ucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Sintering/Sinterings.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcU2ludGVyaW5nXFNpbnRlcmluZ3MucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Start/SelectOrderModal.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcU3RhcnRcU2VsZWN0T3JkZXJNb2RhbC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Start/Start.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcU3RhcnRcU3RhcnQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Tech-Center/TestForm.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVGVjaC1DZW50ZXJcVGVzdEZvcm0ucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/VisualInspectionForm/VisualControl.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVmlzdWFsSW5zcGVjdGlvbkZvcm1cVmlzdWFsQ29udHJvbC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Shared/Draggable.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXERyYWdnYWJsZS5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Shared/DropTarget.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXERyb3BUYXJnZXQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Shared/LoginDisplay.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXExvZ2luRGlzcGxheS5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Shared/SurveyPrompt.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXFN1cnZleVByb21wdC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/_Imports.razor]
+build_metadata.AdditionalFiles.TargetPath = X0ltcG9ydHMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Analitics/Analysis.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQW5hbGl0aWNzXEFuYWx5c2lzLnJhem9y
+build_metadata.AdditionalFiles.CssScope = b-i911b1f1k9
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Analitics/KeyenceParamAnalyzer.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQW5hbGl0aWNzXEtleWVuY2VQYXJhbUFuYWx5emVyLnJhem9y
+build_metadata.AdditionalFiles.CssScope = b-e5s15xb7mw
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Analitics/ParamAnalyzer.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQW5hbGl0aWNzXFBhcmFtQW5hbHl6ZXIucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = b-bduuxyhe81
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Analitics/PVDAnalysis.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQW5hbGl0aWNzXFBWREFuYWx5c2lzLnJhem9y
+build_metadata.AdditionalFiles.CssScope = b-jvgwoo7rom
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Coating/PVDMeasurementTable.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ29hdGluZ1xQVkRNZWFzdXJlbWVudFRhYmxlLnJhem9y
+build_metadata.AdditionalFiles.CssScope = b-1fgwtvdire
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Coating/PVDProcesses.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ29hdGluZ1xQVkRQcm9jZXNzZXMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = b-hze1benpa6
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Coating/PVDProcessReport.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ29hdGluZ1xQVkRQcm9jZXNzUmVwb3J0LnJhem9y
+build_metadata.AdditionalFiles.CssScope = b-ce0umpltln
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Coating/PVDSpecificationTable.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ29hdGluZ1xQVkRTcGVjaWZpY2F0aW9uVGFibGUucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = b-7gvm0bk38y
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Helicheck/HelicheckReport.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSGVsaWNoZWNrXEhlbGljaGVja1JlcG9ydC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = b-94iem8w73m
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Helicheck/HelicheckTable.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSGVsaWNoZWNrXEhlbGljaGVja1RhYmxlLnJhem9y
+build_metadata.AdditionalFiles.CssScope = b-dduwd1rwav
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Laboratory/Laboratory.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTGFib3JhdG9yeVxMYWJvcmF0b3J5LnJhem9y
+build_metadata.AdditionalFiles.CssScope = b-ezpyfq5vl9
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/MRB/MRBForm.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTVJCXE1SQkZvcm0ucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = b-6qq2mnygg9
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/MRB/MRBTable.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTVJCXE1SQlRhYmxlLnJhem9y
+build_metadata.AdditionalFiles.CssScope = b-dcxkxce8iv
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Orders/OrderTable.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcT3JkZXJzXE9yZGVyVGFibGUucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = b-2clg06izq5
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Pressing/PressingTable.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUHJlc3NpbmdcUHJlc3NpbmdUYWJsZS5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = b-mkbtxyj9fd
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Reporting/Report.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUmVwb3J0aW5nXFJlcG9ydC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = b-phrxn7vz2h
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Shrinkage/PowdersShrinkage.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcU2hyaW5rYWdlXFBvd2RlcnNTaHJpbmthZ2UucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = b-1b6rj50eiq
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Sintering/HistoricalBatchPlan.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcU2ludGVyaW5nXEhpc3RvcmljYWxCYXRjaFBsYW4ucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = b-5wk44eas77
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Sintering/NewBatchPlan.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcU2ludGVyaW5nXE5ld0JhdGNoUGxhbi5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = b-vqwbff1du4
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Sintering/SinteringBatchArrangement.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcU2ludGVyaW5nXFNpbnRlcmluZ0JhdGNoQXJyYW5nZW1lbnQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = b-yqg8fu1y3v
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Tech-Center/TestsList.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVGVjaC1DZW50ZXJcVGVzdHNMaXN0LnJhem9y
+build_metadata.AdditionalFiles.CssScope = b-yzc5jgg2nz
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Shared/MainLayout.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXE1haW5MYXlvdXQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = b-dcgi8it27w
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Shared/NavMenu.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXE5hdk1lbnUucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = b-ih2cla92sx
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Areas/Identity/Pages/Account/Login.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcQWNjb3VudFxMb2dpbi5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Areas/Identity/Pages/Account/Logout.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcQWNjb3VudFxMb2dvdXQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Areas/Identity/Pages/Account/Manage/ChangePassword.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcQWNjb3VudFxNYW5hZ2VcQ2hhbmdlUGFzc3dvcmQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Areas/Identity/Pages/Account/_StatusMessage.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcQWNjb3VudFxfU3RhdHVzTWVzc2FnZS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Areas/Identity/Pages/_IdentityLayout.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcX0lkZW50aXR5TGF5b3V0LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Areas/Identity/Pages/_ViewImports.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcX1ZpZXdJbXBvcnRzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Areas/Identity/Pages/_ViewStart.cshtml]
+build_metadata.AdditionalFiles.TargetPath = QXJlYXNcSWRlbnRpdHlcUGFnZXNcX1ZpZXdTdGFydC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/Error.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRXJyb3IuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/ajozwiak/Desktop/QA/QA/QA.UI/Pages/_Host.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcX0hvc3QuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 

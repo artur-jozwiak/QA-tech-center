@@ -1,0 +1,170 @@
+﻿@using QA.BLL.Interfaces
+@using QA.Domain.Models
+@using QA.Domain.Models.Helicheck.Models
+@using QA.UI.Pages.Common
+@using System.Globalization
+
+@inject IHelicheckRepository HelicheckRepository
+@inject ISPCService SPCService
+@inject IUnitOfWork UnitOfWork
+
+@if (Parameters.Count == 0)
+{
+    <strong>Brak danych pomiarowych</strong>
+}
+else if (_isLoading)
+{
+    <LoadingSpiner IsLoading="@_isLoading" Message="Pobieranie danych..."></LoadingSpiner>
+}
+else
+{
+    <table class="table-bordered">
+        <thead>
+            <tr>
+                <th>Parametr</th>
+                <th>Tol-</th>
+                <th>Nominał</th>
+                <th>Tol+</th>
+
+                @{
+                    var seriesesNumers = Parameters.SelectMany(p => p.HelicheckMeasurements).DistinctBy(m => m.Ix).Select(m => m.ToolNum).Order();
+                }
+
+                @foreach (var seriesNo in seriesesNumers)
+                {
+                    var series = Parameters.SelectMany(p => p.HelicheckMeasurements)?.FirstOrDefault(m => m.ToolNum == seriesNo);
+                    var date = series.Datum;
+                    var user = series.Name;
+
+                    <th class="table-header-vertical">
+                        <div class="vertical-text">
+                            <div class="date-part">@date?.Substring(0, 10)</div>
+                            <div class="time-part">@date?.Substring(11, 5)</div>
+                        </div>
+                        <div style="background-color:lightgray">
+                            @seriesNo
+                        </div>
+                    </th>
+                }
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var parameter in Parameters)
+            {
+                decimal? nominal = SPCService.ConvertStringToDecimal(parameter.Nom);
+                decimal? uTol = SPCService.ConvertStringToDecimal(parameter.Otol);
+                decimal? lTol = SPCService.ConvertStringToDecimal(parameter.Utol);
+                decimal? usl = nominal + uTol;
+                decimal? lsl = nominal + lTol;
+
+                <tr>
+                    <td style="font-weight:bold">@parameter.Name</td>
+                    <td>@lTol?.ToString("F3")</td>
+                    <td>@nominal?.ToString("F3")</td>
+                    <td>@uTol?.ToString("F3")</td>
+
+                    @foreach (var series in parameter.HelicheckMeasurements.OrderBy(m => m.ToolNum))
+                    {
+                        var result = series.Results.FirstOrDefault(s => s.KritIx == parameter.Ix);
+                        decimal value = SPCService.ConvertStringToDecimal(series.Results.FirstOrDefault(s => s.KritIx == parameter.Ix)?.ValueF);
+
+                        if (nominal == 0 && lsl == 0 && usl == 0)
+                        {
+                            <td style="border: 1px solid #ccc; padding: 8px;">@value.ToString("F3")</td>
+                        }
+                        else if(lsl != null && usl != null)
+                        {
+                            <td style="@(value < lsl || value > usl ? "color:darkred; background-color:lightcoral;" : "") border: 1px solid #ccc;">@value.ToString("F3")</td>
+                        }
+                        else
+                        {
+                            <td style="border: 1px solid #ccc; padding: 8px;">@value.ToString("F3")</td>
+                        }
+                    }
+                </tr>
+            }
+
+            @* @if (Parameters.Any(p => p.Name.StartsWith("D1.1"))) *@
+            @if (Parameters.Any(p => p.Name.StartsWith("D")))
+            {
+                bool tolleranceDisplayed = false;
+                @for (int toothNo = 1; toothNo <= maxToothQty; toothNo++)
+                {
+                    @* if (Parameters.Any(p => p.Name.StartsWith($"D1.{i}")) && Parameters.Any(p => p.Name.StartsWith($"D2.{i}"))) *@
+                    if (Parameters.Any(p => p.Name.StartsWith($"D{toothNo}.1")) && Parameters.Any(p => p.Name.StartsWith($"D{toothNo}.2")))
+                    {
+                        <tr>
+                            <td style="font-weight:bold">ZW @toothNo</td>
+
+                            @if (!tolleranceDisplayed)
+                            {
+                                tolleranceDisplayed = true;
+                                <td rowspan="6" >
+                                    <InputNumber Value="@Product.NarrowingLTol"
+                                                 ValueChanged="@( (decimal? e) => { Product.NarrowingLTol = e; UpdateTolerance(); })"
+                                                 ValueExpression="() => Product.NarrowingLTol" 
+                                                 style="width:40px; padding:0px" />
+                                </td>
+
+                                <td rowspan="6"></td>
+
+                                <td rowspan="6">
+                                    <InputNumber Value="@Product.NarrowingUTol"
+                                                 ValueChanged="@( (decimal? e) => { Product.NarrowingUTol = e; UpdateTolerance(); })"
+                                                 ValueExpression="() => Product.NarrowingUTol"
+                                                 style="width:40px; padding:0px" />
+                                </td>
+                            }
+
+                            @foreach (var series in Parameters.SelectMany(p => p.HelicheckMeasurements).DistinctBy(m => m.ToolNum))
+                            {
+                                decimal? result = null;
+                                var diam1 = series.Results.FirstOrDefault(s => s.HelicheckParameter.Name.Trim() == $"D{toothNo}.1")?.ValueF;
+                                var diam2 = series.Results.FirstOrDefault(s => s.HelicheckParameter.Name.Trim() == $"D{toothNo}.2")?.ValueF;
+
+                                if (diam1 != null && diam2 != null)
+                                {
+                                    decimal? diam_1 = SPCService.ConvertStringToDecimal(diam1);
+                                    decimal? diam_2 = SPCService.ConvertStringToDecimal(diam2);
+                                    result = (diam_1 - diam_2) / 2;
+                                }
+
+                                <td style="@(result < Product.NarrowingLTol || result > Product.NarrowingUTol ? "color:darkred; background-color:lightcoral;" : "") border: 1px solid #ccc;">@result?.ToString("F3")</td>
+                            }
+                        </tr>
+                    }
+                }
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    [Parameter]
+    public List<HelicheckParameter> Parameters { get; set; }
+    [Parameter]
+    public string OrderNo { get; set; }
+
+    [Parameter]
+    public Product Product { get; set; }
+
+    private bool _isLoading = false;
+    private const int maxToothQty = 12;
+
+    protected override void OnInitialized()
+    {
+        _isLoading = true;
+        foreach (var parameter in Parameters)
+        {
+            HelicheckRepository.GetResultsBy(parameter.Ix, OrderNo);
+        }
+
+        _isLoading = false;
+    }
+
+    private void UpdateTolerance()
+    {
+        UnitOfWork.Complete();
+    }
+}

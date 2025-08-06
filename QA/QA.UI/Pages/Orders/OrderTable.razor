@@ -1,0 +1,42 @@
+﻿@using QA.Domain.Models
+<table class="order-table">
+    <thead>
+        <tr>
+            <th>Zlecenie</th>
+            <th>Symbol produktu</th>
+            <th>Opis produktu</th>
+            <th>Numer PDM</th>
+            <th>Status</th>
+            <th rowspan="2">
+
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>@Order.OrderKey</td>
+            <td>@Order.Product?.Symbol</td>
+            <td>@Order.Product?.Description</td>
+            <td>@Order.Product?.PdmNo</td>
+            <td>
+                <StatusHandler Order="@Order"></StatusHandler>
+            </td>
+            <td>
+                <NavLink class="nav-link btn-primary" href="@_reportNavlink" style="color:white; text-align:center;">
+                    <span aria-hidden="true"></span> Raport
+                </NavLink>
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+@code{
+    [Parameter]
+    public Order Order { get; set; }
+    private string _reportNavlink;
+
+    protected override void  OnInitialized()
+    {
+        _reportNavlink = String.Concat($"report/{Order.Id}");
+    }
+}

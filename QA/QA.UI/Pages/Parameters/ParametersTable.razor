@@ -1,0 +1,307 @@
+﻿@using QA.BLL.Interfaces
+@using QA.DataAccess;
+@using QA.Domain.Models;
+@using QA.UI.Models;
+@using QA.UI.Pages.Develop
+@using QA.UI.Pages.Images
+@using QA.UI.Pages.QCPlan;
+@using QA.UI.Pages.ProductPatterns;
+@using QA.UI.Services;
+@using QA.Domain.Models.Enums
+
+@inject IJSRuntime IJSRuntime
+@inject QAContext QAContext
+@inject IErrorLogger ErrorLogger
+@inject NavigationManager NavigationManager
+@inject IOperationService IOperationService
+@inject IUnitOfWork UnitOfWork
+
+<ParameterCreator @ref="_parameterCreator"></ParameterCreator>
+<AssignChildParametersModal @ref="_assignChildParametersModal"></AssignChildParametersModal>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Nazwa</th>
+            @if (!DisplayOnly)
+            {
+                <th>Rysunek</th>
+            }
+            <th>Jednostka</th>
+            <th>LSL</th>
+            <th>Wartość nominalna</th>
+            <th>USL</th>
+            <th>Klasa próbki</th>
+            <th>Komentarz</th>
+            <th>Automatyczny odczyt pomiaru</th>
+            <th>Parametr próby</th>
+            <th>Urządzenie pomiarowe</th>
+
+            @if (!DisplayOnly)
+            {
+                <th>Akcje</th>
+            }
+        </tr>
+    </thead>
+
+    <tbody>
+        @if (Parameters != null)
+        {
+            @foreach (var parameter in Parameters)
+            {
+                if (!(!_isTrialOrder && parameter.IsTrialParameter))
+                {
+                    <tr>
+                        <td>
+                            @parameter.Name
+                            <span class="oi oi-trash functional-icon" style="color:red" @onclick="() => ConfirmDeletion(parameter)"></span>
+                        </td>
+                        @if (!DisplayOnly)
+                        {
+                            <td>
+                                <ImageUploader Parameter="@parameter" Image="@parameter.Image"></ImageUploader>
+                            </td>
+                        }
+
+                        <td>@parameter.Unit</td>
+                        <td>@parameter.LSL</td>
+                        <td>@parameter.NominalValue</td>
+                        <td>@parameter.USL</td>
+                        <td>@parameter.SampleClass</td>
+                        <td>@parameter.Comment</td>
+                        <td>@parameter.AutomaticMeasurement</td>
+                        <td>@parameter.IsTrialParameter</td>
+
+                        <td>
+                            @if (parameter.DevicePort != null)
+                            {
+                                @(parameter.DevicePort.MeasuringDevice.Name + " Port: " + parameter.DevicePort.Name)
+                            }
+                        </td>
+
+                        <td>
+                            @if (!DisplayOnly)
+                            {
+                                <CascadingAuthenticationState>
+                                    <AuthorizeView Roles="Admin, Manager">
+                                        @if (parameter.ParameterType != ParameterType.Standard)
+                                        {
+                                            <span class="oi oi-fork functional-icon" @onclick="() => ShowAssignChildParametersModal(parameter.Id)"></span>
+                                        }
+                                        <span class="oi oi-pencil functional-icon" @onclick="() => ShowEditModal(parameter)"></span>
+                                    </AuthorizeView>
+                                </CascadingAuthenticationState>
+
+                                @if (!HideMeasurementLink)
+                                {
+                                    if (parameter.ParameterType == ParameterType.Standard && !parameter.IsChildParameter && parameter.DevicePort != null)
+                                    {
+                                        @if (parameter.DevicePort != null)
+                                        {
+                                            if (IOperationService.IsSandblastingOperation(parameter.Operation))
+                                            {
+                                                if (parameter.EdgesQty != null && parameter.EdgesQty != 0)
+                                                {
+                                                    <span class="oi oi-graph functional-icon" @onclick="() => GoToBlastingMeasurementPanel(parameter)"></span>
+                                                }
+                                            }
+                                            else if (IOperationService.IsLaboratoryOperation(parameter.Operation))
+                                            {
+                                                <span class="oi oi-graph functional-icon" @onclick="() => GoToLaboratoryMeasurementPanel(parameter)"></span>
+                                            }
+                                            else
+                                            {
+                                                @* zwykły panel *@
+                                                <span class="oi oi-graph functional-icon" @onclick="() => GoToMeasurementPanel(parameter)"></span>
+                                            }
+                                        }
+                                    }
+                                    @* else if (parameter.ParameterType != ParameterType.Standard  && parameter.ChildParametersAssignements.Count != 0) *@
+                                    else if (parameter.ParameterType != ParameterType.Standard && parameter.ChildParametersAssignements != null && parameter.ChildParametersAssignements.Count != 0)
+                                    {
+                                        //Parametry policzalne
+                                        <span class="oi oi-graph functional-icon" @onclick="() => GoToDerivedParameterMeasurementPanel(parameter.Id)"></span>
+                                        //przekazac do panelu pomiarowego wszystkie parametry z operacji
+                                    }
+                                }
+                            }
+                        </td>
+                    </tr>
+                }
+            }
+        }
+        else
+        {
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    [CascadingParameter]
+    public QCPlan QCPlan { get; set; }
+
+    [CascadingParameter]
+    public ProductPatterns ProductPatterns { get; set; }
+
+    [Parameter]
+    public List<Parameter> Parameters { get; set; }
+
+    [Parameter]
+    public bool DisplayOnly { get; set; }
+
+    [Parameter]
+    public bool HideMeasurementLink { get; set; }
+
+    [Parameter]
+    public int OrderId { get; set; }
+
+    private ParameterCreator _parameterCreator = new();
+
+    private AssignChildParametersModal _assignChildParametersModal = new();
+
+    private bool _isTrialOrder;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        _isTrialOrder = UnitOfWork.Order.IsTrialOrder(OrderId);
+    }
+
+    private void ShowEditModal(Parameter selectedParameter)
+    {
+        _parameterCreator.ShowModalInEditMode(selectedParameter);
+    }
+
+    public async Task ConfirmDeletion(Parameter parameter)
+    {
+        if (parameter != null)
+        {
+            bool confirmed = await IJSRuntime.InvokeAsync<bool>("confirm", $"Czy na pewno chcesz usunąć  parametr : {parameter.Name}, produktu: {parameter.Operation.Product.Symbol}, operacji: {parameter.Operation.Name.Trim()}?");
+
+            if (confirmed)
+            {
+                try
+                {
+                    if (parameter.ChildParametersAssignements != null)
+                    {
+                        var childParameters = parameter.ChildParametersAssignements.Select(cha => cha.ChildParameter);
+                        foreach (var childParameter in childParameters)
+                        {
+                            if (childParameter != null)
+                            {
+                                childParameter.IsChildParameter = false;
+                            }
+                        }
+                    }
+
+                    if (QAContext.ChildParametersAssignement.Any(cpa => cpa.ChildParameterId == parameter.Id))
+                    {
+                        var cpaToRemove = QAContext.ChildParametersAssignement.Where(cpa => cpa.ChildParameterId == parameter.Id);
+                        QAContext.ChildParametersAssignement.RemoveRange(cpaToRemove);
+                    }
+
+                    if (parameter.Measurements.Count > 0)
+                    {
+                        confirmed = await IJSRuntime.InvokeAsync<bool>("confirm", $"Parametr posiada pomiary które zostaną utracone pojego usunięciu. Czy na pewno chcesz go usunąc?");
+                    }
+
+                    if (confirmed)
+                    {
+                        RemoveParameter(parameter);
+                        await Complete();
+                        RefreshAncestorComponent();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    await ErrorLogger.LogError(ex, nameof(ParametersTable));
+                    throw;
+                }
+            }
+        }
+    }
+
+    private void RemoveParameter(Parameter parameter)
+    {
+        QAContext.Parameters.Remove(parameter);
+    }
+
+    private async Task Complete()
+    {
+        await QAContext.SaveChangesAsync();
+    }
+
+    private void GoToMeasurementPanel(Parameter parameter)
+    {
+        List<int> parametersIds = new List<int>();
+
+        if (parameter.ParameterType == Domain.Models.Enums.ParameterType.Standard)
+        {
+            parametersIds = Parameters.Where(p => !p.IsChildParameter
+                                                && p.DevicePort != null
+                                                && p.DevicePort.MeasuringDevice.Id == parameter.DevicePort.MeasuringDeviceId)
+                                      .Select(p => p.Id).ToList();
+        }
+        else
+        {
+            if (parameter.ChildParametersAssignements != null)
+            {
+                parametersIds = parameter.ChildParametersAssignements.Select(cha => (int)cha.ChildParameterId).ToList();
+                parametersIds.Add(parameter.Id);
+            }
+        }
+
+        string parametersIdsString = string.Join(",", parametersIds);
+        NavigationManager.NavigateTo($"/measurementpanel/{parametersIdsString}/{OrderId}");
+    }
+
+    private void GoToDerivedParameterMeasurementPanel(int parameterId)
+    {
+        NavigationManager.NavigateTo($"/resultparameterspanel/{parameterId}/{OrderId}");
+    }
+
+    public void RefreshAncestorComponent()
+    {
+        if (QCPlan != null)
+            QCPlan.Refresh();
+        else if (ProductPatterns != null)
+            ProductPatterns.Refresh();
+    }
+
+    private void ShowAssignChildParametersModal(int parameterId)
+    {
+        _assignChildParametersModal.ShowModal(parameterId);
+    }
+
+    private void GoToBlastingMeasurementPanel(Parameter parameter)
+    {
+        List<int> parametersIds = new List<int>();
+
+        parametersIds = Parameters.Where(p => !p.IsChildParameter
+                                            && p.DevicePort != null
+                                            && p.DevicePort.MeasuringDevice.Id == parameter.DevicePort.MeasuringDeviceId)
+                                  .Select(p => p.Id).ToList();
+
+        string parametersIdsString = string.Join(",", parametersIds);
+        NavigationManager.NavigateTo($"/sandblastingpanel/{parametersIdsString}/{OrderId}");
+    }
+
+    private void GoToLaboratoryMeasurementPanel(Parameter parameter)
+    {
+        List<int> parametersIds = new List<int>();
+
+        parametersIds = Parameters.Select(p => p.Id).ToList();
+
+        string parametersIdsString = string.Join(",", parametersIds);
+        NavigationManager.NavigateTo($"/LaboratoryPanel/{parametersIdsString}/{OrderId}");
+    }
+}

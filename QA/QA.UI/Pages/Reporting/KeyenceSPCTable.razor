@@ -1,0 +1,90 @@
+﻿@using Microsoft.EntityFrameworkCore
+@using QA.BLL.Interfaces
+@using QA.Domain.Models
+@using QA.Domain.Models.Keyence
+@inject ISPCService SPCService
+
+@* dodać ilość pomiarów *@
+
+@if (Measurements == null || !Measurements.Any())
+{
+    <p>Loading...</p>
+}
+else
+{
+    <table class="spc-table">
+        <thead>
+            <tr><th colspan="11" style="text-align: center;">@Parameter.Name</th></tr>
+            <tr>
+                <th>LSL</th>
+                <th>&gt;0&lt;</th>
+                <th>USL</th>
+                <th>QTY</th>
+                <th>Min</th>
+                <th>Avg</th>
+                <th>Max</th>
+                <th>&sigma;</th>
+                <th>&Delta;</th>
+                <th>Cp</th>
+                <th>Cpk</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>@Parameter.LSL</td>
+                <td>@Parameter.Nominal</td>
+                <td>@Parameter.USL</td>
+                <td>@_qty</td>
+                <td class="@(SPCService.IsOutsideTolerance(Parameter.LSL, Parameter.USL, _min) ? "highlight" : "")">@_min</td>
+                <td class="@(SPCService.IsOutsideTolerance(Parameter.LSL, Parameter.USL, _avg) ? "highlight" : "")">@_avg</td>
+                <td class="@(SPCService.IsOutsideTolerance(Parameter.LSL, Parameter.USL, _max) ? "highlight" : "")">@_max</td>
+                <td>@_standardDeviation.ToString("F3")</td>
+                <td>@_delta</td>
+                <td>@_cp</td>
+                <td>@_cpk</td>
+            </tr>
+        </tbody>
+    </table>
+}
+
+@code {
+
+    [Parameter]
+    public KeyenceParameter Parameter { get; set; }
+    [Parameter]
+    public List<decimal> Measurements { get; set; }
+    private decimal _min;
+    private decimal _max;
+    private decimal _avg;
+    private decimal _cp;
+    private decimal _cpk;
+    private decimal _standardDeviation;
+    private decimal _delta;
+    private decimal _qty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        CalculateStatistics();
+    }
+
+    public async Task UpdateTable()
+    {
+        await OnInitializedAsync();
+        StateHasChanged();
+    }
+
+    private void CalculateStatistics()
+    {
+        if (Measurements == null || !Measurements.Any())
+            return;
+
+        _min = SPCService.CalculateMin(Measurements);
+        _max = SPCService.CalculateMax(Measurements);
+        _avg = SPCService.CalculateAvg(Measurements);
+        _standardDeviation = SPCService.CalculateStandardDeviation(Measurements, _avg);
+        _delta = SPCService.CalculateDelta(_max, _min);
+        _cp = SPCService.CalculateCp(Parameter.USL, Parameter.LSL, _standardDeviation);
+        _cpk = SPCService.CalculateCpk(Parameter.USL, Parameter.LSL, _avg, _standardDeviation);
+        _qty = Measurements.Count;
+    }
+}

@@ -1,0 +1,139 @@
+﻿@page "/sintering-orders"
+@using Microsoft.EntityFrameworkCore
+@using QA.BLL.Interfaces
+@using QA.DataAccess
+@using QA.Domain.Models
+@using QA.Domain.Models.SinteringModels
+@using QA.UI.Pages.Common
+@using QA.UI.Pages.Laboratory
+@using QA.UI.Pages.MeasurmentPanel
+@using QA.UI.Pages.Sintering
+
+@inject ISinteringOrdersRepository SinteringOrdersRepository
+@inject IUnitOfWork UnitOfWork
+
+@*
+ <div>
+    <input type="number" id="sinteringNoInput" @onchange="OpenSinteringPanel" placeholder="Numer procesu" />
+    <button class="btn-primary" @onclick="ToggleSinteringMap" hidden="@(_sinteringNo == 0)">
+        @(_showSinteringMap ? "Ukryj plan spieku" : "Pokaż plan spieku")
+    </button>
+</div>
+ *@
+
+<div>
+    @* <input type="number" id="sinteringNoInput" @onchange="OpenSinteringPanel" placeholder="Numer procesu" /> *@
+
+    <input list="coatingProcesses" @onchange="OpenSinteringPanel" placeholder="Numer procesu">
+    <datalist id="coatingProcesses" @onchange="OpenSinteringPanel">
+
+        <option value="">-- Wybierz numer procesu --</option>
+
+        @if (_allProcesses.Any())
+        {
+            int newProcess = _allProcesses.Max(p => p.No) + 1;
+            <option value="@newProcess">Nowy proces</option>
+            @* <option value="@newProcess">@newProcess (Nowy proces)</option> *@
+        }
+
+        @foreach (var process in _allProcesses)
+        {
+            <option value="@process.No">@process.CreationDate.ToString("dd.MM.yyyy")</option>
+        }
+    </datalist>
+
+    <button class="btn-primary" @onclick="ToggleSinteringMap" hidden="@(_sinteringNo == 0)">
+        @(_showSinteringMap ? "Ukryj plan spieku" : "Pokaż plan spieku")
+    </button>
+</div>
+
+@if (_showSinteringMap)
+{
+    if(_orders.Any())
+    {
+        <HistoricalBatchPlan SinteringNo="_sinteringNo"></HistoricalBatchPlan>
+    }
+    else
+    {
+        <NewBatchPlan SinteringNo="_sinteringNo"></NewBatchPlan>
+    }
+}
+
+@if (_orderKeys.Any())
+{
+    foreach (var orderKey in _orderKeys)
+    {
+        if (_orders.Any(o => o.OrderKey == orderKey))
+        {
+            var order = _orders.FirstOrDefault(o => o.OrderKey == orderKey);
+            var operation = order.Product.Operations.First();
+            var parameters = operation.Parameters.ToList();
+
+            if (parameters.Count != 0)
+            {
+                <LaboratoryTable Order="@order" Parameters="@parameters" Operation="@operation" ShowStats="@false"></LaboratoryTable>
+            }
+            else
+            {
+                <li>@orderKey - nie przypisano prametrów</li>
+            }
+        }
+        else
+        {
+            <li>@orderKey - nie zarejstrowano zlecenia</li>
+        }
+    }
+}
+
+<LoadingSpiner IsLoading="@_isLoading"></LoadingSpiner>
+
+@code {
+    private List<string> _orderKeys = new();
+    private List<Order> _orders = new();
+    private bool _isLoading = false;
+    private bool _showSinteringMap = false;
+    private int _sinteringNo = 0;
+
+    private List<SinteringBatch> _allProcesses = new();
+
+
+    protected override void OnInitialized()
+    {
+        _allProcesses =  UnitOfWork.Sintering.GetAllProcesses();
+    }
+
+    private async Task OpenSinteringPanel(ChangeEventArgs e)
+    {
+        _showSinteringMap = false;
+        if (int.TryParse(e.Value.ToString(), out int number))
+        {
+            _sinteringNo = number;
+        }
+
+        await GetOrderKeys(_sinteringNo);
+
+        foreach (var orderKey in _orderKeys)
+        {
+            var order = await UnitOfWork.Order.GetSinteringOrder(orderKey);
+
+            if (order != null)
+            {
+                _orders.Add(order);
+            }
+        }
+
+        _isLoading = false;
+    }
+
+    private  async Task GetOrderKeys(int sinteringNo)
+    {
+        _isLoading = true;
+        _orders = new();
+        _orderKeys = await SinteringOrdersRepository.GetOrderKeysBy(sinteringNo);
+    }
+
+    private void ToggleSinteringMap()
+    {
+        _showSinteringMap = !_showSinteringMap;
+    }
+}

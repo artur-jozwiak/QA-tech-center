@@ -1,0 +1,84 @@
+﻿@page "/test-list"
+@using MudBlazor
+
+@using QA.BLL.Interfaces
+@using QA.Domain.Models.Enums
+@using QA.Domain.Models.ToolTests
+@inject IUnitOfWork UnitOfWork
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+
+
+<table class="mud-table mud-elevation-1 mud-table-hover mud-table-dense custom-bordered-table">
+    <thead class="mud-table-head">
+        <tr>
+            <th class="mud-table-cell font-weight-bold">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    Tool
+                    <MudIconButton Icon="@Icons.Material.Filled.Add" Color="Color.Primary" OnClick="@(() => GoToTestPanelVertical(null))" />
+                </div>
+            </th>
+            <th class="mud-table-cell font-weight-bold">Type</th>
+            <th class="mud-table-cell font-weight-bold">Type of machining</th>
+            <th class="mud-table-cell font-weight-bold">Conclusion</th>
+            <th class="mud-table-cell font-weight-bold">Comment</th>
+            <th class="mud-table-cell font-weight-bold">Actions</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @foreach (var group in _comparisons.GroupBy(c => c.Tool.Id))
+        {
+            int rowSpan = group.Count();
+            bool isFirst = true;
+
+            foreach (var item in group)
+            {
+                <tr>
+                    @if (isFirst)
+                    {
+                        <td class="mud-table-cell font-weight-bold" rowspan="@rowSpan">@item.Tool.Name</td>
+                    }
+
+                    <td class="mud-table-cell">
+                        @if (item.TestType != 0)
+                        {
+                            @EnumExtensions.GetDisplayName(item.TestType)
+                        }
+                    </td>
+                    <td class="mud-table-cell">@item.TypeOfMachinning</td>
+                    <td class="mud-table-cell">@item.Conclusion</td>
+                    <td class="mud-table-cell">@item.Remarks</td>
+                    <td class="mud-table-cell">
+                        <MudIconButton Icon="@Icons.Material.Filled.ArrowCircleRight" Color="Color.Primary" OnClick="@(() => GoToTestPanelVertical(item.Id))" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@(() => DeleteComparison(item))" />
+                    </td>
+                </tr>
+                isFirst = false;
+            }
+        }
+    </tbody>
+</table>
+
+@code {
+
+    private List<ToolTestComparison> _comparisons = new();
+
+    protected override void OnInitialized()
+    {
+         _comparisons = UnitOfWork.ToolTesting.GetAllComparisons();
+    }
+
+    private void DeleteComparison(ToolTestComparison item)
+    {
+        _comparisons.Remove(item);
+        UnitOfWork.ToolTesting.RemoveComparison(item);
+        UnitOfWork.Complete();
+        Snackbar.Add("Comparison deleted.", Severity.Warning);
+    }
+
+    private void GoToTestPanelVertical(int? id)
+    {
+        Navigation.NavigateTo($"/test-form/{id}");
+    }
+}

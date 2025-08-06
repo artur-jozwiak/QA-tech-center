@@ -1,0 +1,167 @@
+﻿@using Microsoft.EntityFrameworkCore
+@using QA.Domain.Models
+@using System.Text.Json
+@using QA.Domain.Models.Helicheck.Models
+@using QA.Domain.Models.Keyence
+@using System.Globalization
+@inject IJSRuntime JSRuntime
+
+<div>
+    <input class="no-print" type="range" id="binDecimalPlaces" min="0" max="3" value="@_bindDecimalPlaces" @oninput="(async (e) => await HandelSlider(e))" />
+    <canvas id="@("Helicheck" + Parameter.Ix)" width="200" height="200"></canvas>
+</div>
+
+@code {
+    [Parameter]
+    public HelicheckParameter Parameter { get; set; }
+    [Parameter]
+    public decimal Nominal { get; set; }
+    [Parameter]
+    public decimal LSL { get; set; }
+    [Parameter]
+    public decimal USL { get; set; }
+    [Parameter]
+    public List<decimal>? Measurements { get; set; }
+    private bool _firstRender = true;
+    private string chartJs;
+    private int _bindDecimalPlaces = 3;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_firstRender)
+        {
+            _firstRender = false;
+            await UpdateHistogram(Parameter.Ix);
+        }
+    }
+
+    private async Task HandelSlider(ChangeEventArgs e)
+    {
+        _bindDecimalPlaces = int.Parse(e.Value.ToString());
+        await UpdateHistogram(Parameter.Ix);
+    }
+
+    public async Task UpdateHistogram(int parameterId)
+    {
+        var chartId = "Helicheck" + parameterId;
+        var chartExists = await JSRuntime.InvokeAsync<bool>("eval", $"document.getElementById('{chartId}') !== null");
+
+        if (chartExists)
+        {
+            await JSRuntime.InvokeVoidAsync("destroyChartById", chartId);
+        }
+
+        List<decimal> roundedMeasurements = Measurements.Select(m => Math.Round(m, _bindDecimalPlaces)).ToList();
+
+        var frequencyData = roundedMeasurements
+            .GroupBy(m => m)
+            .Select(g => new { Value = g.Key, Count = g.Count() })
+            .OrderBy(g => g.Value)
+            .ToList();
+
+        var xValues = frequencyData.Select(f => f.Value).ToList();
+        var yValues = frequencyData.Select(f => f.Count).ToList();
+
+        var data = new
+        {
+            labels = xValues,
+            datasets = new[]
+            {
+                    new
+                    {
+                        label = Parameter.Name,
+                        data = yValues,
+                        type = "bar",
+                        borderColor = "rgba(75, 192, 192, 1)",
+                        backgroundColor ="rgba(75, 192, 192, 0.2)",
+                        borderWidth = 2,
+                        pointRadius = 2,
+                        borderDash = new int[] { 0, 0 },
+                    },
+                }
+        };
+
+        chartJs = $@"
+            var ctx = document.getElementById('{chartId}').getContext('2d');
+            var data = " + JsonSerializer.Serialize(data) + @";
+            new Chart(ctx, {
+                type: 'bar',
+                data: data,
+                options: {
+            animation: {
+                duration: 0,
+            },
+                    scales: {
+                        x: {
+                             type: 'linear',
+                            grid: {
+                                display: true,
+                                color: '#e0e0e0',
+                                lineWidth: 1,
+                                borderDash: [5, 5]
+                            },
+                        },
+
+                        y: {
+                            type: 'linear',
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    },
+                    plugins: {
+                        annotation: {
+                            annotations: [
+                                {
+                                    type: 'line',
+                                    scaleID: 'x',
+                                    value: " + JsonSerializer.Serialize(Nominal) + @",
+                                    borderColor: 'green',
+                                    borderWidth: 2,
+                                    borderDash: [10, 3],
+                                    label: {
+                                        enabled: true,
+                                        content: '><',
+                                        position: 'start'
+                                    }
+                                },
+                                {
+                                    type: 'line',
+                                    scaleID: 'x',
+                                    value: " + JsonSerializer.Serialize(LSL) + @",
+                                    borderColor: 'red',
+                                    borderWidth: 1,
+                                    borderDash: [5, 5],
+                                    label: {
+                                        enabled: true,
+                                        content: 'LSL',
+                                        position: 'start'
+                                    }
+                                },
+                                {
+                                    type: 'line',
+                                    scaleID: 'x',
+                                    value: " + JsonSerializer.Serialize(USL) + @",
+                                    borderColor: 'red',
+                                    borderWidth: 1,
+                                    borderDash: [5, 5],
+                                    label: {
+                                        enabled: true,
+                                        content: 'USL',
+                                        position: 'start'
+                                    }
+                                }
+                            ]
+                        }
+                   }
+                }
+            });
+        ";
+        await JSRuntime.InvokeVoidAsync("eval", chartJs);
+    }
+}
+
+
+
+

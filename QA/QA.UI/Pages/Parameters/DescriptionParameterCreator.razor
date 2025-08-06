@@ -1,0 +1,189 @@
+﻿@using Microsoft.EntityFrameworkCore;
+@using QA.BLL.Interfaces
+@using QA.DataAccess;
+@using QA.Domain
+@using QA.Domain.Models;
+@using QA.Domain.Models.Enums
+@using QA.UI.Models;
+@using QA.UI.Pages.Images;
+@using QA.UI.Pages.QCPlan;
+@using QA.UI.Pages.ProductPatterns;
+@using QA.UI.Services;
+
+@inject QAContext QAContext;
+@inject IErrorLogger ErrorLogger;
+@inject IConfiguration Configuration;
+@inject IOperationService IOperationService;
+
+@*
+
+    //Tworzenie parametru róznicy
+
+*@
+
+@if (_showModal)
+{
+    <div class="modal" style="display: block; width: 20%; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+        <div class="modal-content col-md-2">
+
+            <div class="modal-header">
+                <h5 class="modal-title" style="font-weight:bold">@_product.Symbol | @_operation.Name</h5>
+                <button class="btn btn-close" @onclick="HideModal"></button>
+            </div>
+
+            <EditForm Model="@_parameter" OnValidSubmit="@SaveParameter">
+                <ValidationSummary />
+                <DataAnnotationsValidator />
+
+                <div class="modal-body">
+                    <div class="form-row">
+                        <div class="form-group col-md-12">
+                            <label for="Name">Nazwa</label>
+                            <InputText class="form-control" id="Name" @bind-Value="@_parameter.Name" />
+                            <ValidationMessage For="@(() => _parameter.Name)" />
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group col-md-12">
+                            <label for="TestingInstrument">Narzędzie inspekcyjne</label>
+                            <InputText class="form-control" id="TestingInstrument" @bind-Value="@_parameter.TestingInstrument" />
+                            <ValidationMessage For="@(() => _parameter.TestingInstrument)" />
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group col-md-12">
+                            <label for="FillingMethod">Sposób wypełniania</label>
+                            <InputText class="form-control" id="FillingMethod" @bind-Value="@_parameter.FillingMethod" />
+                            <ValidationMessage For="@(() => _parameter.FillingMethod)" />
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group col-md-12">
+                            <label for="Name">Comment</label>
+                            <InputText class="form-control" id="Comment" @bind-Value="@_parameter.Comment" />
+                            <ValidationMessage For="@(() => _parameter.Comment)" />
+                        </div>
+                    </div>
+
+                        @*
+                        <div class="form-row">
+                        <div class="form-group col-md-12">
+                        <ImageUploader Image="@_parameter.Image"></ImageUploader>
+                        </div>
+                        </div> 
+                        *@
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-success">Zapisz</button>
+                    <button type="submit" class="btn btn-secondary" @onclick=HideModal>Anuluj</button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+}
+
+@code {
+    [CascadingParameter]
+    public QCPlan QCPlan { get; set; }
+    private Product _product { get; set; }
+    private Operation _operation { get; set; }
+    private DescriptiveParameter _parameter = new();
+    private bool _showModal = false;
+    private bool _isEditMode = false;
+
+    public void ShowModalInEditMode(DescriptiveParameter parameter)
+    {
+        _parameter = parameter;
+        _product = parameter.Operation.Product;
+        _operation = parameter.Operation;
+        _isEditMode = true;
+        _showModal = true;
+        StateHasChanged();
+    }
+
+    public void ShowModal(Operation operation)
+    {
+        _operation = operation;
+        _product = operation.Product;
+        _showModal = true;
+        StateHasChanged();
+    }
+
+    private async Task SaveParameter()
+    {
+        if (_isEditMode)
+        {
+            QAContext.DescriptiveParameter.Update(_parameter);
+        }
+        else
+        {
+            _parameter.Operation = _operation;
+            _parameter.OperationId = _operation.Id;
+            _parameter.CreationDate = DateTime.Now;
+            QAContext.DescriptiveParameter.Add(_parameter);
+
+            // await QAContext.SaveChangesAsync();
+            // RefreshAncestorComponent();
+            // HideModal();
+
+            _parameter = new();
+        }
+        await QAContext.SaveChangesAsync();
+        RefreshAncestorComponent();
+        HideModal();
+    }
+
+    public void RefreshAncestorComponent()
+    {
+        if (QCPlan != null)
+            QCPlan.Refresh();
+    }
+
+    private async void HideModal()
+    {
+        _showModal = false;
+    }
+
+    public async Task AddParameterAsync(DescriptiveParameter parameter)
+    {
+        parameter.CreationDate = DateTime.Now;
+        await QAContext.DescriptiveParameter.AddAsync(parameter);
+    }
+
+    private void UpdateParameter(DescriptiveParameter parameter)
+    {
+        if (parameter.Image != null)
+        {
+            UpdateParameterImage(parameter);
+        }
+
+        QAContext.DescriptiveParameter.Update(_parameter);
+    }
+
+    private async Task Complete()
+    {
+        await QAContext.SaveChangesAsync();
+    }
+
+    private void UpdateParameterImage(DescriptiveParameter parameter)
+    {
+        string oldFileName = parameter.Image.ImageUrl;
+        string savePath = Configuration["AppSettings:ImagesPath"];
+        string fileName = $"{parameter.Operation.Product.Symbol}_{parameter.Name}_param.png";
+        string destinationPath = Path.Combine(savePath, fileName);
+        parameter.Image.ImageUrl = destinationPath;
+
+        try
+        {
+            File.Move(oldFileName, destinationPath, true);
+        }
+        catch (Exception)
+        {
+            throw;
+        }
+    }
+}

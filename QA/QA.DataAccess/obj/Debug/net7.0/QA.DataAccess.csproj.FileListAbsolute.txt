@@ -1,0 +1,57 @@
+C:\Users\ajozwiak\Desktop\QA — kopia\QA\QA.DataAccess\bin\Debug\net7.0\QA.DataAccess.deps.json
+C:\Users\ajozwiak\Desktop\QA — kopia\QA\QA.DataAccess\bin\Debug\net7.0\QA.DataAccess.runtimeconfig.json
+C:\Users\ajozwiak\Desktop\QA — kopia\QA\QA.DataAccess\bin\Debug\net7.0\QA.DataAccess.dll
+C:\Users\ajozwiak\Desktop\QA — kopia\QA\QA.DataAccess\bin\Debug\net7.0\QA.DataAccess.pdb
+C:\Users\ajozwiak\Desktop\QA — kopia\QA\QA.DataAccess\bin\Debug\net7.0\QA.BLL.dll
+C:\Users\ajozwiak\Desktop\QA — kopia\QA\QA.DataAccess\bin\Debug\net7.0\QA.Domain.dll
+C:\Users\ajozwiak\Desktop\QA — kopia\QA\QA.DataAccess\bin\Debug\net7.0\QA.BLL.pdb
+C:\Users\ajozwiak\Desktop\QA — kopia\QA\QA.DataAccess\bin\Debug\net7.0\QA.Domain.pdb
+C:\Users\ajozwiak\Desktop\QA — kopia\QA\QA.DataAccess\obj\Debug\net7.0\QA.DataAccess.csproj.AssemblyReference.cache
+C:\Users\ajozwiak\Desktop\QA — kopia\QA\QA.DataAccess\obj\Debug\net7.0\QA.DataAccess.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\ajozwiak\Desktop\QA — kopia\QA\QA.DataAccess\obj\Debug\net7.0\QA.DataAccess.AssemblyInfoInputs.cache
+C:\Users\ajozwiak\Desktop\QA — kopia\QA\QA.DataAccess\obj\Debug\net7.0\QA.DataAccess.AssemblyInfo.cs
+C:\Users\ajozwiak\Desktop\QA — kopia\QA\QA.DataAccess\obj\Debug\net7.0\QA.DataAccess.csproj.CoreCompileInputs.cache
+C:\Users\ajozwiak\Desktop\QA — kopia\QA\QA.DataAccess\obj\Debug\net7.0\QA.DataAccess.dll
+C:\Users\ajozwiak\Desktop\QA — kopia\QA\QA.DataAccess\obj\Debug\net7.0\refint\QA.DataAccess.dll
+C:\Users\ajozwiak\Desktop\QA — kopia\QA\QA.DataAccess\obj\Debug\net7.0\QA.DataAccess.pdb
+C:\Users\ajozwiak\Desktop\QA — kopia\QA\QA.DataAccess\obj\Debug\net7.0\QA.DataAccess.genruntimeconfig.cache
+C:\Users\ajozwiak\Desktop\QA — kopia\QA\QA.DataAccess\obj\Debug\net7.0\ref\QA.DataAccess.dll
+C:\Users\ajozwiak\Desktop\QA — kopia\QA\QA.DataAccess\obj\Debug\net7.0\QA.DataA.A22249D2.Up2Date
+C:\Users\ajozwiak\Desktop\QA Deploy 09.07.24\QA\QA.DataAccess\bin\Debug\net7.0\QA.DataAccess.deps.json
+C:\Users\ajozwiak\Desktop\QA Deploy 09.07.24\QA\QA.DataAccess\bin\Debug\net7.0\QA.DataAccess.runtimeconfig.json
+C:\Users\ajozwiak\Desktop\QA Deploy 09.07.24\QA\QA.DataAccess\bin\Debug\net7.0\QA.DataAccess.dll
+C:\Users\ajozwiak\Desktop\QA Deploy 09.07.24\QA\QA.DataAccess\bin\Debug\net7.0\QA.DataAccess.pdb
+C:\Users\ajozwiak\Desktop\QA Deploy 09.07.24\QA\QA.DataAccess\bin\Debug\net7.0\QA.BLL.dll
+C:\Users\ajozwiak\Desktop\QA Deploy 09.07.24\QA\QA.DataAccess\bin\Debug\net7.0\QA.Domain.dll
+C:\Users\ajozwiak\Desktop\QA Deploy 09.07.24\QA\QA.DataAccess\bin\Debug\net7.0\QA.BLL.pdb
+C:\Users\ajozwiak\Desktop\QA Deploy 09.07.24\QA\QA.DataAccess\bin\Debug\net7.0\QA.Domain.pdb
+C:\Users\ajozwiak\Desktop\QA Deploy 09.07.24\QA\QA.DataAccess\obj\Debug\net7.0\QA.DataAccess.csproj.AssemblyReference.cache
+C:\Users\ajozwiak\Desktop\QA Deploy 09.07.24\QA\QA.DataAccess\obj\Debug\net7.0\QA.DataAccess.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\ajozwiak\Desktop\QA Deploy 09.07.24\QA\QA.DataAccess\obj\Debug\net7.0\QA.DataAccess.AssemblyInfoInputs.cache
+C:\Users\ajozwiak\Desktop\QA Deploy 09.07.24\QA\QA.DataAccess\obj\Debug\net7.0\QA.DataAccess.AssemblyInfo.cs
+C:\Users\ajozwiak\Desktop\QA Deploy 09.07.24\QA\QA.DataAccess\obj\Debug\net7.0\QA.DataAccess.csproj.CoreCompileInputs.cache
+C:\Users\ajozwiak\Desktop\QA Deploy 09.07.24\QA\QA.DataAccess\obj\Debug\net7.0\QA.DataA.A22249D2.Up2Date
+C:\Users\ajozwiak\Desktop\QA Deploy 09.07.24\QA\QA.DataAccess\obj\Debug\net7.0\QA.DataAccess.dll
+C:\Users\ajozwiak\Desktop\QA Deploy 09.07.24\QA\QA.DataAccess\obj\Debug\net7.0\refint\QA.DataAccess.dll
+C:\Users\ajozwiak\Desktop\QA Deploy 09.07.24\QA\QA.DataAccess\obj\Debug\net7.0\QA.DataAccess.pdb
+C:\Users\ajozwiak\Desktop\QA Deploy 09.07.24\QA\QA.DataAccess\obj\Debug\net7.0\QA.DataAccess.genruntimeconfig.cache
+C:\Users\ajozwiak\Desktop\QA Deploy 09.07.24\QA\QA.DataAccess\obj\Debug\net7.0\ref\QA.DataAccess.dll
+C:\Users\ajozwiak\Desktop\QA\QA\QA.DataAccess\bin\Debug\net7.0\QA.DataAccess.deps.json
+C:\Users\ajozwiak\Desktop\QA\QA\QA.DataAccess\bin\Debug\net7.0\QA.DataAccess.runtimeconfig.json
+C:\Users\ajozwiak\Desktop\QA\QA\QA.DataAccess\bin\Debug\net7.0\QA.DataAccess.dll
+C:\Users\ajozwiak\Desktop\QA\QA\QA.DataAccess\bin\Debug\net7.0\QA.DataAccess.pdb
+C:\Users\ajozwiak\Desktop\QA\QA\QA.DataAccess\bin\Debug\net7.0\QA.BLL.dll
+C:\Users\ajozwiak\Desktop\QA\QA\QA.DataAccess\bin\Debug\net7.0\QA.Domain.dll
+C:\Users\ajozwiak\Desktop\QA\QA\QA.DataAccess\bin\Debug\net7.0\QA.BLL.pdb
+C:\Users\ajozwiak\Desktop\QA\QA\QA.DataAccess\bin\Debug\net7.0\QA.Domain.pdb
+C:\Users\ajozwiak\Desktop\QA\QA\QA.DataAccess\obj\Debug\net7.0\QA.DataAccess.csproj.AssemblyReference.cache
+C:\Users\ajozwiak\Desktop\QA\QA\QA.DataAccess\obj\Debug\net7.0\QA.DataAccess.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\ajozwiak\Desktop\QA\QA\QA.DataAccess\obj\Debug\net7.0\QA.DataAccess.AssemblyInfoInputs.cache
+C:\Users\ajozwiak\Desktop\QA\QA\QA.DataAccess\obj\Debug\net7.0\QA.DataAccess.AssemblyInfo.cs
+C:\Users\ajozwiak\Desktop\QA\QA\QA.DataAccess\obj\Debug\net7.0\QA.DataAccess.csproj.CoreCompileInputs.cache
+C:\Users\ajozwiak\Desktop\QA\QA\QA.DataAccess\obj\Debug\net7.0\QA.DataA.A22249D2.Up2Date
+C:\Users\ajozwiak\Desktop\QA\QA\QA.DataAccess\obj\Debug\net7.0\QA.DataAccess.dll
+C:\Users\ajozwiak\Desktop\QA\QA\QA.DataAccess\obj\Debug\net7.0\refint\QA.DataAccess.dll
+C:\Users\ajozwiak\Desktop\QA\QA\QA.DataAccess\obj\Debug\net7.0\QA.DataAccess.pdb
+C:\Users\ajozwiak\Desktop\QA\QA\QA.DataAccess\obj\Debug\net7.0\QA.DataAccess.genruntimeconfig.cache
+C:\Users\ajozwiak\Desktop\QA\QA\QA.DataAccess\obj\Debug\net7.0\ref\QA.DataAccess.dll

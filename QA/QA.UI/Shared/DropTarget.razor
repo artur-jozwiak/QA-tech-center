@@ -1,0 +1,95 @@
+﻿ @using QA.UI.Services
+@inject DragAndDropService DragAndDropService
+@typeparam T
+@**
+<div ondragover="event.preventDefault()" @ondrop="@OnDrop">
+    @ChildContent
+</div>
+
+@code {
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+
+    [Parameter]
+    public int Zone { get; set; }
+
+    [Parameter]
+    public Action<T, int> Drop { get; set; }
+
+    void OnDrop()
+    {
+        //if (Drop != null && DragAndDropService.Accepts(Zone))
+        {
+            Drop((T)DragAndDropService.Data, Zone);
+        }
+    }
+}
+ *@
+
+<div class="drop-zone @(isDragOver ? "drag-over" : "")"
+     ondragover="event.preventDefault()"
+     @ondrop="OnDrop"
+     @ondragenter="OnDragEnter"
+     @ondragleave="OnDragLeave">
+
+    <div class="content-wrapper @(isDragOver ? "faded" : "")">
+        @ChildContent
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+
+    [Parameter]
+    public int Zone { get; set; }
+
+    [Parameter]
+    public Action<T, int> Drop { get; set; }
+
+    private bool isDragOver = false;
+
+    void OnDrop()
+    {
+        isDragOver = false;
+        Drop?.Invoke((T)DragAndDropService.Data, Zone);
+    }
+
+    void OnDragEnter()
+    {
+        isDragOver = true;
+    }
+
+    void OnDragLeave()
+    {
+        isDragOver = false;
+    }
+}
+
+<style>
+.drop-zone {
+    min-height: 4px;
+    overflow: hidden;
+    transition: all 0.1s ease;
+    position: relative;
+    padding: 0;
+    margin: 0;
+}
+
+.drop-zone.drag-over {
+    min-height: 14px;
+    padding: 5px;
+    border: 1px dashed gray;
+}
+
+.content-wrapper {
+    transition: opacity 0.1s ease, filter 0.1s ease;
+}
+
+.content-wrapper.faded {
+    opacity: 0.5;
+    filter: grayscale(100%);
+}
+
+</style>
+

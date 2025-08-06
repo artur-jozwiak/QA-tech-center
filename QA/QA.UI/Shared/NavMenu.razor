@@ -1,0 +1,105 @@
+﻿<div class="top-row ps-3 navbar navbar-dark no-print">
+    <div class="container-fluid">
+        <img src="/images/polcomm-logo.webp" width="150" style="margin-top:-3px;">
+        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    </div>
+</div>
+
+<div class="@NavMenuCssClass nav-scrollable no-print" @onclick="ToggleNavMenu">
+    <nav class="flex-column">
+        <CascadingAuthenticationState>
+            <AuthorizeView>
+
+                <div class="nav-item px-3" style="font-size:12px;">
+                    <NavLink class="nav-link" href="start" Match="NavLinkMatch.All" style="color:black">
+                        <span class="oi oi-eye" aria-hidden="true"></span> Start
+                    </NavLink>
+                </div>
+
+                <div class="nav-item px-3" style="font-size:12px">
+                    <NavLink class="nav-link" href="orders" style="color:black">
+                        <span class="oi oi-list" aria-hidden="true"></span>Zlecenia
+                    </NavLink>
+                </div>
+
+                <div class="nav-item px-3" style="font-size:12px">
+                    <NavLink class="nav-link" href="analysis" style="color:black">
+                        <span class="oi oi-graph" aria-hidden="true"></span>Wizualizacja danych
+                    </NavLink>
+                </div>
+            </AuthorizeView>
+
+            <AuthorizeView Roles="Admin, Manager, Kontroler, Viewer, Spiek, Prasowanie">
+                <div class="nav-item px-3" style="font-size:12px">
+                    <NavLink class="nav-link" href="laboratory" style="color:black">
+                        <span class="oi oi-beaker" aria-hidden="true"></span> Laboratorium
+                    </NavLink>
+                </div>
+            </AuthorizeView>
+
+            <AuthorizeView Roles="Admin, Manager, Viewer">
+                <div class="nav-item px-3" style="font-size:12px">
+                    <NavLink class="nav-link" href="measuringdevices" style="color:black">
+                        <span class="oi oi-crop" aria-hidden="true"></span>Przyrządy pomiarowe
+                    </NavLink>
+                </div>
+
+                <div class="nav-item px-3" style="font-size:12px">
+                    <NavLink class="nav-link" href="productpatterns" style="color:black">
+                        <span class="oi oi-fork" aria-hidden="true"></span>Wzorcowe plany kontroli
+                    </NavLink>
+                </div>
+
+            </AuthorizeView>
+
+            <AuthorizeView Roles="Admin,Manager,Viewer, Kontroler">
+                <div class="nav-item px-3" style="font-size:12px">
+                    <NavLink class="nav-link" href="mrb-table" style="color:black">
+                        <span class="oi oi-list" aria-hidden="true"></span>MRB
+                    </NavLink>
+                </div>
+            </AuthorizeView>
+
+
+            <AuthorizeView Roles="Admin,Manager,Viewer, ToolTest">
+                <div class="nav-item px-3" style="font-size:12px">
+                    <NavLink class="nav-link" href="test-list" style="color:black">
+                        <span class="oi oi-list" aria-hidden="true"></span>Tech-Center 
+                    </NavLink>
+                </div>
+            </AuthorizeView>
+
+            <AuthorizeView Roles="Admin,Manager,Viewer, Kontroler">
+                <div class="nav-item px-3" style="font-size:12px">
+                    <NavLink class="nav-link" href="rtp-shrinkage" style="color:black">
+                        <span class="oi oi-list" aria-hidden="true"></span>RTP shrinkage
+                    </NavLink>
+                </div>
+            </AuthorizeView>
+
+ 
+
+            <AuthorizeView Roles="Admin">
+            <div class="nav-item px-3" style="font-size:12px">
+                <NavLink class="nav-link" href="usersmanager" style="color:black">
+                    <span class="oi oi-people" aria-hidden="true"></span>Użytkownicy
+                </NavLink>
+            </div>
+            </AuthorizeView>
+
+        </CascadingAuthenticationState>
+    </nav>
+</div>
+
+@code {
+    private bool collapseNavMenu = true;
+
+    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+}

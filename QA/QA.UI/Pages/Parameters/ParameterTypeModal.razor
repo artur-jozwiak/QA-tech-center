@@ -1,0 +1,66 @@
+﻿@using QA.Domain.Models
+@using QA.UI.Pages.Operations
+
+@if (_showModal)
+{
+    <div class="modal" style="display: block; width: 20%; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+        <div class="modal-content col-md-2">
+            <div class="modal-header">
+                <h3>
+                    Wybierz rodzaj parametru
+                </h3>
+                <button class="btn btn-close" @onclick="CloseModal"></button>
+            </div>
+
+            <div class="modal-body" style="text-align: center;">
+                <div style="margin-bottom: 10px;">
+                    <button class="btn btn-primary" style="width: 100%; max-width: 200px;" @onclick="@ShowParameterCrator">Parametr liczbowy</button>
+                </div>
+                <div>
+                    <button class="btn btn-primary" style="width: 100%; max-width: 200px;" @onclick="@ShowDescriptiveParameterCrator">Parametr opisowy/tekstowy</button>
+                </div>
+            </div>
+
+            <div class="modal-footer" style="text-align: center;">
+                <button class="btn btn-danger" @onclick="CloseModal">Cancel</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public OperationsList ParentComponent { get; set; }
+
+    // [Parameter]
+    public Operation Operation { get; set; }
+
+    private bool _showModal = false;
+
+    private void ShowDescriptiveParameterCrator()
+    {
+        CloseModal();
+        ParentComponent.ShowDescriptiveParameterCreator(Operation);
+    }
+
+    private void ShowParameterCrator()
+    {
+        CloseModal();
+        ParentComponent.ShowParameterCreator(Operation);
+    }
+
+    public void ShowModal(Operation operation)
+    {
+        Operation = operation;
+        _showModal = true;
+        StateHasChanged();
+    }
+
+    private void CloseModal()
+    {
+        _showModal = false;
+    }
+}
+
+
+

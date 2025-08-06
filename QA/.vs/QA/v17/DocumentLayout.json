@@ -1,0 +1,78 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\ajozwiak\\Desktop\\QA\\QA\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{CEB6BF47-3506-4B68-A65B-D1B058415F4B}|QA.UI\\QA.UI.csproj|c:\\users\\ajozwiak\\desktop\\qa\\qa\\qa.ui\\pages\\images\\imageuploader.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{CEB6BF47-3506-4B68-A65B-D1B058415F4B}|QA.UI\\QA.UI.csproj|solutionrelative:qa.ui\\pages\\images\\imageuploader.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{CEB6BF47-3506-4B68-A65B-D1B058415F4B}|QA.UI\\QA.UI.csproj|c:\\users\\ajozwiak\\desktop\\qa\\qa\\qa.ui\\pages\\tech-center\\testform.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{CEB6BF47-3506-4B68-A65B-D1B058415F4B}|QA.UI\\QA.UI.csproj|solutionrelative:qa.ui\\pages\\tech-center\\testform.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 1,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedHeight": 200,
+          "SelectedChildIndex": 6,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{6d4078d1-5951-4ed1-ac0e-0a8099c1cce5}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{e1b7d1f8-9b3c-49b1-8f4f-bfc63a88835d}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{3ae79031-e1bc-11d0-8f78-00a0c9110057}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:128:0:{1fc202d4-d401-403c-9834-5b218574bb67}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:129:0:{1fc202d4-d401-403c-9834-5b218574bb67}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{1c4feeaa-4718-4aa9-859d-94ce25d182ba}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "ImageUploader.razor",
+              "DocumentMoniker": "C:\\Users\\ajozwiak\\Desktop\\QA\\QA\\QA.UI\\Pages\\Images\\ImageUploader.razor",
+              "RelativeDocumentMoniker": "QA.UI\\Pages\\Images\\ImageUploader.razor",
+              "ToolTip": "C:\\Users\\ajozwiak\\Desktop\\QA\\QA\\QA.UI\\Pages\\Images\\ImageUploader.razor",
+              "RelativeToolTip": "QA.UI\\Pages\\Images\\ImageUploader.razor",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAB8AAABAAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-08-05T08:33:15.359Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "TestForm.razor",
+              "DocumentMoniker": "C:\\Users\\ajozwiak\\Desktop\\QA\\QA\\QA.UI\\Pages\\Tech-Center\\TestForm.razor",
+              "RelativeDocumentMoniker": "QA.UI\\Pages\\Tech-Center\\TestForm.razor",
+              "ToolTip": "C:\\Users\\ajozwiak\\Desktop\\QA\\QA\\QA.UI\\Pages\\Tech-Center\\TestForm.razor",
+              "RelativeToolTip": "QA.UI\\Pages\\Tech-Center\\TestForm.razor",
+              "ViewState": "AQIAALkAAAAAAAAAAAAAAMgAAACBAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-08-05T08:30:40.974Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

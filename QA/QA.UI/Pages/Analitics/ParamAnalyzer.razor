@@ -1,0 +1,225 @@
+﻿@page "/parameter-analys"
+@using QA.BLL.Interfaces
+@using QA.Domain.Models
+@using QA.Domain.Models.Keyence
+@using QA.UI.Pages.Images
+@using QA.UI.Pages.Reporting
+@inject IUnitOfWork UnitOfWork
+
+<div class="inputs-container">
+    <div class="inputs-group">
+        <div class="input-wrapper">
+            <label class="input-label">Produkt</label>
+
+            <InputSelect class="input" TValue="int"
+                         ValueChanged="@(async e => { _selectedProductId = e; await GetProductParameters(); })"
+                         ValueExpression="() => _selectedProductId">
+                <option value="0">Wybierz produkt</option>
+                @foreach (var product in _products)
+                {
+                    <option value="@product.Id">@product.Description / @product.Symbol / @product.PdmNo </option>
+                }
+            </InputSelect>
+        </div>
+
+        <div class="input-wrapper">
+            <label class="input-label">Parametr (@_parameters.Count)</label>
+            <InputSelect class="input" style="width:200px" TValue="int"
+                         Value="_selectedParameterId"
+                         ValueChanged="@(async e => { _selectedParameterId = e; await GetParameterMeasurements(); })"
+                         ValueExpression="() => _selectedParameterId"
+                         disabled="@(_selectedProductId == 0)">
+                <option value="0">Wybierz parametr</option>
+                @foreach (var parameter in _parameters)
+                {
+                    <option value="@parameter.Id">@parameter.Name</option>
+                }
+            </InputSelect>
+        </div>
+
+        <div class="input-wrapper">
+            <label class="input-label">Zakres od:</label>
+            <InputDate class="input" ValueExpression="@(() => _minDate)" Value="@_minDate" ValueChanged="@(async (DateTime? date) => await FilterByDate(date, _maxDate))"></InputDate>
+        </div>
+
+        <div class="input-wrapper">
+            <label class="input-label">Zakres do:</label>
+            <InputDate class="input" ValueExpression="@(() => _maxDate)" Value="@_maxDate" ValueChanged="@(async (DateTime? date) => await FilterByDate(_minDate,date))"></InputDate>
+        </div>
+
+        <div class="input-wrapper" style="margin-top: 15px;">
+            <div class="inner-toggable-container">
+                <div>
+                    <InputCheckbox class="form-check-input"
+                                   Value="_allOrdersSelected"
+                                   ValueChanged="@( async e => { _allOrdersSelected = e; await ToggleSelectAllOrders(e); })"
+                                   ValueExpression="() =>_allOrdersSelected"
+                                   disabled="@(_selectedParameterId == 0)" />
+                    Wszystkie zlecenia
+                </div>
+
+                <NavLink class="nav-link">
+                    <span class="oi oi-chevron-bottom" @onclick="() => ToggleOrdersVisibility()"></span>
+                </NavLink>
+            </div>
+
+            @if (isOrdersSectionVisible)
+            {
+                @foreach (var order in _orders)
+                {
+                    bool isSelectedOrder = _selectedOrders.Contains(order);
+                    <div>
+                        <InputCheckbox class="form-check-input"
+                                       Value="isSelectedOrder"
+                                       ValueChanged="@(async e => await FilterOrder(order))"
+                                       ValueExpression="() => isSelectedOrder" 
+                                       disabled="@(!_mapedParameter.Measurements.Any(m => m.OrderKey == order) && _selectedOrders.Contains(order))"/>
+                        @order
+                    </div>
+                }
+            }
+        </div>
+    </div>
+
+
+@if (_displayChart && _mapedParameter != null)
+{
+    <div class="chart-container">
+        <ParameterChart Parameter="@_mapedParameter" ChartId="@_mapedParameter.Id.ToString()" @ref="@_parameterChart"></ParameterChart>
+    </div>
+}
+</div>
+
+@code {
+    private List<Product> _products = new();
+    private List<Parameter> _parameters = new();
+    private Parameter _selectedParameter = new();
+    private int _selectedProductId;
+    private int _selectedParameterId;
+    private List<string> _orders = new();
+    private List<string> _selectedOrders = new();
+    private bool _displayChart = true;
+    private bool _allOrdersSelected = true;
+    private ParameterChart _parameterChart;
+    private Parameter _mapedParameter;
+    private DateTime? _minDate = DateTime.Now.AddMonths(-6);
+    private DateTime? _maxDate = DateTime.Now;
+    private bool isOrdersSectionVisible = false;
+    private DateTime _deafaultMinDate = new DateTime(2020, 1, 1);
+
+    private void ToggleOrdersVisibility()
+    {
+        isOrdersSectionVisible = !isOrdersSectionVisible;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _products = await UnitOfWork.Product.GetAll();
+    }
+
+    private async Task GetProductParameters()
+    {
+        _displayChart = false;
+        var parameters = await UnitOfWork.Parameter.GetAllBy(_selectedProductId);
+        // _parameters = parameters.OrderBy(p => p.Name).ToList();
+        //Włą czyć K1C po zapisywaniu w bazie
+        _parameters = parameters.Where(p => p.Name.ToUpper() != "K1C" && !p.Name.StartsWith("Wąs")).OrderBy(p => p.Name).ToList();
+        _selectedParameterId = 0;
+        _selectedParameter = new();
+        _orders = new();
+        _selectedOrders = new();
+    }
+
+    private async Task GetParameterMeasurements()
+    {
+        if (_selectedParameterId != 0)
+        {
+            _displayChart = false;
+            _selectedParameter = await UnitOfWork.Parameter.GetWithMeasurementsBy(_selectedParameterId);
+            GetMeasurementsOrders();
+             ResetOrderSelection();
+            await MapParameter();
+            _displayChart = true;
+        }
+    }
+
+    private void GetMeasurementsOrders()
+    {
+        _orders = _selectedParameter.Measurements.OrderBy(m => m.Date).Select(m => m.OrderKey).Distinct().ToList();
+    }
+
+    private void ResetOrderSelection()
+    {
+        if(_selectedOrders.Count == 0)
+        {
+            _selectedOrders = _orders.ToList();
+        }
+        else
+        {
+            _selectedOrders = _orders.Intersect(_selectedOrders).ToList();
+        }
+    }
+
+    private async Task ToggleSelectAllOrders(bool e)
+    {
+        _allOrdersSelected = e;
+        _selectedOrders = _allOrdersSelected ? _orders.ToList() : new List<string>();
+        await MapParameter();
+    }
+
+    private async Task MapParameter()
+    {
+        _mapedParameter = new()
+        {
+                Id = _selectedParameter.Id,
+                Name = _selectedParameter.Name,
+                LSL = _selectedParameter.LSL,
+                NominalValue = _selectedParameter.NominalValue,
+                USL = _selectedParameter.USL,
+                Measurements = _selectedParameter.Measurements
+        };
+
+        await ApplyFilters();
+    }
+
+    private async Task FilterByDate(DateTime? minDate, DateTime? maxDate)
+    {
+        if (minDate != _minDate || maxDate != _maxDate)
+        {
+            _minDate = minDate ?? _deafaultMinDate;
+            _maxDate = maxDate ?? DateTime.Now;
+        }
+
+        await ApplyFilters();
+    }
+
+    private async Task FilterOrder(string order)
+    {
+        if (_selectedOrders.Contains(order))
+        {
+            _selectedOrders.Remove(order);
+        }
+        else
+        {
+            _selectedOrders.Add(order);
+        }
+        _allOrdersSelected = _selectedOrders.Count == _orders.Count;
+        await MapParameter();
+    }
+
+    private async Task ApplyFilters()
+    {
+        if (_mapedParameter != null)
+        {
+            _mapedParameter.Measurements = _selectedParameter.Measurements?
+                                            .Where(m => _selectedOrders.Contains(m.OrderKey))
+                                            .Where(m => m.Date > _minDate && m.Date < _maxDate)
+                                            .OrderBy(m => m.Date)
+                                            .ToList();
+            if (_parameterChart != null)
+            {
+                await _parameterChart.UpdateChart(_mapedParameter.Id.ToString());
+            }
+        }
+    }
+}

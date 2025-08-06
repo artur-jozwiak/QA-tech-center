@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!--
+https://go.microsoft.com/fwlink/?LinkID=208121.
+-->
+<Project>
+  <PropertyGroup>
+    <_PublishTargetUrl>C:\Users\ajozwiak\Desktop\QA Publish 04.06.24</_PublishTargetUrl>
+    <History>True|2024-06-04T05:41:57.5093629Z;True|2024-06-04T07:31:22.0701211+02:00;True|2024-05-14T09:01:55.7950384+02:00;True|2024-05-14T08:57:56.8039154+02:00;True|2024-05-14T07:42:31.5780935+02:00;True|2024-05-14T07:38:56.7785050+02:00;True|2024-05-14T07:37:51.0146526+02:00;True|2024-05-10T11:43:58.6715406+02:00;True|2024-05-09T11:44:26.2962992+02:00;True|2024-05-09T11:40:48.1756431+02:00;True|2024-05-09T11:37:21.1416632+02:00;</History>
+    <LastFailureDetails />
+  </PropertyGroup>
+</Project>

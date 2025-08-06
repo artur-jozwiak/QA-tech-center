@@ -1,0 +1,8 @@
+C:\Users\ajozwiak\Desktop\ICzbiciak\appsettings.Development.json
+C:\Users\ajozwiak\Desktop\ICzbiciak\appsettings.json
+C:\Users\ajozwiak\Desktop\ICzbiciak\appsettings.Production.json
+C:\Users\ajozwiak\Desktop\ICzbiciak\QA.UI.pdb
+C:\Users\ajozwiak\Desktop\ICzbiciak\QA.DataAccess.pdb
+C:\Users\ajozwiak\Desktop\ICzbiciak\QA.Domain.pdb
+C:\Users\ajozwiak\Desktop\ICzbiciak\QA.BLL.pdb
+C:\Users\ajozwiak\Desktop\ICzbiciak\QA.UI.exe

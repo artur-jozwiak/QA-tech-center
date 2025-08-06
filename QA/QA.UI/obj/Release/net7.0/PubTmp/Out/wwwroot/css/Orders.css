@@ -1,0 +1,50 @@
+﻿.orders-table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.orders-table th, .orders-table td {
+    padding: 5px;
+    text-align: center;
+}
+
+.orders-table tr {
+        border-bottom: 1px solid #E5E5E5;
+}
+
+.Waiting {
+    color: darkgrey;
+}
+
+.InProgress {
+    color: #1998f7;
+}
+
+.Checked {
+    color: #00ff00;
+}
+
+.VerificationRequired {
+    color: #d1ef0c;
+}
+
+.NotApproved {
+    color:#ff0000 ;
+}
+
+.Approved {
+    color: #00ff00;
+}
+
+.status {
+    border: none;
+    outline: none;
+    padding: 0;
+    font-size: 14px;
+    /*font-weight: bold;*/
+    width: 210px;
+    background-color: #333333;
+}
+
+
+

@@ -1,0 +1,286 @@
+﻿@page "/orderqcplan/{OrderKey}"
+@using Microsoft.EntityFrameworkCore;
+@using QA.BLL.Interfaces
+@using QA.DataAccess;
+@using QA.Domain.Models.Enums
+@using QA.Domain.Models.Erp;
+@using QA.Domain.Models;
+@using QA.UI.Models;
+@using System.Collections.Generic;
+@using QA.UI.Pages.Common
+@using QA.UI.Pages.Develop
+@using QA.UI.Pages.Images
+@using QA.UI.Pages.Operations;
+@using QA.UI.Pages.Orders
+@using QA.UI.Pages.Parameters;
+@using QA.UI.Pages.VisualInspectionForm
+@using System.Diagnostics
+
+@inject QAContext QAContext;
+@inject ERPContext HermesContext;
+@inject NavigationManager NavigationManager;
+@inject IErrorLogger ErrorLogger;
+@inject IConfiguration Configuration
+@inject IUnitOfWork UnitOfWork
+
+<style>
+    .control-plan-section {
+        border: 2px solid #ccc;
+        padding: 15px;
+        margin-bottom: 20px;
+        border-radius: 5px;
+    }
+</style>
+@if (_order != null)
+{
+    <OrderTable Order="@_order"></OrderTable>
+    @* <ImageUploader Product="@_order.Product" Image="_order.Product.Image"></ImageUploader> *@
+    <div style="display: flex; justify-content: center; margin: 20px 0;">
+        <ImageUploader Product="@_order.Product" Image="_order.Product.Image"></ImageUploader>
+    </div>
+
+
+
+
+    <div class="control-plan-section">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h5 style="font-weight:bold; margin: 0;">Plan kontroli</h5>
+
+            <CascadingAuthenticationState>
+                <AuthorizeView Roles="Admin, Manager">
+                    <NavLink class="nav-link" style="margin-left: auto;">
+                        <span class="oi oi-fork" @onclick="() => ShowCopyingModal()">Kopiuj plan kontroli</span>
+                    </NavLink>
+
+                    @if (_showCopyingModal)
+                    {
+                        <CopyingQCPlanModal @ref="@_copyingQCPlanModal" QCPlan="@this" Product="_order.Product"></CopyingQCPlanModal>
+                    }
+                </AuthorizeView>
+            </CascadingAuthenticationState>
+        </div>
+
+
+    @if (_order.Product?.Operations != null && _order.Product.Operations.Any())
+    {
+        <CascadingValue Value="@this">
+            <OperationsList Operations="_order.Product.Operations.ToList()" OrderId="_order.Id"></OperationsList>
+        </CascadingValue>
+    }
+    else
+    {
+        <p>Nie odnaleziono operacji</p>
+    }
+
+    <CascadingAuthenticationState>
+        <AuthorizeView Roles="Admin, Manager, Kontroler, Viewer">
+            <VisualControl VisualInspectionForm="@_order.VisualInspectionForm"></VisualControl>
+        </AuthorizeView>
+    </CascadingAuthenticationState>
+    </div>
+}
+else
+{
+    <LoadingSpiner IsLoading="true" Message="Pobieranie planu kontroli..."></LoadingSpiner>
+}
+
+@code {
+    [Parameter]
+    public string OrderKey { get; set; }
+    private Order _order;
+    private CopyingQCPlanModal _copyingQCPlanModal = new();
+    private bool _showCopyingModal = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _order = await UnitOfWork.Order.GetWithAllNavPropertiesBy(OrderKey);
+
+        if (_order.VisualInspectionForm == null)
+        {
+            CreateNewVisualInspectionForm(_order);
+        }
+
+        if (_order.VisualInspectionForm.Samples.Count == 0)
+        {
+            var sample = CreateSample();
+            _order.VisualInspectionForm.Samples.Add(sample);
+        }
+    }
+
+    private void ShowCopyingModal()
+    {
+        _showCopyingModal = true;
+    }
+
+    public void HideCopyingModal()
+    {
+        _showCopyingModal = false;
+        StateHasChanged();
+    }
+
+    public void AssignSelectedProduct(Product selectedProduct)
+    {
+        if (selectedProduct != null)
+        {
+            foreach (var operation in _order.Product.Operations)
+            {
+                if (selectedProduct.Operations.Any(o => o.Name == operation.Name))
+                {
+                    List<Parameter> copiedParameters = CopyParameters(selectedProduct.Operations.First(o => o.Name == operation.Name).Parameters);
+                    foreach (var parameterForAdd in copiedParameters)
+                    {
+                        if (operation.Parameters.All(p => p.Name != parameterForAdd.Name))
+                        {
+                            if (_order.OrderKey.StartsWith("ZPR/2T"))
+                            {
+                                operation.Parameters.Add(parameterForAdd);
+                            }
+                            else
+                            {
+                                if (!parameterForAdd.IsTrialParameter)
+                                {
+                                    operation.Parameters.Add(parameterForAdd);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            UpdateProduct(_order.Product);
+            Complete();
+        }
+    }
+
+    private void UpdateProduct(Product product)
+    {
+        QAContext.Products.Update(product);
+    }
+
+    private void Complete()
+    {
+        QAContext.SaveChanges();
+    }
+
+    private List<Parameter> CopyParameters(ICollection<Parameter> source)
+    {
+        List<Parameter> destiny = new();
+
+        foreach (var sourceParameter in source)
+        {
+            Parameter newParameter = new Parameter
+                {
+                    Name = sourceParameter.Name,
+                    Unit = sourceParameter.Unit,
+                    LowerTolerance = sourceParameter.LowerTolerance,
+                    NominalValue = sourceParameter.NominalValue,
+                    UpperTolerance = sourceParameter.UpperTolerance,
+
+                    //
+                    LSL = sourceParameter.LSL,
+                    USL = sourceParameter.USL,
+                    //
+
+                    Comment = sourceParameter.Comment,
+                    DevicePort = sourceParameter.DevicePort,
+                    AutomaticMeasurement = sourceParameter.AutomaticMeasurement,
+                    IsTrialParameter = sourceParameter.IsTrialParameter,
+                    ParameterType = sourceParameter.ParameterType,
+                    CreationDate = DateTime.Now,
+                    EdgesQty = sourceParameter.EdgesQty
+                };
+
+            if (sourceParameter.Image != null)
+            {
+                newParameter.Image = CopyParameterImage(sourceParameter.Image, sourceParameter.Name);
+                newParameter.Image.Parameter = newParameter;
+                newParameter.Image.ParameterId = newParameter.Id;
+            }
+
+            destiny.Add(newParameter);
+        }
+
+        return destiny;
+    }
+
+    public void Refresh()
+    {
+        StateHasChanged();
+    }
+
+    private void CreateNewVisualInspectionForm(Order order)
+    {
+        order.VisualInspectionForm = new VisualInspectionForm();
+        order.VisualInspectionForm.OrderId = order.Id;
+        order.VisualInspectionForm.Order = order;
+        order.VisualInspectionForm.Samples = new List<Sample>();
+
+        if (QAContext.Orders.Any(o => o.ProductId == order.ProductId && o.VisualInspectionForm.Image != null))
+        {
+            var imgForAssign = QAContext.Images.FirstOrDefault(i => i.Name.StartsWith(order.Product.Symbol + "_fkw"));
+            order.VisualInspectionForm.Image = imgForAssign;
+            imgForAssign.VisualInspectionForms.Add(order.VisualInspectionForm);
+            QAContext.SaveChanges();
+        }
+
+        var sample = CreateSample();
+        order.VisualInspectionForm.Samples.Add(sample);
+    }
+
+    private Sample CreateSample()
+    {
+        List<DefectCategory> inspectionCategories = new();
+
+        if (_order.Product.Symbol.StartsWith("W-B"))
+        {
+            inspectionCategories = QAContext.DefectCategories.Include(vis => vis.Defects).Where(df => df.Number != 5).ToList();
+        }
+        else
+        {
+            inspectionCategories = QAContext.DefectCategories.Include(vis => vis.Defects).ToList();
+        }
+
+        var inspetctionElements = inspectionCategories.SelectMany(ic => ic.Defects);
+
+        var sample = new Sample();
+        sample.SampleNumber = 1;
+        sample.SampleDefects = new List<SampleDefect>();
+        sample.Date = DateTime.Now;
+
+        foreach (var element in inspetctionElements)
+        {
+            SampleDefect fault = new SampleDefect { Defect = element, Sample = sample, DefectSymbol = element.Symbol };
+            sample.SampleDefects.Add(fault);
+        }
+        return sample;
+    }
+
+    private Image CopyParameterImage(Image sourceImage, string parameterName)
+    {
+        try
+        {
+            string savePath = Configuration["AppSettings:ImagesPath"];
+            string fileName = $"{_order.Product.Symbol}_{parameterName}_param.png";
+
+            string destinationPath = Path.Combine(savePath, fileName);
+
+            if (File.Exists(sourceImage.ImageUrl))
+            {
+
+                File.Copy(sourceImage.ImageUrl, destinationPath, overwrite: true);
+
+                Image newImage = new Image
+                    {
+                        Name = String.Concat(_order.Product.Symbol, "_", parameterName, "_param"),
+                        ImageUrl = destinationPath,
+                        Destination = Domain.Models.Enums.ImageDestination.Parameter,
+                    };
+                return newImage;
+            }
+            return null;
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException("Failed to copy the image.", ex);
+        }
+    }
+}

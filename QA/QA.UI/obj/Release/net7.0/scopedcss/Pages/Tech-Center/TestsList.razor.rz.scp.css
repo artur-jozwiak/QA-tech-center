@@ -1,0 +1,24 @@
+.custom-bordered-table[b-yzc5jgg2nz] {
+    border-collapse: collapse;
+    width: 100%;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+    .custom-bordered-table th[b-yzc5jgg2nz],
+    .custom-bordered-table td[b-yzc5jgg2nz] {
+        border: 1px solid #e0e0e0;
+        padding: 8px 12px;
+        vertical-align: middle;
+    }
+
+    .custom-bordered-table th[b-yzc5jgg2nz] {
+        background-color: #f5f5f5;
+        text-align: left;
+    }
+
+    .custom-bordered-table .font-weight-bold[b-yzc5jgg2nz] {
+        font-weight: 600;
+        background-color: #fafafa;
+    }

@@ -1,0 +1,273 @@
+﻿@using System.Text.Json;
+@using QA.Domain.Models;
+@using QA.Domain.Models.CoatingModels
+@inject IJSRuntime JSRuntime
+@inherits ComponentBase
+@inject NavigationManager NavigationManager;
+
+@* Zostawić tylko wieże dla których istnieja pomiary *@
+
+<style>
+    .chart {
+        margin: 2px;
+    }
+</style>
+
+<canvas class="chart" id="@ChartId"></canvas>
+
+@code {
+    [Parameter]
+    public int ChartId { get; set; }
+    [Parameter]
+    public Coating Specifications { get; set; }
+    [Parameter]
+    public List<CoatingMeasurementSeries>? Measurements { get; set; }
+    private string chartJs;
+    private int _measurementsQty;
+
+    public string[] Labels { get; set; }
+
+    //tylko wierze z pomiarami
+    protected override void OnInitialized()
+    {
+        _measurementsQty = Measurements.Count();
+        //tower1Values = new();
+
+        Labels = new string[3] { "T", "M", "B" };
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await UpdateChart(ChartId);
+        }
+    }
+
+    public async Task UpdateChart(int chartId)
+    {
+        var chartExists = await JSRuntime.InvokeAsync<bool>("eval", $"document.getElementById('{chartId}') !== null");
+        if (chartExists)
+        {
+            await JSRuntime.InvokeVoidAsync("destroyChart", chartId);
+            // OnInitialized();
+
+            // var data = new
+            // {
+            //     labels = Labels,
+            //     datasets = new[]
+            //     {
+            //             new
+            //             {
+            //                 label = "LSL",
+            //                 data = Measurements.Select(m => new
+            //                 {
+            //                     x = Specifications?.LSL,
+            //                     y = m.Level
+
+            //                 }).ToList(),
+            //                 borderColor = "red",
+            //                 borderWidth = 2,
+            //                 pointRadius= 0,
+            //                 borderDash= new int[] {5, 5 }
+            //             },
+            //             new
+            //             {
+            //                 label = "T1",
+            //                 data = Measurements.Where(m => m.TowerNo == 1).Select(m => new
+            //                 {
+            //                   x = new[] { m.Thickness1, m.Thickness2, m.Thickness3, m.Thickness4 }.Average(),
+            //                     y = m.Level
+                                
+            //                 }).ToList(),
+            //                 borderColor = "yellow",
+            //                 borderWidth = 2,
+            //                 pointRadius= 4,
+            //                 borderDash= new int[] { 0, 0 }
+            //             },
+            //             new
+            //             {
+            //                 label = "T2",
+            //                 data = Measurements.Where(m => m.TowerNo == 2).Select(m => new
+            //                 {
+            //                   x = new[] { m.Thickness1, m.Thickness2, m.Thickness3, m.Thickness4 }.Average(),
+            //                   y = m.Level
+
+            //                 }).ToList(),
+            //                 borderColor = "green",
+            //                 borderWidth = 2,
+            //                 pointRadius= 4,
+            //                 borderDash= new int[] { 0, 0 }
+            //             },
+            //             new
+            //             {
+            //                 label = "T3",
+            //                  data = Measurements.Where(m => m.TowerNo == 3).Select(m => new
+            //                 {
+            //                   x = new[] { m.Thickness1, m.Thickness2, m.Thickness3, m.Thickness4 }.Average(),
+            //                     y = m.Level
+
+            //                 }).ToList(),
+            //                 borderColor = "orange",
+            //                 borderWidth = 2,
+            //                 pointRadius= 4,
+            //                 borderDash= new int[] { 0, 0 }
+            //             },
+            //              new
+            //             {
+            //                 label = "T4",
+            //                 data = Measurements.Where(m => m.TowerNo == 4).Select(m => new
+            //                 {
+            //                   x = new[] { m.Thickness1, m.Thickness2, m.Thickness3, m.Thickness4 }.Average(),
+            //                     y = m.Level
+
+            //                 }).ToList(),
+            //                 borderColor = "purple",
+            //                 borderWidth = 2,
+            //                 pointRadius= 4,
+            //                 borderDash= new int[] { 0, 0 }
+            //             },
+            //             new
+            //             {
+            //                 label = "T5",
+            //                  data = Measurements.Where(m => m.TowerNo == 5).Select(m => new
+            //                 {
+            //                   x = new[] { m.Thickness1, m.Thickness2, m.Thickness3, m.Thickness4 }.Average(),
+            //                   y = m.Level
+
+            //                 }).ToList(),
+            //                 borderColor = "blue",
+            //                 borderWidth = 2,
+            //                 pointRadius= 4,
+            //                 borderDash= new int[] { 0, 0 }
+            //             },
+            //             new
+            //             {
+            //                 label = "T6",
+            //                 data = Measurements.Where(m => m.TowerNo == 6).Select(m => new
+            //                 {
+            //                   x = new[] { m.Thickness1, m.Thickness2, m.Thickness3, m.Thickness4 }.Average(),
+            //                   y = m.Level
+
+            //                 }).ToList(),
+            //                 borderColor = "darkgreen",
+            //                 borderWidth = 2,
+            //                 pointRadius= 4,
+            //                 borderDash= new int[] { 0, 0 }
+            //             },
+            //             new
+            //             {
+            //                 label = "USL",
+            //                 data = Measurements.Select(m => new
+            //                 {
+            //                     x = Specifications?.USL,
+            //                     y = m.Level
+            //                 }).ToList(),
+            //                 borderColor = "red",
+            //                 borderWidth = 2,
+            //                 pointRadius= 0,
+            //                 borderDash= new int[] { 5, 5 }
+            //             },
+            //          }
+                     
+            // };
+            var datasets = new List<object>();
+
+            // Dodaj linię LSL
+            datasets.Add(new
+            {
+                label = "LSL",
+                data = Measurements.Select(m => new
+                {
+                    x = Specifications?.LSL,
+                    y = m.Level
+                }).ToList(),
+                borderColor = "red",
+                borderWidth = 2,
+                pointRadius = 0,
+                borderDash = new int[] { 5, 5 }
+            });
+
+            // Dodaj pomiary dla wież T1-T6
+            for (int tower = 1; tower <= 6; tower++)
+            {
+                var towerMeasurements = Measurements.Where(m => m.TowerNo == tower).ToList();
+                if (towerMeasurements.Any())
+                {
+                    datasets.Add(new
+                    {
+                        label = $"T{tower}",
+                        data = towerMeasurements.Select(m => new
+                        {
+                            x = new[] { m.Thickness1, m.Thickness2, m.Thickness3, m.Thickness4 }.Average(),
+                            y = m.Level
+                        }).ToList(),
+                        borderColor = tower switch
+                        {
+                            1 => "yellow",
+                            2 => "green",
+                            3 => "orange",
+                            4 => "purple",
+                            5 => "blue",
+                            6 => "darkgreen",
+                        },
+                        borderWidth = 2,
+                        pointRadius = 4,
+                        borderDash = new int[] { 0, 0 }
+                    });
+                }
+            }
+
+            datasets.Add(new
+            {
+                label = "USL",
+                data = Measurements.Select(m => new
+                {
+                    x = Specifications?.USL,
+                    y = m.Level
+                }).ToList(),
+                borderColor = "red",
+                borderWidth = 2,
+                pointRadius = 0,
+                borderDash = new int[] { 5, 5 }
+            });
+
+            var data = new
+            {
+                labels = Labels,
+                datasets = datasets
+            };
+
+            chartJs = @"
+            var canvasId = '" + chartId + @"';
+            var ctx = document.getElementById(canvasId).getContext('2d');
+
+            var data = " + JsonSerializer.Serialize(data) + @";
+            var config = {
+                type: 'line',
+                data: data,
+                options: {
+                    plugins:{
+                        legend: {
+                                position:'top',
+                                labels: {
+                                        usePointStyle: true,
+                                        pointStyle: 'circle',
+                                        boxWidth: 10
+                                        },
+                                },
+                            },
+                    indexAxis: 'y',
+                    animation: {
+                        duration: 0,
+                    },
+                },
+            };
+            document.getElementById(canvasId).style.backgroundColor = '#f2f2f2';
+            // document.getElementById(canvasId).height = window.innerHeight -150;
+            new Chart(ctx, config);";
+            await JSRuntime.InvokeVoidAsync("eval", chartJs);
+            StateHasChanged();
+        }
+    }
+}

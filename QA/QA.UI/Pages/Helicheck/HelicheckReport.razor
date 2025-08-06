@@ -1,0 +1,32 @@
+﻿@using QA.BLL.Interfaces
+@using QA.Domain.Models
+@using QA.Domain.Models.Helicheck.Models
+@using QA.UI.Pages.Images
+@inject IHelicheckRepository HelicheckRepository
+<ImageUploader Product="@Product" Image="Product.Image" Height="400" Width="1200"></ImageUploader>
+
+<HelicheckTable Parameters="_parameters" OrderNo="@OrderNo" Product="@Product"></HelicheckTable>
+
+<div class="grid-container">
+    @foreach (var parameter in _parameters)
+    {
+        <div class="grid-item">
+            <HelicheckSPC Parameter="@parameter" OrderNo="@OrderNo"></HelicheckSPC>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public string OrderNo { get; set; }   
+
+    [Parameter]
+    public Product Product { get; set; }
+
+    private List<HelicheckParameter> _parameters = new();
+
+    protected override void OnInitialized()
+    {
+        _parameters = HelicheckRepository.GetParametersBy(OrderNo);
+    }
+}

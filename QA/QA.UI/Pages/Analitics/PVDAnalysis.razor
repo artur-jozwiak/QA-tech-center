@@ -1,0 +1,145 @@
+﻿@page "/pvd-analys"
+@using QA.BLL.Interfaces
+@using QA.Domain.Models
+@using QA.Domain.Models.CoatingModels
+@using QA.Domain.Models.Keyence
+@using QA.UI.Pages.Images
+@using QA.UI.Pages.Reporting
+@inject IUnitOfWork UnitOfWork
+
+<div class="inputs-container">
+
+    <div class="inputs-group">
+        <div class="input-wrapper">
+            <label class="input-label">Powłoka </label>
+            <InputSelect class="input" style="width:200px" TValue="string"
+                         Value="_selectedCoatingName"
+                         ValueChanged="@(async e => { _selectedCoatingName = e; await GetCoatingMeasurements(); })"
+                         ValueExpression="() => _selectedCoatingName">
+                <option value="0">Wybierz powłoke</option>
+                @foreach (var coating in _coatings.DistinctBy(c => c.CoatingName))
+                {
+                    <option value="@coating.CoatingName"> @coating.CoatingName - @coating.InternalName </option>
+                }
+            </InputSelect>
+        </div>
+
+        <div class="input-wrapper">
+            @*             <label class="input-label">Process </label>
+            <InputSelect class="input" style="width:200px" TValue="int"
+            Value="_selectedCoatingID"
+            ValueChanged="@(async e => { _selectedCoatingID = e; await GetCoatingMeasurements(); })"
+            ValueExpression="() => _selectedCoatingID">
+            <option value="0">Wybierz process</option>
+            @foreach (var coating in _coatings)
+            {
+            <option value="@coating.Id">@coating.CoatingSymbol @coating.CoatingName @coating.InternalName</option>
+            }
+            </InputSelect> *@
+
+            <label class="input-label">Process </label>
+            <InputSelect class="input" style="width:200px" TValue="int"
+                         Value="_selectedCoatingID"
+                         ValueChanged="@(async e => { _selectedCoatingID = e; await GetProcessMeasurements(); })"
+                         ValueExpression="() => _selectedCoatingID">
+                <option value="0">Wybierz process</option>
+                @foreach (var coating in _coatings)
+                {
+                    <option value="@coating.Id">@coating.CoatingSymbol</option>
+                }
+            </InputSelect>
+
+        </div>
+
+        <div class="input-wrapper">
+            <label class="input-label">Zakres od:</label>
+            <InputDate class="input" ValueExpression="@(() => _minDate)" Value="@_minDate" ValueChanged="@(async (DateTime? date) => await FilterByDate(date, _maxDate))"></InputDate>
+        </div>
+
+        <div class="input-wrapper">
+            <label class="input-label">Zakres do:</label>
+            <InputDate class="input" ValueExpression="@(() => _maxDate)" Value="@_maxDate" ValueChanged="@(async (DateTime? date) => await FilterByDate(_minDate,date))"></InputDate>
+        </div>
+    </div>
+
+    @if (_displayChart && _filteredMeasurements.Count != 0)
+    {
+        <div class="chart-container">
+
+            <PVDTrendChart Measurements="@_filteredMeasurements" ChartId="PVDChart" LSL="_selectedCoating.LSL" USL="_selectedCoating.USL" @ref="@_chart"></PVDTrendChart>
+        </div>
+    }
+
+</div>
+
+@code {
+    private List<Coating> _coatings = new();
+
+    private int _selectedCoatingID;
+    private Coating _selectedCoating = new();
+
+    private string? _selectedCoatingName;
+
+    private List<CoatingMeasurementSeries> _measurementSerieses = new();
+    private List<CoatingMeasurementSeries> _filteredMeasurements = new();
+    private PVDTrendChart _chart;
+
+    private bool _displayChart = true;
+    private DateTime? _minDate = DateTime.Now.AddMonths(-6);
+    private DateTime? _maxDate = DateTime.Now;
+    private DateTime _deafaultMinDate = new DateTime(2020, 1, 1);
+
+    protected override async Task OnInitializedAsync()
+    {
+        _coatings = UnitOfWork.Coating.GetAll();
+    }
+
+    private async Task FilterByDate(DateTime? minDate, DateTime? maxDate)
+    {
+        if (minDate != _minDate || maxDate != _maxDate)
+        {
+            _minDate = minDate ?? _deafaultMinDate;
+            _maxDate = maxDate ?? DateTime.Now;
+        }
+
+        await ApplyFilters();
+    }
+
+    private async Task GetProcessMeasurements()
+    {
+        _displayChart = false;
+        if (_selectedCoatingID != 0)
+        {
+            _selectedCoating = _coatings.FirstOrDefault(c => c.Id == _selectedCoatingID);
+            _measurementSerieses = UnitOfWork.Coating.GetProcessMeasurementsBy(_selectedCoating.CoatingSymbol);
+            await ApplyFilters();
+            _selectedCoatingName = "0";
+            _displayChart = true;
+        }
+    }
+
+    private async Task GetCoatingMeasurements()
+    {
+        _displayChart = false;
+        if (!String.IsNullOrEmpty(_selectedCoatingName))
+        {
+            _measurementSerieses = UnitOfWork.Coating.GetCoatingMeasurementsBy(_selectedCoatingName);
+            await ApplyFilters();
+            _selectedCoatingID = 0;
+            _displayChart = true;
+        }
+    }
+
+    private async Task ApplyFilters()
+    {
+        _filteredMeasurements = _measurementSerieses
+                                            .Where(m => m.Date > _minDate && m.Date < _maxDate)
+                                            .OrderBy(m => m.Date)
+                                            .ToList();
+        if (_chart != null)
+        {
+            await _chart.UpdateChart(_selectedCoatingID.ToString());
+        }
+
+    }
+}

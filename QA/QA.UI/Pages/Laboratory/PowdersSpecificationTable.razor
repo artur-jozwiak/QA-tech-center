@@ -1,0 +1,103 @@
+﻿@page "/PowdersSpecificationTable"
+@using QA.DataAccess
+@using QA.Domain.Models
+@inject NavigationManager Navigation
+@inject QAContext QAContext
+@inject IJSRuntime IJSRuntime
+
+<table class="laboratory-table">
+    <thead>
+        <tr>
+            <th>Gatunek</th>
+            <th>HCJ Min</th>
+            <th>HCJ Nominal</th>
+            <th>HCJ Max</th>
+            <th>COM% Min</th>
+            <th>COM% Nominal</th>
+            <th>COM% Max</th>
+            <th>Gęstość Min</th>
+            <th>Gęstość Nominal</th>
+            <th>Gęstość Max</th>
+            <th>HV30 Min</th>
+            <th>HV30 Nominal</th>
+            <th>HV30 Max</th>
+            <th>K1C</th>
+            <th>Porosity</th>
+            <th style="width:600px">Zasady uwalniania</th>
+            <th>Zasady uwalniania dla prób</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var powder in powderSpecifications)
+        {
+            <tr>
+                <td><InputText style="font-weight:bold; width:60px" @bind-Value="@powder.PowderType" /></td>
+                <td><InputNumber style="width:40px" @bind-Value="@powder.HCJMin" /></td>
+                <td><InputNumber style="width:40px" @bind-Value="@powder.HCJNominal" /></td>
+                <td><InputNumber style="width:40px" @bind-Value="@powder.HCJMax" /></td>
+                <td><InputNumber style="width:40px" @bind-Value="@powder.COMMin" /></td>
+                <td><InputNumber style="width:40px" @bind-Value="@powder.COMNominal" /></td>
+                <td><InputNumber style="width:40px" @bind-Value="@powder.COMMax" /></td>
+                <td><InputNumber style="width:40px" @bind-Value="@powder.DensityMin" /></td>
+                <td><InputNumber style="width:40px" @bind-Value="@powder.DensityNominal" /></td>
+                <td><InputNumber style="width:40px" @bind-Value="@powder.DensityMax" /></td>
+                <td><InputNumber style="width:40px" @bind-Value="@powder.HV30Min" /></td>
+                <td><InputNumber style="width:40px" @bind-Value="@powder.HV30Nominal" /></td>
+                <td><InputNumber style="width:40px" @bind-Value="@powder.HV30Max" /></td>
+                <td><InputText style="width:60px" @bind-Value="@powder.K1C" /></td>
+                <td><InputText style="width:100px" @bind-Value="@powder.Porosity" /></td>
+                <td><InputText style="width:350px" @bind-Value="@powder.ReleaseRules" /></td>
+                <td><InputText style="width:350px" @bind-Value="@powder.ReleaseRulesForSamples" /></td>
+
+                <td>
+                    @if (powder.Id != 0)
+                    {
+                        <span class="oi oi-trash " style=" color:red" @onclick="() => Delete(powder)"></span>
+                    }
+                </td>
+            </tr>
+        }
+        <tr>
+            <CascadingAuthenticationState>
+                <AuthorizeView Roles="Admin, Manager">
+                    <td colspan="17"><button class="btn btn-primary" onclick="@(() => SaveChanges())" style="height:25px">Zapisz</button></td>
+                </AuthorizeView>
+            </CascadingAuthenticationState>
+
+        </tr>
+    </tbody>
+</table>
+
+@code {
+    private List<PowderSpecification> powderSpecifications = new List<PowderSpecification>();
+    private PowderSpecification newPowderSpecification = new PowderSpecification();
+
+    protected override async Task OnInitializedAsync()
+    {
+        powderSpecifications = QAContext.PowdersSpecifications.ToList();
+        powderSpecifications.Add(newPowderSpecification);
+    }
+    private async Task SaveChanges()
+    {
+        if (!String.IsNullOrEmpty(newPowderSpecification.PowderType))
+        {
+            await QAContext.PowdersSpecifications.AddAsync(newPowderSpecification);
+            newPowderSpecification = new PowderSpecification();
+            powderSpecifications.Add(newPowderSpecification);
+        }
+        await QAContext.SaveChangesAsync();
+        StateHasChanged();
+    }
+
+    private async Task Delete(PowderSpecification powder)
+    {
+        bool confirmed = await IJSRuntime.InvokeAsync<bool>("confirm", $"Czy na pewno chcesz usunąć specyfikacje: {powder.PowderType}?");
+        if (confirmed)
+        {
+            QAContext.PowdersSpecifications.Remove(powder);
+            powderSpecifications.Remove(powder);
+            await QAContext.SaveChangesAsync();
+            StateHasChanged();
+        }
+    }
+}

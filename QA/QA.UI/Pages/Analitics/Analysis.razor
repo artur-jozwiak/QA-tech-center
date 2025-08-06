@@ -1,0 +1,54 @@
+﻿@page "/analysis"
+@using QA.BLL.Interfaces
+@using QA.UI.Pages.Laboratory
+
+<div class="tabs">
+    <button @onclick="() => SelectTab(0)" class="tab-button @(activeTab == 0 ? "active" : "")">Parametry</button>
+    <button @onclick="() => SelectTab(1)" class="tab-button @(activeTab == 1 ? "active" : "")">Parametry Keyence</button>
+    <button @onclick="() => SelectTab(2)" class="tab-button @(activeTab == 2 ? "active" : "")">SM/HC</button>
+    <button @onclick="() => SelectTab(3)" class="tab-button @(activeTab == 3 ? "active" : "")">SM/HC Masters</button>
+    <button @onclick="() => SelectTab(4)" class="tab-button @(activeTab == 4 ? "active" : "")">Analiza PVD</button>
+</div>
+
+<div class="tab-content">
+    @if (activeTab == 0)
+    {
+        <div>
+            <ParamAnalyzer></ParamAnalyzer>
+        </div>
+    }
+    else if (activeTab == 1)
+    {
+        <div>
+            <KeyenceParamAnalyzer></KeyenceParamAnalyzer>
+        </div>
+    }
+    else if (activeTab == 2)
+    {
+        <div>
+            <SMHCAnalysis></SMHCAnalysis>
+        </div>
+    }
+    else if (activeTab == 3)
+    {
+        <div>
+            <SMHCMasters></SMHCMasters>
+        </div>
+    }
+    else if (activeTab == 4)
+    {
+        <div>
+            <PVDAnalysis></PVDAnalysis>
+        </div>
+    }
+</div>
+
+@code {
+    private int activeTab = 0;
+
+    private void SelectTab(int index)
+    {
+        activeTab = index;
+    }
+}
+

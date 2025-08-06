@@ -1,0 +1,14 @@
+
+
+.grid-container[b-94iem8w73m] {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+.grid-item[b-94iem8w73m] {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    text-align: center;
+}
