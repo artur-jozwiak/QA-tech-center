@@ -3,12 +3,16 @@
   "WorkspaceRootPath": "C:\\Users\\ajozwiak\\Desktop\\QA\\QA\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{CEB6BF47-3506-4B68-A65B-D1B058415F4B}|QA.UI\\QA.UI.csproj|c:\\users\\ajozwiak\\desktop\\qa\\qa\\qa.ui\\pages\\images\\imageuploader.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{CEB6BF47-3506-4B68-A65B-D1B058415F4B}|QA.UI\\QA.UI.csproj|solutionrelative:qa.ui\\pages\\images\\imageuploader.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{CEB6BF47-3506-4B68-A65B-D1B058415F4B}|QA.UI\\QA.UI.csproj|c:\\users\\ajozwiak\\desktop\\qa\\qa\\qa.ui\\pages\\tech-center\\testform.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
       "RelativeMoniker": "D:0:0:{CEB6BF47-3506-4B68-A65B-D1B058415F4B}|QA.UI\\QA.UI.csproj|solutionrelative:qa.ui\\pages\\tech-center\\testform.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{DA79572A-71ED-4F34-BCED-FC059CC6EC19}|QA.Domain\\QA.Domain.csproj|c:\\users\\ajozwiak\\desktop\\qa\\qa\\qa.domain\\models\\tooltests\\tooltestcomparison.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{DA79572A-71ED-4F34-BCED-FC059CC6EC19}|QA.Domain\\QA.Domain.csproj|solutionrelative:qa.domain\\models\\tooltests\\tooltestcomparison.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{CEB6BF47-3506-4B68-A65B-D1B058415F4B}|QA.UI\\QA.UI.csproj|c:\\users\\ajozwiak\\desktop\\qa\\qa\\qa.ui\\pages\\measurmentpanel\\measurementpanel.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{CEB6BF47-3506-4B68-A65B-D1B058415F4B}|QA.UI\\QA.UI.csproj|solutionrelative:qa.ui\\pages\\measurmentpanel\\measurementpanel.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     }
   ],
   "DocumentGroupContainers": [
@@ -18,7 +22,7 @@
       "DocumentGroups": [
         {
           "DockedHeight": 200,
-          "SelectedChildIndex": 6,
+          "SelectedChildIndex": 8,
           "Children": [
             {
               "$type": "Bookmark",
@@ -46,28 +50,39 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "ImageUploader.razor",
-              "DocumentMoniker": "C:\\Users\\ajozwiak\\Desktop\\QA\\QA\\QA.UI\\Pages\\Images\\ImageUploader.razor",
-              "RelativeDocumentMoniker": "QA.UI\\Pages\\Images\\ImageUploader.razor",
-              "ToolTip": "C:\\Users\\ajozwiak\\Desktop\\QA\\QA\\QA.UI\\Pages\\Images\\ImageUploader.razor",
-              "RelativeToolTip": "QA.UI\\Pages\\Images\\ImageUploader.razor",
-              "ViewState": "AQIAAAAAAAAAAAAAAAAAAB8AAABAAAAA",
+              "DocumentIndex": 2,
+              "Title": "MeasurementPanel.razor",
+              "DocumentMoniker": "C:\\Users\\ajozwiak\\Desktop\\QA\\QA\\QA.UI\\Pages\\MeasurmentPanel\\MeasurementPanel.razor",
+              "RelativeDocumentMoniker": "QA.UI\\Pages\\MeasurmentPanel\\MeasurementPanel.razor",
+              "ToolTip": "C:\\Users\\ajozwiak\\Desktop\\QA\\QA\\QA.UI\\Pages\\MeasurmentPanel\\MeasurementPanel.razor",
+              "RelativeToolTip": "QA.UI\\Pages\\MeasurmentPanel\\MeasurementPanel.razor",
+              "ViewState": "AQIAAP8AAAAAAAAAAAD4vxkBAAAMAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-08-05T08:33:15.359Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-08-07T11:47:54.811Z"
             },
             {
               "$type": "Document",
               "DocumentIndex": 1,
+              "Title": "ToolTestComparison.cs",
+              "DocumentMoniker": "C:\\Users\\ajozwiak\\Desktop\\QA\\QA\\QA.Domain\\Models\\ToolTests\\ToolTestComparison.cs",
+              "RelativeDocumentMoniker": "QA.Domain\\Models\\ToolTests\\ToolTestComparison.cs",
+              "ToolTip": "C:\\Users\\ajozwiak\\Desktop\\QA\\QA\\QA.Domain\\Models\\ToolTests\\ToolTestComparison.cs",
+              "RelativeToolTip": "QA.Domain\\Models\\ToolTests\\ToolTestComparison.cs",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAYAAAAjAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-07T11:36:10.925Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
               "Title": "TestForm.razor",
               "DocumentMoniker": "C:\\Users\\ajozwiak\\Desktop\\QA\\QA\\QA.UI\\Pages\\Tech-Center\\TestForm.razor",
               "RelativeDocumentMoniker": "QA.UI\\Pages\\Tech-Center\\TestForm.razor",
               "ToolTip": "C:\\Users\\ajozwiak\\Desktop\\QA\\QA\\QA.UI\\Pages\\Tech-Center\\TestForm.razor",
               "RelativeToolTip": "QA.UI\\Pages\\Tech-Center\\TestForm.razor",
-              "ViewState": "AQIAALkAAAAAAAAAAAAAAMgAAACBAAAA",
+              "ViewState": "AQIAAAwAAAAAAAAAAAAAACkAAAAkAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-08-05T08:30:40.974Z",
+              "WhenOpened": "2025-08-06T09:04:02.003Z",
               "EditorCaption": ""
             }
           ]
