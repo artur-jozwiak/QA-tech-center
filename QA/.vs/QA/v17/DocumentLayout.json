@@ -3,16 +3,28 @@
   "WorkspaceRootPath": "C:\\Users\\ajozwiak\\Desktop\\QA\\QA\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{CEB6BF47-3506-4B68-A65B-D1B058415F4B}|QA.UI\\QA.UI.csproj|c:\\users\\ajozwiak\\desktop\\qa\\qa\\qa.ui\\pages\\tech-center\\testform.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{CEB6BF47-3506-4B68-A65B-D1B058415F4B}|QA.UI\\QA.UI.csproj|solutionrelative:qa.ui\\pages\\tech-center\\testform.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+      "AbsoluteMoniker": "D:0:0:{CEB6BF47-3506-4B68-A65B-D1B058415F4B}|QA.UI\\QA.UI.csproj|c:\\users\\ajozwiak\\desktop\\qa\\qa\\qa.ui\\pages\\laboratory\\smhcmasters.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{CEB6BF47-3506-4B68-A65B-D1B058415F4B}|QA.UI\\QA.UI.csproj|solutionrelative:qa.ui\\pages\\laboratory\\smhcmasters.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{DA79572A-71ED-4F34-BCED-FC059CC6EC19}|QA.Domain\\QA.Domain.csproj|c:\\users\\ajozwiak\\desktop\\qa\\qa\\qa.domain\\models\\tooltests\\tooltestcomparison.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{DA79572A-71ED-4F34-BCED-FC059CC6EC19}|QA.Domain\\QA.Domain.csproj|solutionrelative:qa.domain\\models\\tooltests\\tooltestcomparison.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{CEB6BF47-3506-4B68-A65B-D1B058415F4B}|QA.UI\\QA.UI.csproj|c:\\users\\ajozwiak\\desktop\\qa\\qa\\qa.ui\\pages\\laboratory\\smhcanalysis.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{CEB6BF47-3506-4B68-A65B-D1B058415F4B}|QA.UI\\QA.UI.csproj|solutionrelative:qa.ui\\pages\\laboratory\\smhcanalysis.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{CEB6BF47-3506-4B68-A65B-D1B058415F4B}|QA.UI\\QA.UI.csproj|c:\\users\\ajozwiak\\desktop\\qa\\qa\\qa.ui\\pages\\measurmentpanel\\measurementpanel.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{CEB6BF47-3506-4B68-A65B-D1B058415F4B}|QA.UI\\QA.UI.csproj|solutionrelative:qa.ui\\pages\\measurmentpanel\\measurementpanel.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+      "AbsoluteMoniker": "D:0:0:{CEB6BF47-3506-4B68-A65B-D1B058415F4B}|QA.UI\\QA.UI.csproj|c:\\users\\ajozwiak\\desktop\\qa\\qa\\qa.ui\\resources\\sharedresources.en.resx||{FF4D6ACA-9352-4A5F-821E-F4D6EBDCAB11}",
+      "RelativeMoniker": "D:0:0:{CEB6BF47-3506-4B68-A65B-D1B058415F4B}|QA.UI\\QA.UI.csproj|solutionrelative:qa.ui\\resources\\sharedresources.en.resx||{FF4D6ACA-9352-4A5F-821E-F4D6EBDCAB11}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{CEB6BF47-3506-4B68-A65B-D1B058415F4B}|QA.UI\\QA.UI.csproj|c:\\users\\ajozwiak\\desktop\\qa\\qa\\qa.ui\\resources\\sharedresources.pl.resx||{FF4D6ACA-9352-4A5F-821E-F4D6EBDCAB11}",
+      "RelativeMoniker": "D:0:0:{CEB6BF47-3506-4B68-A65B-D1B058415F4B}|QA.UI\\QA.UI.csproj|solutionrelative:qa.ui\\resources\\sharedresources.pl.resx||{FF4D6ACA-9352-4A5F-821E-F4D6EBDCAB11}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{CEB6BF47-3506-4B68-A65B-D1B058415F4B}|QA.UI\\QA.UI.csproj|c:\\users\\ajozwiak\\desktop\\qa\\qa\\qa.ui\\pages\\analitics\\keyenceparamanalyzer.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{CEB6BF47-3506-4B68-A65B-D1B058415F4B}|QA.UI\\QA.UI.csproj|solutionrelative:qa.ui\\pages\\analitics\\keyenceparamanalyzer.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{CEB6BF47-3506-4B68-A65B-D1B058415F4B}|QA.UI\\QA.UI.csproj|c:\\users\\ajozwiak\\desktop\\qa\\qa\\qa.ui\\pages\\analitics\\analysis.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{CEB6BF47-3506-4B68-A65B-D1B058415F4B}|QA.UI\\QA.UI.csproj|solutionrelative:qa.ui\\pages\\analitics\\analysis.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     }
   ],
   "DocumentGroupContainers": [
@@ -22,7 +34,7 @@
       "DocumentGroups": [
         {
           "DockedHeight": 200,
-          "SelectedChildIndex": 8,
+          "SelectedChildIndex": 7,
           "Children": [
             {
               "$type": "Bookmark",
@@ -50,39 +62,120 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "MeasurementPanel.razor",
-              "DocumentMoniker": "C:\\Users\\ajozwiak\\Desktop\\QA\\QA\\QA.UI\\Pages\\MeasurmentPanel\\MeasurementPanel.razor",
-              "RelativeDocumentMoniker": "QA.UI\\Pages\\MeasurmentPanel\\MeasurementPanel.razor",
-              "ToolTip": "C:\\Users\\ajozwiak\\Desktop\\QA\\QA\\QA.UI\\Pages\\MeasurmentPanel\\MeasurementPanel.razor",
-              "RelativeToolTip": "QA.UI\\Pages\\MeasurmentPanel\\MeasurementPanel.razor",
-              "ViewState": "AQIAAP8AAAAAAAAAAAD4vxkBAAAMAAAA",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-08-07T11:47:54.811Z"
-            },
-            {
-              "$type": "Document",
               "DocumentIndex": 1,
-              "Title": "ToolTestComparison.cs",
-              "DocumentMoniker": "C:\\Users\\ajozwiak\\Desktop\\QA\\QA\\QA.Domain\\Models\\ToolTests\\ToolTestComparison.cs",
-              "RelativeDocumentMoniker": "QA.Domain\\Models\\ToolTests\\ToolTestComparison.cs",
-              "ToolTip": "C:\\Users\\ajozwiak\\Desktop\\QA\\QA\\QA.Domain\\Models\\ToolTests\\ToolTestComparison.cs",
-              "RelativeToolTip": "QA.Domain\\Models\\ToolTests\\ToolTestComparison.cs",
-              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAYAAAAjAAAA",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-08-07T11:36:10.925Z"
+              "Title": "SMHCAnalysis.razor",
+              "DocumentMoniker": "C:\\Users\\ajozwiak\\Desktop\\QA\\QA\\QA.UI\\Pages\\Laboratory\\SMHCAnalysis.razor",
+              "RelativeDocumentMoniker": "QA.UI\\Pages\\Laboratory\\SMHCAnalysis.razor",
+              "ToolTip": "C:\\Users\\ajozwiak\\Desktop\\QA\\QA\\QA.UI\\Pages\\Laboratory\\SMHCAnalysis.razor",
+              "RelativeToolTip": "QA.UI\\Pages\\Laboratory\\SMHCAnalysis.razor",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAYAAAAeAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-08-14T06:19:42.879Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 0,
-              "Title": "TestForm.razor",
-              "DocumentMoniker": "C:\\Users\\ajozwiak\\Desktop\\QA\\QA\\QA.UI\\Pages\\Tech-Center\\TestForm.razor",
-              "RelativeDocumentMoniker": "QA.UI\\Pages\\Tech-Center\\TestForm.razor",
-              "ToolTip": "C:\\Users\\ajozwiak\\Desktop\\QA\\QA\\QA.UI\\Pages\\Tech-Center\\TestForm.razor",
-              "RelativeToolTip": "QA.UI\\Pages\\Tech-Center\\TestForm.razor",
-              "ViewState": "AQIAAAwAAAAAAAAAAAAAACkAAAAkAAAA",
+              "Title": "SMHCMasters.razor",
+              "DocumentMoniker": "C:\\Users\\ajozwiak\\Desktop\\QA\\QA\\QA.UI\\Pages\\Laboratory\\SMHCMasters.razor",
+              "RelativeDocumentMoniker": "QA.UI\\Pages\\Laboratory\\SMHCMasters.razor",
+              "ToolTip": "C:\\Users\\ajozwiak\\Desktop\\QA\\QA\\QA.UI\\Pages\\Laboratory\\SMHCMasters.razor",
+              "RelativeToolTip": "QA.UI\\Pages\\Laboratory\\SMHCMasters.razor",
+              "ViewState": "AQIAACQAAAAAAAAAAAAAADEAAAAVAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-08-06T09:04:02.003Z",
+              "WhenOpened": "2025-08-14T05:58:29.87Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "FloatingWindowState": {
+        "Id": "3adb3374-6e0d-4a24-bdae-d4236aa34559",
+        "Display": 0,
+        "X": 226,
+        "Y": 75,
+        "Width": 1527,
+        "Height": 728,
+        "WindowState": 2
+      },
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 1,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "SharedResources.pl.resx",
+              "DocumentMoniker": "C:\\Users\\ajozwiak\\Desktop\\QA\\QA\\QA.UI\\Resources\\SharedResources.pl.resx",
+              "RelativeDocumentMoniker": "QA.UI\\Resources\\SharedResources.pl.resx",
+              "ToolTip": "C:\\Users\\ajozwiak\\Desktop\\QA\\QA\\QA.UI\\Resources\\SharedResources.pl.resx",
+              "RelativeToolTip": "QA.UI\\Resources\\SharedResources.pl.resx",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001005|",
+              "WhenOpened": "2025-08-14T05:17:09.873Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "SharedResources.en.resx",
+              "DocumentMoniker": "C:\\Users\\ajozwiak\\Desktop\\QA\\QA\\QA.UI\\Resources\\SharedResources.en.resx",
+              "RelativeDocumentMoniker": "QA.UI\\Resources\\SharedResources.en.resx",
+              "ToolTip": "C:\\Users\\ajozwiak\\Desktop\\QA\\QA\\QA.UI\\Resources\\SharedResources.en.resx",
+              "RelativeToolTip": "QA.UI\\Resources\\SharedResources.en.resx",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001005|",
+              "WhenOpened": "2025-08-14T05:17:09.049Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "Analysis.razor",
+              "DocumentMoniker": "C:\\Users\\ajozwiak\\Desktop\\QA\\QA\\QA.UI\\Pages\\Analitics\\Analysis.razor",
+              "RelativeDocumentMoniker": "QA.UI\\Pages\\Analitics\\Analysis.razor",
+              "ToolTip": "C:\\Users\\ajozwiak\\Desktop\\QA\\QA\\QA.UI\\Pages\\Analitics\\Analysis.razor",
+              "RelativeToolTip": "QA.UI\\Pages\\Analitics\\Analysis.razor",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAcAAABvAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-08-14T05:49:12.21Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "FloatingWindowState": {
+        "Id": "bc4155aa-6a56-4b89-9bbe-ae5d6cc54c09",
+        "Display": 0,
+        "X": 144,
+        "Y": 134,
+        "Width": 1527,
+        "Height": 704,
+        "WindowState": 2
+      },
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "KeyenceParamAnalyzer.razor",
+              "DocumentMoniker": "C:\\Users\\ajozwiak\\Desktop\\QA\\QA\\QA.UI\\Pages\\Analitics\\KeyenceParamAnalyzer.razor",
+              "RelativeDocumentMoniker": "QA.UI\\Pages\\Analitics\\KeyenceParamAnalyzer.razor",
+              "ToolTip": "C:\\Users\\ajozwiak\\Desktop\\QA\\QA\\QA.UI\\Pages\\Analitics\\KeyenceParamAnalyzer.razor",
+              "RelativeToolTip": "QA.UI\\Pages\\Analitics\\KeyenceParamAnalyzer.razor",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAABMAAAA4AAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-08-14T05:45:29.349Z",
               "EditorCaption": ""
             }
           ]
