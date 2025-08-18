@@ -3,28 +3,20 @@
   "WorkspaceRootPath": "C:\\Users\\ajozwiak\\Desktop\\QA\\QA\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{CEB6BF47-3506-4B68-A65B-D1B058415F4B}|QA.UI\\QA.UI.csproj|c:\\users\\ajozwiak\\desktop\\qa\\qa\\qa.ui\\pages\\mrb\\mrbform.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{CEB6BF47-3506-4B68-A65B-D1B058415F4B}|QA.UI\\QA.UI.csproj|solutionrelative:qa.ui\\pages\\mrb\\mrbform.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{CEB6BF47-3506-4B68-A65B-D1B058415F4B}|QA.UI\\QA.UI.csproj|c:\\users\\ajozwiak\\desktop\\qa\\qa\\qa.ui\\resources\\sharedresources.en.resx||{FF4D6ACA-9352-4A5F-821E-F4D6EBDCAB11}",
+      "RelativeMoniker": "D:0:0:{CEB6BF47-3506-4B68-A65B-D1B058415F4B}|QA.UI\\QA.UI.csproj|solutionrelative:qa.ui\\resources\\sharedresources.en.resx||{FF4D6ACA-9352-4A5F-821E-F4D6EBDCAB11}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{CEB6BF47-3506-4B68-A65B-D1B058415F4B}|QA.UI\\QA.UI.csproj|c:\\users\\ajozwiak\\desktop\\qa\\qa\\qa.ui\\resources\\sharedresources.pl.resx||{FF4D6ACA-9352-4A5F-821E-F4D6EBDCAB11}",
+      "RelativeMoniker": "D:0:0:{CEB6BF47-3506-4B68-A65B-D1B058415F4B}|QA.UI\\QA.UI.csproj|solutionrelative:qa.ui\\resources\\sharedresources.pl.resx||{FF4D6ACA-9352-4A5F-821E-F4D6EBDCAB11}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{CEB6BF47-3506-4B68-A65B-D1B058415F4B}|QA.UI\\QA.UI.csproj|c:\\users\\ajozwiak\\desktop\\qa\\qa\\qa.ui\\pages\\measurmentpanel\\trialmeasurementpanel.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
       "RelativeMoniker": "D:0:0:{CEB6BF47-3506-4B68-A65B-D1B058415F4B}|QA.UI\\QA.UI.csproj|solutionrelative:qa.ui\\pages\\measurmentpanel\\trialmeasurementpanel.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{CEB6BF47-3506-4B68-A65B-D1B058415F4B}|QA.UI\\QA.UI.csproj|c:\\users\\ajozwiak\\desktop\\qa\\qa\\qa.ui\\pages\\measurmentpanel\\laboratorypanel.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{CEB6BF47-3506-4B68-A65B-D1B058415F4B}|QA.UI\\QA.UI.csproj|solutionrelative:qa.ui\\pages\\measurmentpanel\\laboratorypanel.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{CEB6BF47-3506-4B68-A65B-D1B058415F4B}|QA.UI\\QA.UI.csproj|c:\\users\\ajozwiak\\desktop\\qa\\qa\\qa.ui\\pages\\images\\imageuploader.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{CEB6BF47-3506-4B68-A65B-D1B058415F4B}|QA.UI\\QA.UI.csproj|solutionrelative:qa.ui\\pages\\images\\imageuploader.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{CEB6BF47-3506-4B68-A65B-D1B058415F4B}|QA.UI\\QA.UI.csproj|c:\\users\\ajozwiak\\desktop\\qa\\qa\\qa.ui\\pages\\helicheck\\helichecktable.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{CEB6BF47-3506-4B68-A65B-D1B058415F4B}|QA.UI\\QA.UI.csproj|solutionrelative:qa.ui\\pages\\helicheck\\helichecktable.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{CEB6BF47-3506-4B68-A65B-D1B058415F4B}|QA.UI\\QA.UI.csproj|c:\\users\\ajozwiak\\desktop\\qa\\qa\\qa.ui\\pages\\devices\\devicecreator.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{CEB6BF47-3506-4B68-A65B-D1B058415F4B}|QA.UI\\QA.UI.csproj|solutionrelative:qa.ui\\pages\\devices\\devicecreator.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{CEB6BF47-3506-4B68-A65B-D1B058415F4B}|QA.UI\\QA.UI.csproj|c:\\users\\ajozwiak\\desktop\\qa\\qa\\qa.ui\\pages\\devices\\measuringdevices.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{CEB6BF47-3506-4B68-A65B-D1B058415F4B}|QA.UI\\QA.UI.csproj|solutionrelative:qa.ui\\pages\\devices\\measuringdevices.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     }
   ],
   "DocumentGroupContainers": [
@@ -34,7 +26,7 @@
       "DocumentGroups": [
         {
           "DockedHeight": 200,
-          "SelectedChildIndex": 6,
+          "SelectedChildIndex": 7,
           "Children": [
             {
               "$type": "Bookmark",
@@ -63,79 +55,72 @@
             {
               "$type": "Document",
               "DocumentIndex": 0,
-              "Title": "TrialMeasurementPanel.razor",
-              "DocumentMoniker": "C:\\Users\\ajozwiak\\Desktop\\QA\\QA\\QA.UI\\Pages\\MeasurmentPanel\\TrialMeasurementPanel.razor",
-              "RelativeDocumentMoniker": "QA.UI\\Pages\\MeasurmentPanel\\TrialMeasurementPanel.razor",
-              "ToolTip": "C:\\Users\\ajozwiak\\Desktop\\QA\\QA\\QA.UI\\Pages\\MeasurmentPanel\\TrialMeasurementPanel.razor",
-              "RelativeToolTip": "QA.UI\\Pages\\MeasurmentPanel\\TrialMeasurementPanel.razor",
-              "ViewState": "AQIAAIMAAAAAAAAAAAAAAI8AAAArAAAA",
+              "Title": "MRBForm.razor",
+              "DocumentMoniker": "C:\\Users\\ajozwiak\\Desktop\\QA\\QA\\QA.UI\\Pages\\MRB\\MRBForm.razor",
+              "RelativeDocumentMoniker": "QA.UI\\Pages\\MRB\\MRBForm.razor",
+              "ToolTip": "C:\\Users\\ajozwiak\\Desktop\\QA\\QA\\QA.UI\\Pages\\MRB\\MRBForm.razor",
+              "RelativeToolTip": "QA.UI\\Pages\\MRB\\MRBForm.razor",
+              "ViewState": "AQIAALQAAAAAAAAAAAAAAMsAAACGAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-08-14T13:08:51.021Z",
+              "WhenOpened": "2025-08-18T05:12:31.885Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "FloatingWindowState": {
+        "Id": "1df9a1e6-be10-4d18-b96c-3f376c7adbb5",
+        "Display": 0,
+        "X": -9,
+        "Y": 162,
+        "Width": 1527,
+        "Height": 728,
+        "WindowState": 0
+      },
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 1,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "SharedResources.pl.resx",
+              "DocumentMoniker": "C:\\Users\\ajozwiak\\Desktop\\QA\\QA\\QA.UI\\Resources\\SharedResources.pl.resx",
+              "RelativeDocumentMoniker": "QA.UI\\Resources\\SharedResources.pl.resx",
+              "ToolTip": "C:\\Users\\ajozwiak\\Desktop\\QA\\QA\\QA.UI\\Resources\\SharedResources.pl.resx",
+              "RelativeToolTip": "QA.UI\\Resources\\SharedResources.pl.resx",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001005|",
+              "WhenOpened": "2025-08-18T05:15:20.568Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 1,
-              "Title": "LaboratoryPanel.razor",
-              "DocumentMoniker": "C:\\Users\\ajozwiak\\Desktop\\QA\\QA\\QA.UI\\Pages\\MeasurmentPanel\\LaboratoryPanel.razor",
-              "RelativeDocumentMoniker": "QA.UI\\Pages\\MeasurmentPanel\\LaboratoryPanel.razor",
-              "ToolTip": "C:\\Users\\ajozwiak\\Desktop\\QA\\QA\\QA.UI\\Pages\\MeasurmentPanel\\LaboratoryPanel.razor",
-              "RelativeToolTip": "QA.UI\\Pages\\MeasurmentPanel\\LaboratoryPanel.razor",
-              "ViewState": "AQIAAAAAAAAAAAAAAAAAACIAAAArAAAA",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-08-14T11:53:55.638Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "ImageUploader.razor",
-              "DocumentMoniker": "C:\\Users\\ajozwiak\\Desktop\\QA\\QA\\QA.UI\\Pages\\Images\\ImageUploader.razor",
-              "RelativeDocumentMoniker": "QA.UI\\Pages\\Images\\ImageUploader.razor",
-              "ToolTip": "C:\\Users\\ajozwiak\\Desktop\\QA\\QA\\QA.UI\\Pages\\Images\\ImageUploader.razor",
-              "RelativeToolTip": "QA.UI\\Pages\\Images\\ImageUploader.razor",
-              "ViewState": "AQIAAAAAAAAAAAAAAAAAAB0AAAAeAAAA",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-08-14T11:34:49.983Z",
+              "Title": "SharedResources.en.resx",
+              "DocumentMoniker": "C:\\Users\\ajozwiak\\Desktop\\QA\\QA\\QA.UI\\Resources\\SharedResources.en.resx",
+              "RelativeDocumentMoniker": "QA.UI\\Resources\\SharedResources.en.resx",
+              "ToolTip": "C:\\Users\\ajozwiak\\Desktop\\QA\\QA\\QA.UI\\Resources\\SharedResources.en.resx",
+              "RelativeToolTip": "QA.UI\\Resources\\SharedResources.en.resx",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001005|",
+              "WhenOpened": "2025-08-18T05:15:19.51Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 3,
-              "Title": "HelicheckTable.razor",
-              "DocumentMoniker": "C:\\Users\\ajozwiak\\Desktop\\QA\\QA\\QA.UI\\Pages\\Helicheck\\HelicheckTable.razor",
-              "RelativeDocumentMoniker": "QA.UI\\Pages\\Helicheck\\HelicheckTable.razor",
-              "ToolTip": "C:\\Users\\ajozwiak\\Desktop\\QA\\QA\\QA.UI\\Pages\\Helicheck\\HelicheckTable.razor",
-              "RelativeToolTip": "QA.UI\\Pages\\Helicheck\\HelicheckTable.razor",
-              "ViewState": "AQIAAAAAAAAAAAAAAAAAAAoAAAAAAAAA",
+              "Title": "TrialMeasurementPanel.razor",
+              "DocumentMoniker": "C:\\Users\\ajozwiak\\Desktop\\QA\\QA\\QA.UI\\Pages\\MeasurmentPanel\\TrialMeasurementPanel.razor",
+              "RelativeDocumentMoniker": "QA.UI\\Pages\\MeasurmentPanel\\TrialMeasurementPanel.razor",
+              "ToolTip": "C:\\Users\\ajozwiak\\Desktop\\QA\\QA\\QA.UI\\Pages\\MeasurmentPanel\\TrialMeasurementPanel.razor",
+              "RelativeToolTip": "QA.UI\\Pages\\MeasurmentPanel\\TrialMeasurementPanel.razor",
+              "ViewState": "AQIAAAAAAAAAAAAAAAAAAC4AAABrAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-08-14T11:29:38.261Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 5,
-              "Title": "MeasuringDevices.razor",
-              "DocumentMoniker": "C:\\Users\\ajozwiak\\Desktop\\QA\\QA\\QA.UI\\Pages\\Devices\\MeasuringDevices.razor",
-              "RelativeDocumentMoniker": "QA.UI\\Pages\\Devices\\MeasuringDevices.razor",
-              "ToolTip": "C:\\Users\\ajozwiak\\Desktop\\QA\\QA\\QA.UI\\Pages\\Devices\\MeasuringDevices.razor",
-              "RelativeToolTip": "QA.UI\\Pages\\Devices\\MeasuringDevices.razor",
-              "ViewState": "AQIAAAAAAAAAAAAAAAAAABEAAAAAAAAA",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-08-14T11:17:00.556Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 4,
-              "Title": "DeviceCreator.razor",
-              "DocumentMoniker": "C:\\Users\\ajozwiak\\Desktop\\QA\\QA\\QA.UI\\Pages\\Devices\\DeviceCreator.razor",
-              "RelativeDocumentMoniker": "QA.UI\\Pages\\Devices\\DeviceCreator.razor",
-              "ToolTip": "C:\\Users\\ajozwiak\\Desktop\\QA\\QA\\QA.UI\\Pages\\Devices\\DeviceCreator.razor",
-              "RelativeToolTip": "QA.UI\\Pages\\Devices\\DeviceCreator.razor",
-              "ViewState": "AQIAAAAAAAAAAAAAAAAAABAAAABVAAAA",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-08-14T11:00:19.237Z",
+              "WhenOpened": "2025-08-14T13:08:51.021Z",
               "EditorCaption": ""
             }
           ]
